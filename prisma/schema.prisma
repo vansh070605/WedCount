@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Wedding {
+  id          String   @id @default(cuid())
+  name        String
+  city        String?
+  rsvpDeadline DateTime?
+  createdAt   DateTime @default(now())
+  events      Event[]
+  guests      Guest[]
+}
+
+// One wedding has several functions: haldi, sangeet, wedding, reception.
+model Event {
+  id        String   @id @default(cuid())
+  weddingId String
+  wedding   Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  name      String
+  startsAt  DateTime
+  venue     String?
+  rsvps     Rsvp[]
+
+  @@index([weddingId])
+}
+
+model Guest {
+  id        String   @id @default(cuid())
+  weddingId String
+  wedding   Wedding  @relation(fields: [weddingId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String
+  side      String   // "bride" | "groom"
+  relation  String   // "family" | "friend" | "colleague" | "other"
+  // Secret part of the personal invite link; never expose guest ids in URLs.
+  token     String   @unique @default(cuid())
+  createdAt DateTime @default(now())
+  rsvps     Rsvp[]
+
+  @@unique([weddingId, phone])
+  @@index([weddingId])
+}
+
+// A guest's answer for one event. Missing row means no reply yet.
+// Headcount is vegCount + nonVegCount, so the two can never disagree.
+model Rsvp {
+  id          String   @id @default(cuid())
+  guestId     String
+  guest       Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  status      String   // "attending" | "declined" | "maybe"
+  vegCount    Int      @default(0)
+  nonVegCount Int      @default(0)
+  arrivalTime DateTime?
+  updatedAt   DateTime @updatedAt
+
+  @@unique([guestId, eventId])
+  @@index([eventId])
+}
