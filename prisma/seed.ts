@@ -1,6 +1,11 @@
 import { PrismaClient } from "@prisma/client";
+import { hashPassword } from "../lib/password";
 
 const prisma = new PrismaClient();
+
+// Local demo login only. Never use these values outside a dev database.
+export const DEMO_EMAIL = "demo@wedcount.test";
+export const DEMO_PASSWORD = "demo-planner-123";
 
 const names = [
   "Sharma Uncle", "Priya Mehta", "Rohit Verma", "Anjali Gupta", "Vikram Singh",
@@ -12,11 +17,15 @@ const relations = ["family", "friend", "colleague", "other"];
 const statuses = ["attending", "declined", "maybe"];
 
 async function main() {
-  // Re-runnable: wipe demo data first. Cascades remove events, guests, RSVPs.
-  await prisma.wedding.deleteMany({ where: { name: "Demo: Priya & Rohit" } });
+  // Re-runnable: wipe the demo planner first. Cascades remove weddings, events, guests, RSVPs.
+  await prisma.planner.deleteMany({ where: { email: DEMO_EMAIL } });
+  const planner = await prisma.planner.create({
+    data: { email: DEMO_EMAIL, name: "Demo Planner", passwordHash: await hashPassword(DEMO_PASSWORD) },
+  });
 
   const wedding = await prisma.wedding.create({
     data: {
+      plannerId: planner.id,
       name: "Demo: Priya & Rohit",
       city: "Jaipur",
       rsvpDeadline: new Date("2026-12-01T00:00:00+05:30"),

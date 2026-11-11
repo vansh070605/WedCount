@@ -7,14 +7,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Planner {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+  weddings     Wedding[]
+}
+
+// Login session. Only the SHA-256 of the cookie token is stored, so a leaked DB can't log anyone in.
+model Session {
+  id        String   @id // sha256(token)
+  plannerId String
+  planner   Planner  @relation(fields: [plannerId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+
+  @@index([plannerId])
+}
+
 model Wedding {
   id          String   @id @default(cuid())
+  plannerId   String
+  planner     Planner  @relation(fields: [plannerId], references: [id], onDelete: Cascade)
   name        String
   city        String?
   rsvpDeadline DateTime?
   createdAt   DateTime @default(now())
   events      Event[]
   guests      Guest[]
+
+  @@index([plannerId])
 }
 
 // One wedding has several functions: haldi, sangeet, wedding, reception.
