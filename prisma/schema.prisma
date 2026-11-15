@@ -63,7 +63,8 @@ model Guest {
   side      String   // "bride" | "groom"
   relation  String   // "family" | "friend" | "colleague" | "other"
   // Secret part of the personal invite link; never expose guest ids in URLs.
-  token     String   @unique @default(cuid())
+  // Set in code with crypto randomness (lib/guests.ts newGuestToken): cuid() is guessable.
+  token     String   @unique
   createdAt DateTime @default(now())
   rsvps     Rsvp[]
 

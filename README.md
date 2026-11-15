@@ -3,7 +3,7 @@
 WhatsApp-based guest RSVP and headcount prediction for Indian wedding planners.
 
 ## Status
-Day 3: planner signup/login, create weddings, add guests by hand or CSV import.
+Day 4: guests reply per function (Haldi, Sangeet, Wedding) from their personal link `/r/<token>`.
 
 ## Run locally
 ```bash
@@ -38,6 +38,11 @@ College Friend,+91 90000 11111,groom,friend
 - `side` is `bride` or `groom`. `relation` is `family`, `friend`, `colleague` or `other` (defaults to `other`).
 - Phones are Indian mobiles in any common format; stored as `+91XXXXXXXXXX`.
 - If any row is invalid, nothing is imported. Guests already on the list are skipped.
+
+## Guest RSVP
+- Each guest has a private link `/r/<token>`. The token is 128 random bits; it is the guest's only credential.
+- Per function: Coming / Maybe / Can't come, veg and non-veg counts (max 20), optional arrival time (IST).
+- Guests can change their reply until the wedding's RSVP deadline (end of that day, IST). After it, the page is read-only.
 
 ## Security notes
 - Passwords hashed with scrypt (Node built-in). Sessions stored server-side; DB keeps only a SHA-256 of the cookie token.

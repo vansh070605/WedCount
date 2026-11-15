@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../lib/password";
+import { newGuestToken } from "../lib/guests";
 
 const prisma = new PrismaClient();
 
@@ -48,6 +49,7 @@ async function main() {
         phone: `+9198${String(10000000 + i).padStart(8, "0")}`,
         side: i % 2 === 0 ? "bride" : "groom",
         relation: relations[i % relations.length],
+        token: newGuestToken(),
       },
     });
 
