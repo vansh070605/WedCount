@@ -11,6 +11,8 @@ import {
   ImportGuestsForm,
   WhatsAppSendButton,
 } from "@/app/ui/forms";
+import { Badge, Card, PageHeader, SectionTitle, Stat, buttonClass } from "@/app/ui/kit";
+import { CountUp } from "@/app/ui/count-up";
 import { appUrl, inviteLink, inviteMessage, reminderMessage, whatsappUrl } from "@/lib/invite";
 import { REMIND_EVERY_DAYS, ago, missingEvents, reminderStatus } from "@/lib/reminders";
 import { countHeadcount } from "@/lib/headcount";
@@ -19,8 +21,8 @@ import { plannerCalibration } from "@/lib/calibrate";
 
 export default function WeddingPage(props: PageProps<"/weddings/[id]">) {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-10">
-      <Suspense fallback={<p className="text-zinc-500">Loading wedding…</p>}>
+    <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
+      <Suspense fallback={<p className="text-muted">Loading wedding…</p>}>
         <Wedding params={props.params} />
       </Suspense>
     </main>
@@ -29,18 +31,17 @@ export default function WeddingPage(props: PageProps<"/weddings/[id]">) {
 
 const ist = (d: Date, opts: Intl.DateTimeFormatOptions) =>
   d.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", ...opts });
-const card = "rounded-lg border border-zinc-200 p-5 dark:border-zinc-800";
-const muted = "text-sm text-zinc-600 dark:text-zinc-400";
-
 const signed = (pct: number) => (pct > 0 ? `+${pct}%` : `${pct}%`);
+const th = "px-4 py-3 text-xs font-medium tracking-wide text-muted uppercase";
+const td = "px-4 py-3";
 
-// Short per-event reply for the guest list, e.g. "3 coming", "maybe 2", "no".
-function replyLabel(r: { status: string; vegCount: number; nonVegCount: number } | undefined) {
-  if (!r) return "—";
+// Short per-function reply for the guest list.
+function Reply({ r }: { r: { status: string; vegCount: number; nonVegCount: number } | undefined }) {
+  if (!r) return <span className="text-muted">—</span>;
   const people = r.vegCount + r.nonVegCount;
-  if (r.status === "attending") return `${people} coming`;
-  if (r.status === "maybe") return `maybe ${people}`;
-  return "no";
+  if (r.status === "attending") return <Badge tone="ok">{people} coming</Badge>;
+  if (r.status === "maybe") return <Badge tone="gold">maybe {people}</Badge>;
+  return <Badge>can&apos;t come</Badge>;
 }
 
 async function Wedding({ params }: { params: Promise<{ id: string }> }) {
@@ -60,103 +61,140 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
   const statuses = guests.map((g) => ({ guest: g, status: reminderStatus(g, events, wedding.rsvpDeadline, now) }));
   const tally = (s: string) => statuses.filter((x) => x.status === s).length;
   const due = statuses.filter((x) => x.status === "due").map((x) => x.guest);
+  const replied = tally("complete");
+  const next = events.map((e, i) => ({ e, i })).find(({ e }) => e.startsAt > now);
+  const sections = [
+    ["headcount", "Headcount"],
+    ...(started.length ? [["turnout", "Turnout"]] : []),
+    ["reminders", "Reminders"],
+    ["functions", "Functions"],
+    ["guests", "Guests"],
+    ["add", "Add guests"],
+  ];
 
   return (
-    <>
-      <header>
-        <Link href="/dashboard" className="text-sm text-zinc-600 underline dark:text-zinc-400">
-          ← All weddings
-        </Link>
-        <h1 className="mt-2 font-display text-3xl font-semibold">{wedding.name}</h1>
-        <p className={muted}>
-          {wedding.city ?? "No city"} · {guests.length} invites
-          {wedding.rsvpDeadline && ` · RSVP by ${ist(wedding.rsvpDeadline, { dateStyle: "medium" })}`}
-        </p>
-      </header>
-
-      <section className={card}>
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-semibold">Headcount</h2>
-          {events.length > 0 && (
-            <a
-              href={`/weddings/${wedding.id}/export`}
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:border-rose-600 dark:border-zinc-700"
-            >
-              Download for caterer (CSV)
+    <div className="stagger flex flex-col gap-8">
+      <PageHeader
+        back={{ href: "/dashboard", label: "All weddings" }}
+        eyebrow={wedding.city ?? "Wedding"}
+        title={wedding.name}
+        sub={
+          <>
+            {guests.length} invites · {events.length} functions
+            {wedding.rsvpDeadline && ` · RSVP by ${ist(wedding.rsvpDeadline, { dateStyle: "medium" })}`}
+          </>
+        }
+        action={
+          events.length > 0 && (
+            <a href={`/weddings/${wedding.id}/export`} className={buttonClass("secondary")}>
+              ↓ Caterer CSV
             </a>
-          )}
-        </div>
+          )
+        }
+      />
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Stat label="Invites" value={<CountUp value={guests.length} />} sub={`${tally("not-invited")} not sent yet`} />
+        <Stat
+          label="Replied to all"
+          value={<CountUp value={events.length ? replied : 0} />}
+          sub={guests.length && events.length ? `${Math.round((replied / guests.length) * 100)}% of invites` : "Waiting for functions"}
+        />
+        <Stat label="Due a reminder" value={<CountUp value={tally("due")} />} sub={`quiet for ${REMIND_EVERY_DAYS}+ days`} tone="gold" />
+        <Stat
+          label={next ? `Expected · ${next.e.name}` : "Expected"}
+          value={next ? <CountUp value={predictions[next.i].expected} /> : "—"}
+          sub={next ? `likely ${predictions[next.i].low}–${predictions[next.i].high}` : "No upcoming function"}
+          tone="brand"
+        />
+      </div>
+
+      <nav
+        aria-label="Sections"
+        className="sticky top-[61px] z-20 -mx-4 overflow-x-auto bg-paper/85 px-4 py-2 backdrop-blur-md sm:mx-0 sm:rounded-full sm:border sm:border-line sm:px-2"
+      >
+        <ul className="flex gap-1 text-sm whitespace-nowrap">
+          {sections.map(([anchor, label]) => (
+            <li key={anchor}>
+              <a href={`#${anchor}`} className={buttonClass("ghost", "sm")}>
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <Card id="headcount" className="scroll-mt-32">
+        <SectionTitle title="Headcount" hint="Coming and Maybe count people. Can't come and No reply count invites." />
         {events.length === 0 ? (
-          <p className={muted}>Add a function below to start counting.</p>
+          <p className="text-muted">Add a function below to start counting.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="text-zinc-600 dark:text-zinc-400">
-                <tr>
-                  <th className="py-2 pr-4 font-medium">Function</th>
-                  <th className="py-2 pr-4 font-medium">Coming</th>
-                  <th className="py-2 pr-4 font-medium">Veg / Non-veg</th>
-                  <th className="py-2 pr-4 font-medium">Maybe</th>
-                  <th className="py-2 pr-4 font-medium">Can&apos;t come</th>
-                  <th className="py-2 pr-4 font-medium">No reply</th>
-                  <th className="py-2 font-medium">Expected</th>
-                </tr>
-              </thead>
-              <tbody>
-                {counts.map((c, i) => (
-                  <tr key={c.eventId} className="border-t border-zinc-200 dark:border-zinc-800">
-                    <td className="py-2 pr-4 font-medium">{c.name}</td>
-                    <td className="py-2 pr-4 text-lg font-semibold">{c.attending.people}</td>
-                    <td className="py-2 pr-4">
-                      {c.attending.veg} / {c.attending.nonVeg}
-                    </td>
-                    <td className="py-2 pr-4">{c.maybe.people} people</td>
-                    <td className="py-2 pr-4">{c.declined} invites</td>
-                    <td className="py-2 pr-4">{c.noReply} invites</td>
-                    <td className="py-2 whitespace-nowrap">
-                      <span className="text-lg font-semibold text-rose-700 dark:text-rose-400">
-                        {predictions[i].expected}
-                      </span>{" "}
-                      <span className={muted}>
-                        ({predictions[i].low}–{predictions[i].high})
-                      </span>
-                    </td>
+          <>
+            <div className="-mx-5 overflow-x-auto sm:-mx-6">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-sunken">
+                  <tr>
+                    <th className={th}>Function</th>
+                    <th className={th}>Expected</th>
+                    <th className={th}>Coming</th>
+                    <th className={th}>Veg / Non-veg</th>
+                    <th className={th}>Maybe</th>
+                    <th className={th}>Can&apos;t come</th>
+                    <th className={th}>No reply</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className={`mt-3 ${muted}`}>
-              Coming and Maybe count people. Can&apos;t come and No reply count invites (one per guest row).
-            </p>
-            <details className={`mt-2 ${muted}`}>
-              <summary className="cursor-pointer font-medium">How &ldquo;Expected&rdquo; is worked out</summary>
+                </thead>
+                <tbody>
+                  {counts.map((c, i) => (
+                    <tr key={c.eventId} className="border-t border-line transition-colors hover:bg-sunken/60">
+                      <td className={`${td} font-medium`}>{c.name}</td>
+                      <td className={`${td} whitespace-nowrap`}>
+                        <span className="font-display text-2xl font-semibold text-brand">
+                          <CountUp value={predictions[i].expected} />
+                        </span>{" "}
+                        <span className="text-xs text-muted tabular-nums">
+                          {predictions[i].low}–{predictions[i].high}
+                        </span>
+                      </td>
+                      <td className={`${td} font-semibold tabular-nums`}>{c.attending.people}</td>
+                      <td className={`${td} tabular-nums`}>
+                        {c.attending.veg} / {c.attending.nonVeg}
+                      </td>
+                      <td className={`${td} tabular-nums`}>{c.maybe.people}</td>
+                      <td className={`${td} tabular-nums`}>{c.declined}</td>
+                      <td className={`${td} tabular-nums`}>{c.noReply}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <details className="mt-5 rounded-xl bg-sunken p-4 text-sm text-muted">
+              <summary className="cursor-pointer font-medium text-ink">How &ldquo;Expected&rdquo; is worked out</summary>
               <p className="mt-2">
-                Each reply is weighted by how often that kind of guest really turns up: a family &ldquo;Coming&rdquo;
-                counts more than a colleague&apos;s, a &ldquo;Maybe&rdquo; counts for less, and a guest who never
-                replied still counts a little at the average party size. The range in brackets is where the real number
-                should land about 9 times out of 10.{" "}
+                Each reply is weighted by how often that kind of guest really turns up: a family &ldquo;Coming&rdquo; counts
+                more than a colleague&apos;s, a &ldquo;Maybe&rdquo; counts for less, and a guest who never replied still
+                counts a little at the average party size. The range is where the real number should land about 9 times out
+                of 10.{" "}
                 {calibration.events === 0
                   ? "These weights are starting assumptions. Record real turnout after each function and the predictions adjust to your guests."
                   : `Adjusted using real turnout from ${calibration.events} past function${calibration.events === 1 ? "" : "s"} (scaled by ${calibration.factor.toFixed(2)}).`}
               </p>
             </details>
-          </div>
+          </>
         )}
-      </section>
+      </Card>
 
       {started.length > 0 && (
-        <section className={card}>
-          <h2 className="mb-1 font-semibold">Actual turnout</h2>
-          <p className={`mb-4 ${muted}`}>
-            After a function, enter how many people came. It shows how close the prediction was and improves the next
-            ones.
-          </p>
-          <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+        <Card id="turnout" className="scroll-mt-32">
+          <SectionTitle
+            title="Actual turnout"
+            hint="After a function, enter how many people came. It shows how close the prediction was and improves the next ones."
+          />
+          <ul className="divide-y divide-line">
             {started.map(({ e, i }) => (
-              <li key={e.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <li key={e.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
                 <div>
                   <p className="font-medium">{e.name}</p>
-                  <p className={muted}>
+                  <p className="text-sm text-muted">
                     {e.actualCount == null
                       ? `Expected ${predictions[i].expected}. Not recorded yet.`
                       : `Came: ${e.actualCount} · Expected: ${predictions[i].expected} (${signed(errorPct(predictions[i].expected, e.actualCount))}) · Counting only "Coming": ${counts[i].attending.people} (${signed(errorPct(counts[i].attending.people, e.actualCount))})`}
@@ -166,26 +204,28 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
               </li>
             ))}
           </ul>
-        </section>
+        </Card>
       )}
 
       {events.length > 0 && guests.length > 0 && (
-        <section className={card}>
-          <h2 className="mb-1 font-semibold">Reminders</h2>
-          <p className={`mb-4 ${muted}`}>
-            {tally("complete")} replied to everything · {tally("due")} due a reminder · {tally("recent")} contacted in
-            the last {REMIND_EVERY_DAYS} days · {tally("not-invited")} not invited yet
-            {tally("closed") > 0 && ` · ${tally("closed")} missed the deadline`}
-          </p>
+        <Card id="reminders" className="scroll-mt-32">
+          <SectionTitle
+            title="Reminders"
+            hint={
+              <>
+                {tally("complete")} replied to everything · {tally("due")} due · {tally("recent")} contacted in the last{" "}
+                {REMIND_EVERY_DAYS} days · {tally("not-invited")} not invited yet
+                {tally("closed") > 0 && ` · ${tally("closed")} missed the deadline`}
+              </>
+            }
+          />
           {due.length === 0 ? (
-            <p className={muted}>
-              {tally("closed") > 0
-                ? "The RSVP deadline has passed, so reminders are off."
-                : "Nobody needs a reminder right now."}
+            <p className="rounded-xl bg-sunken p-4 text-sm text-muted">
+              {tally("closed") > 0 ? "The RSVP deadline has passed, so reminders are off." : "Nobody needs a reminder right now."}
               {tally("not-invited") > 0 && " Send invites from the guest list below first."}
             </p>
           ) : (
-            <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+            <ul className="divide-y divide-line">
               {due.map((g) => {
                 const missing = missingEvents(g, events).map((e) => e.name);
                 const text = reminderMessage({
@@ -196,10 +236,10 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                   missing,
                 });
                 return (
-                  <li key={g.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                  <li key={g.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                     <div>
                       <p className="font-medium">{g.name}</p>
-                      <p className={muted}>
+                      <p className="text-sm text-muted">
                         No reply for {missing.join(", ")} ·{" "}
                         {g.remindedAt
                           ? `reminded ${ago(g.remindedAt, now)} (${g.reminderCount}x)`
@@ -217,94 +257,74 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
               })}
             </ul>
           )}
-        </section>
+        </Card>
       )}
 
-      <section className={card}>
-        <h2 className="mb-1 font-semibold">Functions ({events.length})</h2>
+      <Card id="functions" className="scroll-mt-32">
+        <SectionTitle title={`Functions (${events.length})`} hint="Click a function to edit or delete it." />
         {events.length > 0 && (
-          <ul className={`mb-4 ${muted}`}>
+          <ul className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {events.map((e) => (
               <li key={e.id}>
-                <Link
-                  href={`/weddings/${wedding.id}/events/${e.id}`}
-                  className="font-medium text-zinc-900 underline decoration-zinc-400 underline-offset-2 hover:decoration-rose-600 dark:text-zinc-100"
-                >
-                  {e.name}
-                </Link>{" "}
-                ·{" "}
-                {ist(e.startsAt, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
-                {e.venue && ` · ${e.venue}`}
+                <Link href={`/weddings/${wedding.id}/events/${e.id}`} className="lift block rounded-xl border border-line bg-paper p-4">
+                  <p className="font-display text-lg font-semibold">{e.name}</p>
+                  <p className="mt-1 text-sm text-muted">
+                    {ist(e.startsAt, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
+                  </p>
+                  {e.venue && <p className="text-sm text-muted">{e.venue}</p>}
+                </Link>
               </li>
             ))}
           </ul>
         )}
         <AddEventForm action={addEvent.bind(null, wedding.id)} />
-      </section>
+      </Card>
 
-      <section className={card}>
-        <h2 className="mb-4 font-semibold">Add a guest</h2>
-        <AddGuestForm action={addGuest.bind(null, wedding.id)} />
-      </section>
-
-      <section className={card}>
-        <h2 className="mb-1 font-semibold">Import from CSV</h2>
-        <p className={`mb-4 ${muted}`}>
-          First row must be a header: <code>name,phone,side,relation</code>. If any row is wrong, nothing is imported.
-        </p>
-        <ImportGuestsForm action={importGuests.bind(null, wedding.id)} />
-      </section>
-
-      <section>
-        <h2 className="mb-3 font-semibold">Guest list ({guests.length})</h2>
+      <Card id="guests" className="scroll-mt-32">
+        <SectionTitle title={`Guest list (${guests.length})`} hint="Click a name to edit or remove a guest." />
         {guests.length === 0 ? (
-          <p className="text-zinc-600 dark:text-zinc-400">No guests yet.</p>
+          <p className="text-muted">No guests yet. Add them below or import a CSV.</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+          <div className="-mx-5 overflow-x-auto sm:-mx-6">
             <table className="w-full text-left text-sm">
-              <thead className="bg-zinc-50 dark:bg-zinc-900">
+              <thead className="bg-sunken">
                 <tr>
-                  <th className="px-3 py-2 font-medium">Name</th>
-                  <th className="px-3 py-2 font-medium">Phone</th>
-                  <th className="px-3 py-2 font-medium">Side</th>
+                  <th className={th}>Name</th>
+                  <th className={th}>Phone</th>
+                  <th className={th}>Side</th>
                   {events.map((e) => (
-                    <th key={e.id} className="px-3 py-2 font-medium">
+                    <th key={e.id} className={th}>
                       {e.name}
                     </th>
                   ))}
-                  <th className="px-3 py-2 font-medium">Invite</th>
+                  <th className={th}>Invite</th>
                 </tr>
               </thead>
               <tbody>
                 {guests.map((g) => {
                   const link = inviteLink(g.token, base);
-                  const text = inviteMessage({
-                    guestName: g.name,
-                    weddingName: wedding.name,
-                    link,
-                    deadline: wedding.rsvpDeadline,
-                  });
+                  const text = inviteMessage({ guestName: g.name, weddingName: wedding.name, link, deadline: wedding.rsvpDeadline });
                   return (
-                    <tr key={g.id} className="border-t border-zinc-200 dark:border-zinc-800">
-                      <td className="px-3 py-2">
+                    <tr key={g.id} className="border-t border-line transition-colors hover:bg-sunken/60">
+                      <td className={td}>
                         <Link
                           href={`/weddings/${wedding.id}/guests/${g.id}`}
                           aria-label={`Edit ${g.name}`}
-                          className="underline decoration-zinc-400 underline-offset-2 hover:decoration-rose-600"
+                          className="draw font-medium hover:text-brand"
                         >
                           {g.name}
                         </Link>
                       </td>
-                      <td className="px-3 py-2 font-mono">{g.phone}</td>
-                      <td className="px-3 py-2 capitalize">
+                      <td className={`${td} font-mono text-xs text-muted`}>{g.phone}</td>
+                      <td className={`${td} capitalize`}>
                         {g.side} · {g.relation}
                       </td>
                       {events.map((e) => (
-                        <td key={e.id} className="px-3 py-2 whitespace-nowrap">
-                          {replyLabel(g.rsvps.find((r) => r.eventId === e.id))}
+                        <td key={e.id} className={`${td} whitespace-nowrap`}>
+                          <Reply r={g.rsvps.find((r) => r.eventId === e.id)} />
                         </td>
                       ))}
-                      <td className="px-3 py-2">
+                      <td className={td}>
                         <div className="flex gap-2">
                           <WhatsAppSendButton
                             href={whatsappUrl(g.phone, text)}
@@ -314,9 +334,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                           />
                           <CopyLinkButton link={link} guestName={g.name} />
                         </div>
-                        <p className="mt-1 text-xs text-zinc-500">
-                          {g.invitedAt ? `Invited ${ago(g.invitedAt, now)}` : "Not invited yet"}
-                        </p>
+                        <p className="mt-1 text-xs text-muted">{g.invitedAt ? `Invited ${ago(g.invitedAt, now)}` : "Not invited yet"}</p>
                       </td>
                     </tr>
                   );
@@ -325,7 +343,26 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
             </table>
           </div>
         )}
-      </section>
-    </>
+      </Card>
+
+      <div id="add" className="grid scroll-mt-32 gap-8 lg:grid-cols-2">
+        <Card>
+          <SectionTitle title="Add a guest" />
+          <AddGuestForm action={addGuest.bind(null, wedding.id)} />
+        </Card>
+        <Card>
+          <SectionTitle
+            title="Import from CSV"
+            hint={
+              <>
+                Header row: <code className="rounded bg-sunken px-1">name,phone,side,relation</code>. If any row is wrong,
+                nothing is imported.
+              </>
+            }
+          />
+          <ImportGuestsForm action={importGuests.bind(null, wedding.id)} />
+        </Card>
+      </div>
+    </div>
   );
 }

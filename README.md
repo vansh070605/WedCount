@@ -24,6 +24,12 @@ npm test          # unit tests
 npm run test:db   # database tests on a throwaway SQLite file
 ```
 
+## Design system
+- **Tokens** in `app/globals.css`: paper, surface, ink, muted, line, brand (sindoor), gold (marigold), ok, danger, wa. Light and dark themes switch these variables only; components use the names (`bg-surface`, `text-brand`), never raw colours.
+- **Components** in `app/ui/kit.tsx`: `Button` / `ButtonLink` (primary, secondary, ghost, danger, whatsapp), `Card`, `PageHeader`, `SectionTitle`, `Stat`, `Badge`, `Ornament`, `inputClass`.
+- **Type:** Fraunces for headings, Geist for text.
+- **Motion:** buttons step up and press, linked cards lift, links draw their underline, app pages rise in on load, numbers count up. The landing page uses GSAP + ScrollTrigger (hero entrance, pinned "how it works" story on wide screens, scroll reveals, animated bars). Everything is server-rendered in its final state and rests under `prefers-reduced-motion`.
+
 ## Data model
 - **Wedding** has many **Events** (haldi, sangeet, wedding) and many **Guests**.
 - **Rsvp** is one guest's answer for one event: status, veg and non-veg counts, arrival time.

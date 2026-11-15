@@ -2,17 +2,16 @@
 
 import { startTransition, useActionState, useState } from "react";
 import type { FormState } from "@/app/actions";
+import { buttonClass, inputClass } from "@/app/ui/kit";
 
 type Action = (state: FormState, fd: FormData) => Promise<FormState>;
 
-export const input =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-2 focus:outline-rose-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
-const button =
-  "rounded-md bg-rose-700 px-4 py-2 text-sm font-medium text-white hover:bg-rose-800 disabled:opacity-60";
+export const input = inputClass;
+const button = buttonClass("primary", "md");
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+    <label className="flex flex-col gap-1.5 text-sm font-medium text-ink">
       {label}
       {children}
     </label>
@@ -31,15 +30,15 @@ const keepValues = (formAction: (fd: FormData) => void) => (ev: React.FormEvent<
 function Status({ state }: { state: FormState }) {
   return (
     <div aria-live="polite" className="text-sm">
-      {state.error && <p className="text-red-700 dark:text-red-400">{state.error}</p>}
+      {state.error && <p className="text-danger">{state.error}</p>}
       {state.errors && (
-        <ul className="mt-1 list-disc pl-5 text-red-700 dark:text-red-400">
+        <ul className="mt-1 list-disc pl-5 text-danger">
           {state.errors.map((e) => (
             <li key={e}>{e}</li>
           ))}
         </ul>
       )}
-      {state.message && <p className="text-green-700 dark:text-green-400">{state.message}</p>}
+      {state.message && <p className="text-ok">{state.message}</p>}
     </div>
   );
 }
@@ -67,7 +66,7 @@ export function AuthForm({ action, mode }: { action: Action; mode: "login" | "si
         />
       </Field>
       <Status state={state} />
-      <button disabled={pending} className={button}>
+      <button disabled={pending} className={buttonClass("primary", "lg", "w-full")}>
         {pending ? "Please wait…" : mode === "signup" ? "Create account" : "Log in"}
       </button>
     </form>
@@ -89,7 +88,7 @@ export function CreateWeddingForm({ action }: { action: Action }) {
       </Field>
       <div className="sm:col-span-3">
         <Status state={state} />
-        <button disabled={pending} className={`${button} mt-2`}>
+        <button disabled={pending} className={`${button} mt-3 w-full sm:w-auto`}>
           {pending ? "Creating…" : "Create wedding"}
         </button>
       </div>
@@ -106,7 +105,7 @@ export function AddGuestForm({ action, guest }: { action: Action; guest?: GuestD
     <form
       action={formAction}
       onSubmit={guest ? keepValues(formAction) : undefined}
-      className="grid gap-3 sm:grid-cols-4 sm:items-end"
+      className="grid gap-4 sm:grid-cols-2 sm:items-end"
     >
       <Field label="Name">
         <input name="name" required defaultValue={guest?.name} className={input} />
@@ -128,9 +127,9 @@ export function AddGuestForm({ action, guest }: { action: Action; guest?: GuestD
           <option value="other">Other</option>
         </select>
       </Field>
-      <div className="sm:col-span-4">
+      <div className="sm:col-span-2">
         <Status state={state} />
-        <button disabled={pending} className={`${button} mt-2`}>
+        <button disabled={pending} className={`${button} mt-3 w-full sm:w-auto`}>
           {pending ? "Saving…" : guest ? "Save changes" : "Add guest"}
         </button>
       </div>
@@ -141,7 +140,7 @@ export function AddGuestForm({ action, guest }: { action: Action; guest?: GuestD
 export function ImportGuestsForm({ action }: { action: Action }) {
   const [state, formAction, pending] = useActionState(action, {});
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form action={formAction} className="flex flex-col gap-4">
       <Field label="CSV file (columns: name, phone, side, relation)">
         <input name="file" type="file" accept=".csv,text/csv" required className={input} />
       </Field>
@@ -169,7 +168,7 @@ export function CopyLinkButton({ link, guestName }: { link: string; guestName: s
           window.prompt(`Copy ${guestName}'s invite link:`, link);
         }
       }}
-      className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium hover:border-rose-600 dark:border-zinc-700"
+      className={buttonClass("secondary", "sm")}
     >
       <span aria-live="polite">{copied ? "Copied" : "Copy link"}</span>
     </button>
@@ -206,7 +205,7 @@ export function AddEventForm({ action, event }: { action: Action; event?: EventD
       </Field>
       <div className="sm:col-span-4">
         <Status state={state} />
-        <button disabled={pending} className={`${button} mt-2`}>
+        <button disabled={pending} className={`${button} mt-3 w-full sm:w-auto`}>
           {pending ? "Saving…" : event ? "Save changes" : "Add function"}
         </button>
       </div>
@@ -235,7 +234,7 @@ export function WhatsAppSendButton({
       onClick={() => {
         onSend().catch(() => {});
       }}
-      className="rounded-md bg-green-700 px-2 py-1 text-xs font-medium whitespace-nowrap text-white hover:bg-green-800"
+      className={buttonClass("whatsapp", "sm")}
     >
       {label}
     </a>
@@ -257,7 +256,7 @@ export function ActualCountForm({ action, current, eventName }: { action: Action
         aria-label={`People who actually came to ${eventName}`}
         className={`${input} w-24`}
       />
-      <button disabled={pending} className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium dark:border-zinc-700">
+      <button disabled={pending} className={buttonClass("secondary", "md")}>
         {pending ? "Saving…" : current == null ? "Save" : "Update"}
       </button>
       <Status state={state} />
@@ -274,7 +273,7 @@ export function DeleteButton({ action, confirmText, label }: { action: () => Pro
         if (!window.confirm(confirmText)) ev.preventDefault();
       }}
     >
-      <button className="rounded-md border border-red-700 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-500 dark:text-red-400 dark:hover:bg-red-950">
+      <button className={buttonClass("danger", "md")}>
         {label}
       </button>
     </form>

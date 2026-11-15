@@ -1,18 +1,23 @@
 import Link from "next/link";
 import { signup } from "@/app/actions";
 import { AuthForm } from "@/app/ui/forms";
+import { AuthShell } from "@/app/ui/auth-shell";
 
 export default function SignupPage() {
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-4 py-12">
-      <h1 className="font-display text-3xl font-semibold">Create your planner account</h1>
+    <AuthShell
+      title="Start planning"
+      sub="Create your planner account. Add your first wedding in under a minute."
+      footer={
+        <>
+          Already have an account?{" "}
+          <Link href="/login" className="draw font-medium text-brand">
+            Log in
+          </Link>
+        </>
+      }
+    >
       <AuthForm action={signup} mode="signup" />
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        Already have an account?{" "}
-        <Link href="/login" className="font-medium text-rose-700 underline dark:text-rose-400">
-          Log in
-        </Link>
-      </p>
-    </main>
+    </AuthShell>
   );
 }
