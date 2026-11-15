@@ -42,7 +42,7 @@ async function Dashboard() {
   const now = new Date();
 
   return (
-    <div className="stagger flex flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <PageHeader
         eyebrow={`Namaste, ${planner.name}`}
         title="Your weddings"
@@ -55,7 +55,7 @@ async function Dashboard() {
       />
 
       {weddings.length === 0 ? (
-        <div className="jaali flex flex-col items-center gap-3 rounded-card border border-dashed border-line px-6 py-14 text-center">
+        <div className="rise jaali flex flex-col items-center gap-3 rounded-card border border-dashed border-line px-6 py-14 text-center [--d:120ms]">
           <Mark className="size-12" />
           <p className="font-display text-2xl font-semibold">Your first wedding starts here</p>
           <p className="max-w-md text-muted">Create a wedding below, add its functions and guests, then send invites on WhatsApp.</p>
@@ -68,8 +68,8 @@ async function Dashboard() {
             const replied = repliedBy.get(w.id) ?? 0;
             const pct = w._count.guests ? Math.round((replied / w._count.guests) * 100) : 0;
             return (
-              <li key={w.id}>
-                <Link href={`/weddings/${w.id}`} className="lift flex h-full flex-col rounded-card border border-line bg-surface p-6 shadow-card">
+              <li key={w.id} className="reveal">
+                <Link href={`/weddings/${w.id}`} className="spot lift flex h-full flex-col rounded-card border border-line bg-surface p-6 shadow-card">
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-display text-xl font-semibold">{w.name}</p>
                     {done ? <Badge>Done</Badge> : next ? <Badge tone="brand">Upcoming</Badge> : <Badge tone="gold">Setting up</Badge>}

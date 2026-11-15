@@ -45,7 +45,7 @@ export function RsvpForm({
       {events.map((e) => {
         const going = status[e.id] === "attending" || status[e.id] === "maybe";
         return (
-          <fieldset key={e.id} disabled={!open} className="rounded-card border border-line bg-surface p-5 shadow-card transition-colors has-checked:border-gold/60 sm:p-6">
+          <fieldset key={e.id} disabled={!open} className="reveal rounded-card border border-line bg-surface p-5 shadow-card transition-colors has-checked:border-gold/60 sm:p-6">
             <legend className="px-2 font-display text-xl font-semibold">{e.name}</legend>
             <p className="mb-4 text-sm text-muted">
               {e.when}

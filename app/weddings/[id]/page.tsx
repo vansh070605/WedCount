@@ -74,7 +74,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
   ];
 
   return (
-    <div className="stagger flex flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <PageHeader
         back={{ href: "/dashboard", label: "All weddings" }}
         eyebrow={wedding.city ?? "Wedding"}
@@ -94,7 +94,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
         }
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="rise grid grid-cols-2 gap-4 [--d:120ms] lg:grid-cols-4">
         <Stat label="Invites" value={<CountUp value={guests.length} />} sub={`${tally("not-invited")} not sent yet`} />
         <Stat
           label="Replied to all"
@@ -120,7 +120,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
           <>
             <ul className="flex flex-col gap-3 sm:hidden">
               {counts.map((c, i) => (
-                <li key={c.eventId} className="rounded-xl border border-line bg-paper p-4">
+                <li key={c.eventId} className="reveal-row rounded-xl border border-line bg-paper p-4">
                   <div className="flex items-baseline justify-between gap-3">
                     <p className="font-display text-lg font-semibold">{c.name}</p>
                     <p className="text-right">
@@ -211,7 +211,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
           />
           <ul className="divide-y divide-line">
             {started.map(({ e, i }) => (
-              <li key={e.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
+              <li key={e.id} className="reveal-row flex flex-wrap items-center justify-between gap-3 py-4">
                 <div>
                   <p className="font-medium">{e.name}</p>
                   <p className="text-sm text-muted">
@@ -256,7 +256,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                   missing,
                 });
                 return (
-                  <li key={g.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <li key={g.id} className="reveal-row flex flex-wrap items-center justify-between gap-3 py-3">
                     <div>
                       <p className="font-medium">{g.name}</p>
                       <p className="text-sm text-muted">
@@ -286,7 +286,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
           <ul className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {events.map((e) => (
               <li key={e.id}>
-                <Link href={`/weddings/${wedding.id}/events/${e.id}`} className="lift block rounded-xl border border-line bg-paper p-4">
+                <Link href={`/weddings/${wedding.id}/events/${e.id}`} className="spot lift block rounded-xl border border-line bg-paper p-4">
                   <p className="font-display text-lg font-semibold">{e.name}</p>
                   <p className="mt-1 text-sm text-muted">
                     {ist(e.startsAt, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
@@ -310,7 +310,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
               const link = inviteLink(g.token, base);
               const text = inviteMessage({ guestName: g.name, weddingName: wedding.name, link, deadline: wedding.rsvpDeadline });
               return (
-                <li key={g.id} className="py-4 first:pt-0">
+                <li key={g.id} className="reveal-row py-4 first:pt-0">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <Link href={`/weddings/${wedding.id}/guests/${g.id}`} aria-label={`Edit ${g.name}`} className="font-medium">
