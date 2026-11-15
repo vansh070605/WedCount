@@ -4,13 +4,18 @@ import { prisma } from "@/lib/db";
 import { isRsvpOpen } from "@/lib/rsvp";
 import { saveRsvp } from "@/app/actions";
 import { RsvpForm, type EventAnswer } from "@/app/ui/rsvp-form";
+import { Mark } from "@/app/ui/brand";
+import { Ornament } from "@/app/ui/kit";
 
 export default function RsvpPage(props: PageProps<"/r/[token]">) {
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-10">
-      <Suspense fallback={<p className="text-zinc-500">Loading your invite…</p>}>
+    <main className="relative flex-1">
+      <div aria-hidden className="jaali absolute inset-x-0 top-0 h-72 opacity-60 [mask-image:linear-gradient(to_bottom,black,transparent)]" />
+      <div className="stagger relative mx-auto flex w-full max-w-xl flex-col gap-8 px-4 py-12">
+      <Suspense fallback={<p className="text-center text-muted">Loading your invite…</p>}>
         <Rsvp params={props.params} />
       </Suspense>
+      </div>
     </main>
   );
 }
@@ -50,10 +55,13 @@ async function Rsvp({ params }: { params: Promise<{ token: string }> }) {
 
   return (
     <>
-      <header>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">Namaste {guest.name},</p>
-        <h1 className="mt-1 font-display text-3xl font-semibold">You&apos;re invited to {wedding.name}</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+      <header className="flex flex-col items-center text-center">
+        <Mark className="size-10" />
+        <p className="mt-5 text-sm text-muted">Namaste {guest.name},</p>
+        <p className="mt-1 text-xs font-semibold tracking-[0.2em] text-gold uppercase">You&apos;re invited to</p>
+        <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">{wedding.name}</h1>
+        <Ornament className="mt-5 w-full max-w-xs" />
+        <p className="mt-4 text-sm text-muted">
           {wedding.city}
           {wedding.rsvpDeadline &&
             ` · ${open ? "Please reply by" : "Replies closed on"} ${ist(wedding.rsvpDeadline, { dateStyle: "medium" })}`}
@@ -61,10 +69,11 @@ async function Rsvp({ params }: { params: Promise<{ token: string }> }) {
       </header>
 
       {events.length === 0 ? (
-        <p className="text-zinc-600 dark:text-zinc-400">The family hasn&apos;t added the functions yet. Check back soon.</p>
+        <p className="text-center text-muted">The family hasn&apos;t added the functions yet. Check back soon.</p>
       ) : (
         <RsvpForm action={saveRsvp.bind(null, token)} events={events} open={open} />
       )}
+      <p className="text-center text-xs text-muted">Sent with WedCount · Only you can see this invite</p>
     </>
   );
 }

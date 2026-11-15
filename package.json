@@ -14,7 +14,9 @@
     "test:db": "node scripts/test-db.mjs"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@prisma/client": "^6.19.3",
+    "gsap": "^3.15.1",
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",

@@ -8,8 +8,8 @@ import { AddGuestForm, DeleteButton } from "@/app/ui/forms";
 
 export default function EditGuestPage(props: PageProps<"/weddings/[id]/guests/[guestId]">) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10">
-      <Suspense fallback={<p className="text-zinc-500">Loading guest…</p>}>
+    <main className="stagger mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6">
+      <Suspense fallback={<p className="text-muted">Loading guest…</p>}>
         <EditGuest params={props.params} />
       </Suspense>
     </main>
@@ -29,22 +29,22 @@ async function EditGuest({ params }: { params: Promise<{ id: string; guestId: st
   return (
     <>
       <header>
-        <Link href={`/weddings/${id}`} className="text-sm text-zinc-600 underline dark:text-zinc-400">
+        <Link href={`/weddings/${id}`} className="draw text-sm text-muted hover:text-ink">
           ← {guest.wedding.name}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">Edit {guest.name}</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">Edit {guest.name}</h1>
+        <p className="text-sm text-muted">
           Their invite link stays the same, so links you already sent keep working.
         </p>
       </header>
 
-      <section className="rounded-lg border border-zinc-200 p-5 dark:border-zinc-800">
+      <section className="rounded-card border border-line bg-surface p-5 shadow-card sm:p-6">
         <AddGuestForm action={updateGuest.bind(null, guest.id)} guest={guest} />
       </section>
 
-      <section className="rounded-lg border border-red-200 p-5 dark:border-red-900">
-        <h2 className="mb-1 font-semibold">Remove from guest list</h2>
-        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+      <section className="rounded-card border border-danger/30 bg-surface p-5 sm:p-6">
+        <h2 className="mb-1 font-display text-xl font-semibold">Remove from guest list</h2>
+        <p className="mb-4 text-sm text-muted">
           Deletes {guest.name}, their {guest._count.rsvps} saved repl{guest._count.rsvps === 1 ? "y" : "ies"}, and
           their invite link. This can&apos;t be undone.
         </p>
