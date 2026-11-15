@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type { FormState } from "@/app/actions";
 
 type Action = (state: FormState, fd: FormData) => Promise<FormState>;
@@ -134,5 +134,28 @@ export function ImportGuestsForm({ action }: { action: Action }) {
         {pending ? "Importing…" : "Import guests"}
       </button>
     </form>
+  );
+}
+
+export function CopyLinkButton({ link, guestName }: { link: string; guestName: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      aria-label={`Copy invite link for ${guestName}`}
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(link);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch {
+          // Clipboard blocked (permissions, plain http): let the planner copy it by hand.
+          window.prompt(`Copy ${guestName}'s invite link:`, link);
+        }
+      }}
+      className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium hover:border-rose-600 dark:border-zinc-700"
+    >
+      <span aria-live="polite">{copied ? "Copied" : "Copy link"}</span>
+    </button>
   );
 }

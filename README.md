@@ -3,7 +3,7 @@
 WhatsApp-based guest RSVP and headcount prediction for Indian wedding planners.
 
 ## Status
-Day 4: guests reply per function (Haldi, Sangeet, Wedding) from their personal link `/r/<token>`.
+Day 5: planners send each guest their invite on WhatsApp in one click.
 
 ## Run locally
 ```bash
@@ -43,6 +43,11 @@ College Friend,+91 90000 11111,groom,friend
 - Each guest has a private link `/r/<token>`. The token is 128 random bits; it is the guest's only credential.
 - Per function: Coming / Maybe / Can't come, veg and non-veg counts (max 20), optional arrival time (IST).
 - Guests can change their reply until the wedding's RSVP deadline (end of that day, IST). After it, the page is read-only.
+
+## Sending invites
+- Each guest row has a **WhatsApp** button. It opens WhatsApp (app or web) to that guest's number with the invite message and their personal link already typed. The planner presses send.
+- **Copy link** copies just the link, for SMS or email.
+- Links use `APP_URL` from `.env`. In production the app refuses to start sending links if `APP_URL` is missing, so guests never get a `localhost` link.
 
 ## Security notes
 - Passwords hashed with scrypt (Node built-in). Sessions stored server-side; DB keeps only a SHA-256 of the cookie token.

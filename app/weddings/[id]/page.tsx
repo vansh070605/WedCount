@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { requireOwnedWedding, requirePlanner } from "@/lib/auth";
 import { addGuest, importGuests } from "@/app/actions";
-import { AddGuestForm, ImportGuestsForm } from "@/app/ui/forms";
+import { AddGuestForm, CopyLinkButton, ImportGuestsForm } from "@/app/ui/forms";
+import { appUrl, inviteLink, inviteMessage, whatsappUrl } from "@/lib/invite";
 
 export default function WeddingPage(props: PageProps<"/weddings/[id]">) {
   return (
@@ -20,6 +21,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
   const planner = await requirePlanner();
   const wedding = await requireOwnedWedding(planner.id, id);
   const guests = await prisma.guest.findMany({ where: { weddingId: wedding.id }, orderBy: { name: "asc" } });
+  const base = appUrl();
 
   return (
     <>
@@ -61,17 +63,41 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                   <th className="px-3 py-2 font-medium">Phone</th>
                   <th className="px-3 py-2 font-medium">Side</th>
                   <th className="px-3 py-2 font-medium">Relation</th>
+                  <th className="px-3 py-2 font-medium">Invite</th>
                 </tr>
               </thead>
               <tbody>
-                {guests.map((g) => (
-                  <tr key={g.id} className="border-t border-zinc-200 dark:border-zinc-800">
-                    <td className="px-3 py-2">{g.name}</td>
-                    <td className="px-3 py-2 font-mono">{g.phone}</td>
-                    <td className="px-3 py-2 capitalize">{g.side}</td>
-                    <td className="px-3 py-2 capitalize">{g.relation}</td>
-                  </tr>
-                ))}
+                {guests.map((g) => {
+                  const link = inviteLink(g.token, base);
+                  const text = inviteMessage({
+                    guestName: g.name,
+                    weddingName: wedding.name,
+                    link,
+                    deadline: wedding.rsvpDeadline,
+                  });
+                  return (
+                    <tr key={g.id} className="border-t border-zinc-200 dark:border-zinc-800">
+                      <td className="px-3 py-2">{g.name}</td>
+                      <td className="px-3 py-2 font-mono">{g.phone}</td>
+                      <td className="px-3 py-2 capitalize">{g.side}</td>
+                      <td className="px-3 py-2 capitalize">{g.relation}</td>
+                      <td className="px-3 py-2">
+                        <div className="flex gap-2">
+                          <a
+                            href={whatsappUrl(g.phone, text)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Send invite to ${g.name} on WhatsApp`}
+                            className="rounded-md bg-green-700 px-2 py-1 text-xs font-medium text-white hover:bg-green-800"
+                          >
+                            WhatsApp
+                          </a>
+                          <CopyLinkButton link={link} guestName={g.name} />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
