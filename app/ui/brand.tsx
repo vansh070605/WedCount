@@ -28,7 +28,7 @@ export function Wordmark({ href = "/" }: { href?: string }) {
 // Top bar for logged-in pages.
 export function AppHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-paper/85 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-line bg-paper">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
         <Wordmark href="/dashboard" />
         <nav className="flex items-center gap-2 text-sm">

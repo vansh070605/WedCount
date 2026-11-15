@@ -6,6 +6,22 @@ import { useEffect, useRef, useState } from "react";
 export function SectionTabs({ sections }: { sections: [id: string, label: string][] }) {
   const [active, setActive] = useState(sections[0]?.[0]);
   const strip = useRef<HTMLUListElement>(null);
+  const bar = useRef<HTMLElement>(null);
+  const [stuck, setStuck] = useState(false);
+
+  const first = sections[0]?.[0];
+  useEffect(() => {
+    // Docked under the header? Then it takes the hanging shape (see .hang in globals.css).
+    // Not docked means we're above the first section, so the first tab is the current one.
+    const onScroll = () => {
+      const docked = (bar.current?.getBoundingClientRect().top ?? 1e9) <= 64.5;
+      setStuck(docked);
+      if (!docked) setActive(first);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [first]);
 
   useEffect(() => {
     const els = sections.map(([id]) => document.getElementById(id)).filter((e): e is HTMLElement => !!e);
@@ -29,7 +45,12 @@ export function SectionTabs({ sections }: { sections: [id: string, label: string
   }, [active]);
 
   return (
-    <nav aria-label="Sections" className="sticky top-16 z-20 -mx-4 border-b border-line bg-paper sm:mx-0 sm:rounded-full sm:border sm:bg-surface sm:shadow-card">
+    <nav
+      ref={bar}
+      aria-label="Sections"
+      data-stuck={stuck || undefined}
+      className="hang sticky top-16 z-40 -mx-4 border-b border-line bg-paper transition-[border-radius,border-color] duration-200 sm:mx-0 sm:rounded-[1.25rem] sm:border sm:bg-surface sm:shadow-card sm:data-stuck:rounded-t-none sm:data-stuck:border-t-transparent sm:data-stuck:bg-paper"
+    >
       <ul
         ref={strip}
         className="no-scrollbar flex gap-1 overflow-x-auto px-4 py-2 [mask-image:linear-gradient(to_right,transparent,black_16px,black_calc(100%-24px),transparent)] sm:px-2 sm:[mask-image:none]"
