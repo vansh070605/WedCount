@@ -218,3 +218,26 @@ export function WhatsAppSendButton({
     </a>
   );
 }
+
+export function ActualCountForm({ action, current, eventName }: { action: Action; current: number | null; eventName: string }) {
+  const [state, formAction, pending] = useActionState(action, {});
+  return (
+    <form action={formAction} className="flex flex-wrap items-center gap-2">
+      <input
+        name="actual"
+        type="number"
+        min={0}
+        max={99999}
+        required
+        inputMode="numeric"
+        defaultValue={current ?? undefined}
+        aria-label={`People who actually came to ${eventName}`}
+        className={`${input} w-24`}
+      />
+      <button disabled={pending} className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium dark:border-zinc-700">
+        {pending ? "Saving…" : current == null ? "Save" : "Update"}
+      </button>
+      <Status state={state} />
+    </form>
+  );
+}

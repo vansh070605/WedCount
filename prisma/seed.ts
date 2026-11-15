@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../lib/password";
 import { newGuestToken } from "../lib/guests";
+import { predictEvent } from "../lib/predict";
 
 const prisma = new PrismaClient();
 
@@ -81,6 +82,57 @@ async function main() {
     rsvps: await prisma.rsvp.count({ where: { guest: { weddingId: wedding.id } } }),
   };
   console.log("Seeded", counts);
+
+  await seedPastWedding(planner.id);
+}
+
+// A finished wedding with recorded turnout, so the demo planner's predictions have history to calibrate on.
+// Its guests came at about 80% of what the starting assumptions predict.
+async function seedPastWedding(plannerId: string) {
+  const past = await prisma.wedding.create({
+    data: {
+      plannerId,
+      name: "Demo (past): Ananya & Kabir",
+      city: "Udaipur",
+      rsvpDeadline: new Date("2025-02-01T23:59:59+05:30"),
+      events: {
+        create: [
+          { name: "Sangeet", startsAt: new Date("2025-02-14T19:00:00+05:30"), venue: "Lake Pichola Lawns" },
+          { name: "Wedding", startsAt: new Date("2025-02-15T20:00:00+05:30"), venue: "Lake Pichola Lawns" },
+        ],
+      },
+    },
+    include: { events: true },
+  });
+
+  for (let i = 0; i < 60; i++) {
+    const guest = await prisma.guest.create({
+      data: {
+        weddingId: past.id,
+        name: `Past Guest ${i + 1}`,
+        phone: `+9197${String(10000000 + i).padStart(8, "0")}`,
+        side: i % 2 ? "groom" : "bride",
+        relation: relations[i % relations.length],
+        token: newGuestToken(),
+        invitedAt: new Date("2025-01-10T10:00:00+05:30"),
+      },
+    });
+    if (i % 6 === 5) continue; // never replied
+    for (const event of past.events) {
+      const status = i % 7 === 0 ? "declined" : i % 5 === 0 ? "maybe" : "attending";
+      const people = status === "declined" ? 0 : 1 + (i % 3);
+      await prisma.rsvp.create({
+        data: { guestId: guest.id, eventId: event.id, status, vegCount: people, nonVegCount: 0 },
+      });
+    }
+  }
+
+  const guests = await prisma.guest.findMany({ where: { weddingId: past.id }, select: { relation: true, rsvps: true } });
+  for (const event of past.events) {
+    const actualCount = Math.round(predictEvent(event.id, guests).expected * 0.8);
+    await prisma.event.update({ where: { id: event.id }, data: { actualCount } });
+  }
+  console.log("Seeded past wedding with turnout for calibration");
 }
 
 main()

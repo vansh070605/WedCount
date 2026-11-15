@@ -179,3 +179,19 @@ export async function markSent(guestId: string, kind: "invite" | "reminder") {
   });
   revalidatePath(`/weddings/${guest.weddingId}`);
 }
+
+export async function recordActual(eventId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const planner = await requirePlanner();
+  const event = await prisma.event.findFirst({
+    where: { id: eventId, wedding: { plannerId: planner.id } },
+    select: { weddingId: true, startsAt: true },
+  });
+  if (!event) return { error: "Function not found." };
+  if (event.startsAt > new Date()) return { error: "You can record turnout once the function has started." };
+  const raw = text(fd, "actual");
+  if (!/^\d{1,5}$/.test(raw)) return { error: "Enter the number of people who came." };
+
+  await prisma.event.update({ where: { id: eventId }, data: { actualCount: Number(raw) } });
+  revalidatePath(`/weddings/${event.weddingId}`);
+  return { message: "Saved." };
+}

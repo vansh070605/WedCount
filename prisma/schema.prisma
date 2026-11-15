@@ -49,6 +49,8 @@ model Event {
   name      String
   startsAt  DateTime
   venue     String?
+  // People who actually came, entered by the planner afterwards. Calibrates future predictions.
+  actualCount Int?
   rsvps     Rsvp[]
 
   @@index([weddingId])
