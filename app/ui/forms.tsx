@@ -159,3 +159,34 @@ export function CopyLinkButton({ link, guestName }: { link: string; guestName: s
     </button>
   );
 }
+
+export function AddEventForm({ action }: { action: Action }) {
+  const [state, formAction, pending] = useActionState(action, {});
+  return (
+    <form action={formAction} className="grid gap-3 sm:grid-cols-4 sm:items-end">
+      <Field label="Function">
+        <input name="name" required placeholder="Sangeet" list="function-names" className={input} />
+        <datalist id="function-names">
+          {["Haldi", "Mehendi", "Sangeet", "Wedding", "Reception"].map((n) => (
+            <option key={n} value={n} />
+          ))}
+        </datalist>
+      </Field>
+      <Field label="Date">
+        <input name="date" type="date" required className={input} />
+      </Field>
+      <Field label="Time (IST)">
+        <input name="time" type="time" required className={input} />
+      </Field>
+      <Field label="Venue">
+        <input name="venue" placeholder="Rambagh Lawns" className={input} />
+      </Field>
+      <div className="sm:col-span-4">
+        <Status state={state} />
+        <button disabled={pending} className={`${button} mt-2`}>
+          {pending ? "Adding…" : "Add function"}
+        </button>
+      </div>
+    </form>
+  );
+}
