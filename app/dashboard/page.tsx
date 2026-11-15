@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { requirePlanner } from "@/lib/auth";
 import { createWedding } from "@/app/actions";
 import { CreateWeddingForm } from "@/app/ui/forms";
-import { Badge, Card, PageHeader, SectionTitle } from "@/app/ui/kit";
+import { Badge, Card, PageHeader, SectionTitle, buttonClass } from "@/app/ui/kit";
 import { Mark } from "@/app/ui/brand";
 
 export default function DashboardPage() {
@@ -43,7 +43,16 @@ async function Dashboard() {
 
   return (
     <div className="stagger flex flex-col gap-8">
-      <PageHeader eyebrow={`Namaste, ${planner.name}`} title="Your weddings" sub={`${weddings.length} in your account`} />
+      <PageHeader
+        eyebrow={`Namaste, ${planner.name}`}
+        title="Your weddings"
+        sub={`${weddings.length} in your account`}
+        action={
+          <a href="#new" className={buttonClass("primary", "md", "w-full sm:w-auto")}>
+            + New wedding
+          </a>
+        }
+      />
 
       {weddings.length === 0 ? (
         <div className="jaali flex flex-col items-center gap-3 rounded-card border border-dashed border-line px-6 py-14 text-center">
@@ -97,7 +106,7 @@ async function Dashboard() {
         </ul>
       )}
 
-      <Card>
+      <Card id="new" className="scroll-mt-24">
         <SectionTitle title="New wedding" hint="You can add functions, guests and the RSVP deadline next." />
         <CreateWeddingForm action={createWedding} />
       </Card>

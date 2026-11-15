@@ -37,7 +37,7 @@
     --gold-soft: #3a2c12;
     --ok: #5fbf86;
     --danger: #f97066;
-    --wa: #3ccf79;
+    --wa: #1d8a4b; /* dark enough for white text */
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
     --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.45), 0 18px 40px -16px rgb(0 0 0 / 0.7);
   }
@@ -129,6 +129,41 @@ body {
   .stagger > *:nth-child(5) { animation-delay: 240ms; }
   .stagger > *:nth-child(6) { animation-delay: 300ms; }
   .stagger > *:nth-child(n + 7) { animation-delay: 360ms; }
+
+  /* Horizontal strips that scroll by swipe, without a visible scrollbar. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* A bar that hangs from the sticky header: it covers the header's bottom border, and on wider screens its
+     top corners flare outwards (inverted radius), so header and bar read as one shape. */
+  @media (min-width: 640px) {
+    .hang[data-stuck]::before,
+    .hang[data-stuck]::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+      border-top: 1px solid var(--line);
+    }
+    .hang[data-stuck]::before {
+      right: 100%;
+      border-right: 1px solid var(--line);
+      border-top-right-radius: 20px;
+      box-shadow: 10px -10px 0 0 var(--paper);
+    }
+    .hang[data-stuck]::after {
+      left: 100%;
+      border-left: 1px solid var(--line);
+      border-top-left-radius: 20px;
+      box-shadow: -10px -10px 0 0 var(--paper);
+    }
+  }
 
   /* Faint jaali (lattice) pattern for brand panels. */
   .jaali {

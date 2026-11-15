@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requirePlanner } from "@/lib/auth";
 import { deleteGuest, updateGuest } from "@/app/actions";
 import { AddGuestForm, DeleteButton } from "@/app/ui/forms";
+import { BackLink } from "@/app/ui/kit";
 
 export default function EditGuestPage(props: PageProps<"/weddings/[id]/guests/[guestId]">) {
   return (
@@ -29,10 +29,8 @@ async function EditGuest({ params }: { params: Promise<{ id: string; guestId: st
   return (
     <>
       <header>
-        <Link href={`/weddings/${id}`} className="draw text-sm text-muted hover:text-ink">
-          ← {guest.wedding.name}
-        </Link>
-        <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">Edit {guest.name}</h1>
+        <BackLink href={`/weddings/${id}`} label={guest.wedding.name} />
+        <h1 className="mt-5 font-display text-3xl font-semibold tracking-tight sm:text-4xl">Edit {guest.name}</h1>
         <p className="text-sm text-muted">
           Their invite link stays the same, so links you already sent keep working.
         </p>

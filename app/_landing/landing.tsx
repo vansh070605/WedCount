@@ -367,7 +367,7 @@ export function Landing() {
         {/* Hero */}
         <section className="relative">
           <Petals />
-          <div className="mx-auto grid min-h-[calc(100svh-4.5rem)] w-full max-w-6xl items-center gap-12 px-4 pt-10 pb-24 sm:px-6 lg:grid-cols-[1.1fr_1fr]">
+          <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pt-10 pb-20 sm:px-6 lg:min-h-[calc(100svh-4.5rem)] lg:grid-cols-[1.1fr_1fr] lg:pb-24">
             <div>
               <p data-hero-fade className="text-xs font-semibold tracking-[0.2em] text-gold uppercase">
                 For Indian wedding planners
@@ -392,10 +392,10 @@ export function Landing() {
                 give the caterer one number per function, with a likely range.
               </p>
               <div data-hero-fade className="mt-8 flex flex-wrap gap-3">
-                <ButtonLink href="/signup" size="lg">
+                <ButtonLink href="/signup" size="lg" className="w-full sm:w-auto">
                   Start planning a wedding
                 </ButtonLink>
-                <ButtonLink href="#how" variant="secondary" size="lg">
+                <ButtonLink href="#how" variant="secondary" size="lg" className="w-full sm:w-auto">
                   See how it works
                 </ButtonLink>
               </div>
@@ -406,21 +406,21 @@ export function Landing() {
 
         {/* The problem */}
         <section data-problem className="border-y border-line bg-surface">
-          <div className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6">
+          <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
             <h2 className="sr-only">The guest-count problem</h2>
-            <div className="grid gap-10 text-center sm:grid-cols-3">
+            <div className="grid grid-cols-3 gap-4 text-center sm:gap-10">
               {[
                 ["400", "invited"],
                 ["400", "said they'd come"],
                 ["280", "actually came"],
               ].map(([n, label]) => (
                 <div key={label} data-problem-num>
-                  <p className="font-display text-7xl font-semibold tabular-nums sm:text-8xl">{n}</p>
-                  <p className="mt-2 text-muted">{label}</p>
+                  <p className="font-display text-5xl font-semibold tabular-nums sm:text-8xl">{n}</p>
+                  <p className="mt-2 text-sm text-muted sm:text-base">{label}</p>
                 </div>
               ))}
             </div>
-            <div data-problem-note className="mx-auto mt-14 max-w-2xl text-center">
+            <div data-problem-note className="mx-auto mt-10 max-w-2xl text-center sm:mt-14">
               <p className="font-display text-2xl leading-snug sm:text-3xl">
                 The caterer still cooked for 400. That&apos;s{" "}
                 <span className="relative inline-block whitespace-nowrap text-brand">
@@ -439,10 +439,10 @@ export function Landing() {
 
         {/* How it works: pinned story on wide screens */}
         <section id="how" data-story className="relative">
-          <div className="mx-auto grid min-h-svh w-full max-w-6xl items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2">
+          <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:min-h-svh lg:grid-cols-2">
             <div>
               <p className="text-xs font-semibold tracking-[0.2em] text-gold uppercase">How it works</p>
-              <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight sm:text-5xl">From invite to headcount</h2>
+              <h2 className="mt-3 font-display text-[2rem] leading-tight font-semibold tracking-tight sm:text-5xl">From invite to headcount</h2>
               <div className="relative mt-10 pl-8">
                 <span className="absolute top-1 bottom-1 left-[11px] w-0.5 rounded bg-line" />
                 <span
@@ -470,10 +470,10 @@ export function Landing() {
 
         {/* Features */}
         <section className="border-t border-line bg-surface">
-          <div className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6">
+          <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
             <div data-reveal className="max-w-2xl">
               <p className="text-xs font-semibold tracking-[0.2em] text-gold uppercase">What planners get</p>
-              <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Built around how Indian weddings run</h2>
+              <h2 className="mt-3 font-display text-[2rem] leading-tight font-semibold tracking-tight sm:text-5xl">Built around how Indian weddings run</h2>
             </div>
             <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {features.map((f) => (
@@ -491,10 +491,10 @@ export function Landing() {
 
         {/* Prediction */}
         <section>
-          <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-24 sm:px-6 lg:grid-cols-2">
+          <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2">
             <div data-reveal>
               <p className="text-xs font-semibold tracking-[0.2em] text-gold uppercase">Expected turnout</p>
-              <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
+              <h2 className="mt-3 font-display text-[2rem] leading-tight font-semibold tracking-tight sm:text-5xl">
                 &ldquo;Coming&rdquo; doesn&apos;t always mean coming
               </h2>
               <p className="mt-5 text-lg leading-relaxed text-muted">
@@ -548,7 +548,7 @@ export function Landing() {
 
         {/* For guests */}
         <section className="border-y border-line bg-surface">
-          <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-24 sm:px-6 lg:grid-cols-[1fr_1.1fr]">
+          <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1fr_1.1fr]">
             <div data-reveal className="order-2 lg:order-1">
               <div className="jaali mx-auto max-w-sm rounded-card border border-line bg-paper p-6 shadow-lift">
                 <p className="text-center text-sm text-muted">Namaste Sharma Uncle,</p>
@@ -567,7 +567,7 @@ export function Landing() {
             </div>
             <div data-reveal className="order-1 lg:order-2">
               <p className="text-xs font-semibold tracking-[0.2em] text-gold uppercase">For guests</p>
-              <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
+              <h2 className="mt-3 font-display text-[2rem] leading-tight font-semibold tracking-tight sm:text-5xl">
                 An invite that feels like an invite
               </h2>
               <p className="mt-5 text-lg leading-relaxed text-muted">
@@ -582,9 +582,9 @@ export function Landing() {
         {/* Call to action */}
         <section className="relative overflow-hidden">
           <div className="jaali absolute inset-0 opacity-60" aria-hidden />
-          <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-4 py-28 text-center sm:px-6">
+          <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-4 py-20 text-center sm:px-6 sm:py-28">
             <Mark className="size-12" />
-            <h2 data-reveal className="mt-6 max-w-3xl font-display text-4xl font-semibold tracking-tight sm:text-6xl">
+            <h2 data-reveal className="mt-6 max-w-3xl font-display text-[2.1rem] leading-tight font-semibold tracking-tight sm:text-6xl">
               Plan the food for the guests who&apos;ll actually come
             </h2>
             <div data-reveal className="mt-8 flex flex-wrap justify-center gap-3">
