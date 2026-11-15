@@ -143,3 +143,22 @@ export async function saveRsvp(token: string, _: FormState, fd: FormData): Promi
   revalidatePath(`/weddings/${guest.weddingId}`);
   return { message: "Saved. Thank you!" };
 }
+
+export async function addEvent(weddingId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const planner = await requirePlanner();
+  await requireOwnedWedding(planner.id, weddingId);
+  const name = text(fd, "name");
+  const date = text(fd, "date");
+  const time = text(fd, "time");
+  const venue = text(fd, "venue") || null;
+  if (!name) return { error: "Function name is required." };
+  if (name.length > 60) return { error: "Function name is too long." };
+  // Date and time are entered in IST.
+  const startsAt = new Date(`${date}T${time}:00+05:30`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time) || isNaN(startsAt.getTime()))
+    return { error: "Enter a valid date and time." };
+
+  await prisma.event.create({ data: { weddingId, name, startsAt, venue } });
+  revalidatePath(`/weddings/${weddingId}`);
+  return { message: `Added ${name}.` };
+}

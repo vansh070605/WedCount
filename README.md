@@ -3,7 +3,7 @@
 WhatsApp-based guest RSVP and headcount prediction for Indian wedding planners.
 
 ## Status
-Day 5: planners send each guest their invite on WhatsApp in one click.
+Day 6: live headcount per function, caterer CSV export, planners add functions.
 
 ## Run locally
 ```bash
@@ -43,6 +43,12 @@ College Friend,+91 90000 11111,groom,friend
 - Each guest has a private link `/r/<token>`. The token is 128 random bits; it is the guest's only credential.
 - Per function: Coming / Maybe / Can't come, veg and non-veg counts (max 20), optional arrival time (IST).
 - Guests can change their reply until the wedding's RSVP deadline (end of that day, IST). After it, the page is read-only.
+
+## Headcount
+- Wedding page shows, per function: people **Coming** (with veg / non-veg split), people who said **Maybe**, and invites that said **Can't come** or haven't replied.
+- Guest list shows each guest's reply per function.
+- **Download for caterer (CSV)** gives one row per function with those numbers. Opens cleanly in Excel (UTF-8, formula-safe).
+- Planners add functions (Haldi, Sangeet, ...) with date, time in IST and venue.
 
 ## Sending invites
 - Each guest row has a **WhatsApp** button. It opens WhatsApp (app or web) to that guest's number with the invite message and their personal link already typed. The planner presses send.
