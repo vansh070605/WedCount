@@ -1,4 +1,9 @@
+import { randomBytes } from "node:crypto";
+
 export const SIDES = ["bride", "groom"] as const;
+
+// 128 random bits, URL-safe. The invite link is the guest's only credential.
+export const newGuestToken = () => randomBytes(16).toString("base64url");
 export const RELATIONS = ["family", "friend", "colleague", "other"] as const;
 
 export type GuestInput = {

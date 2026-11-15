@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { createSession, destroySession, requireOwnedWedding, requirePlanner } from "@/lib/auth";
 import { hashPassword, verifyPassword } from "@/lib/password";
-import { parseGuestCsv, validateGuest, type GuestInput } from "@/lib/guests";
+import { newGuestToken, parseGuestCsv, validateGuest, type GuestInput } from "@/lib/guests";
+import { isRsvpOpen, parseRsvpForm } from "@/lib/rsvp";
 
 export type FormState = { error?: string; message?: string; errors?: string[] };
 
@@ -52,14 +53,17 @@ export async function createWedding(_: FormState, fd: FormData): Promise<FormSta
   const deadline = text(fd, "rsvpDeadline");
   if (!name) return { error: "Wedding name is required." };
   if (name.length > 120) return { error: "Wedding name is too long." };
+  // Deadline is a date in IST; store end of that day. Checked because a raw POST can send anything.
+  const rsvpDeadline = deadline ? new Date(`${deadline}T23:59:59+05:30`) : null;
+  if (deadline && (!/^\d{4}-\d{2}-\d{2}$/.test(deadline) || isNaN(rsvpDeadline!.getTime())))
+    return { error: "Enter a valid RSVP deadline." };
 
   const wedding = await prisma.wedding.create({
     data: {
       plannerId: planner.id,
       name,
       city,
-      // Deadline is a date in IST; store end of that day.
-      rsvpDeadline: deadline ? new Date(`${deadline}T23:59:59+05:30`) : null,
+      rsvpDeadline,
     },
   });
   redirect(`/weddings/${wedding.id}`);
@@ -72,7 +76,8 @@ async function saveGuests(weddingId: string, guests: GuestInput[]) {
   });
   const taken = new Set(existing.map((g) => g.phone));
   const fresh = guests.filter((g) => !taken.has(g.phone));
-  if (fresh.length) await prisma.guest.createMany({ data: fresh.map((g) => ({ ...g, weddingId })) });
+  if (fresh.length)
+    await prisma.guest.createMany({ data: fresh.map((g) => ({ ...g, weddingId, token: newGuestToken() })) });
   return { added: fresh.length, skipped: [...taken] };
 }
 
@@ -110,4 +115,31 @@ export async function importGuests(weddingId: string, _: FormState, fd: FormData
   return {
     message: `Imported ${added} guest(s).` + (skipped.length ? ` Skipped ${skipped.length} already on the list.` : ""),
   };
+}
+
+// Public: the guest's invite token is the only credential.
+export async function saveRsvp(token: string, _: FormState, fd: FormData): Promise<FormState> {
+  const guest = await prisma.guest.findUnique({
+    where: { token },
+    include: { wedding: { include: { events: true } } },
+  });
+  if (!guest) return { error: "This invite link is not valid. Ask the family for a new one." };
+  if (!isRsvpOpen(guest.wedding.rsvpDeadline)) return { error: "RSVPs for this wedding are closed." };
+
+  const { rsvps, errors } = parseRsvpForm(guest.wedding.events, (key) => String(fd.get(key) ?? ""));
+  if (errors.length) return { error: "Please fix these:", errors };
+
+  // One transaction so a guest never ends up with half their events saved.
+  await prisma.$transaction(
+    rsvps.map(({ eventId, ...answer }) =>
+      prisma.rsvp.upsert({
+        where: { guestId_eventId: { guestId: guest.id, eventId } },
+        create: { guestId: guest.id, eventId, ...answer },
+        update: answer,
+      }),
+    ),
+  );
+  revalidatePath(`/r/${token}`);
+  revalidatePath(`/weddings/${guest.weddingId}`);
+  return { message: "Saved. Thank you!" };
 }
