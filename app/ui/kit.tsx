@@ -86,17 +86,27 @@ export function PageHeader({
   return (
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        {back && (
-          <Link href={back.href} className="draw text-sm text-muted hover:text-ink">
-            ← {back.label}
-          </Link>
-        )}
-        {eyebrow && <p className="mt-3 text-xs font-semibold tracking-[0.18em] text-gold uppercase">{eyebrow}</p>}
+        {back && <BackLink href={back.href} label={back.label} />}
+        {eyebrow && <p className="mt-5 text-xs font-semibold tracking-[0.18em] text-gold uppercase">{eyebrow}</p>}
         <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
         {sub && <p className="mt-2 text-sm text-muted">{sub}</p>}
       </div>
       {action}
     </header>
+  );
+}
+
+export function BackLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="press group inline-flex h-9 items-center gap-1.5 rounded-full border border-line bg-surface pr-4 pl-2.5 text-sm font-medium text-muted hover:border-brand hover:text-ink"
+    >
+      <svg viewBox="0 0 20 20" aria-hidden className="size-4 transition-transform group-hover:-translate-x-0.5">
+        <path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {label}
+    </Link>
   );
 }
 

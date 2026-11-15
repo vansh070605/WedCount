@@ -37,7 +37,7 @@
     --gold-soft: #3a2c12;
     --ok: #5fbf86;
     --danger: #f97066;
-    --wa: #3ccf79;
+    --wa: #1d8a4b; /* dark enough for white text */
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
     --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.45), 0 18px 40px -16px rgb(0 0 0 / 0.7);
   }
@@ -129,6 +129,14 @@ body {
   .stagger > *:nth-child(5) { animation-delay: 240ms; }
   .stagger > *:nth-child(6) { animation-delay: 300ms; }
   .stagger > *:nth-child(n + 7) { animation-delay: 360ms; }
+
+  /* Horizontal strips that scroll by swipe, without a visible scrollbar. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 
   /* Faint jaali (lattice) pattern for brand panels. */
   .jaali {

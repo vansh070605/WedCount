@@ -13,6 +13,7 @@ import {
 } from "@/app/ui/forms";
 import { Badge, Card, PageHeader, SectionTitle, Stat, buttonClass } from "@/app/ui/kit";
 import { CountUp } from "@/app/ui/count-up";
+import { SectionTabs } from "@/app/ui/section-tabs";
 import { appUrl, inviteLink, inviteMessage, reminderMessage, whatsappUrl } from "@/lib/invite";
 import { REMIND_EVERY_DAYS, ago, missingEvents, reminderStatus } from "@/lib/reminders";
 import { countHeadcount } from "@/lib/headcount";
@@ -63,10 +64,10 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
   const due = statuses.filter((x) => x.status === "due").map((x) => x.guest);
   const replied = tally("complete");
   const next = events.map((e, i) => ({ e, i })).find(({ e }) => e.startsAt > now);
-  const sections = [
+  const sections: [string, string][] = [
     ["headcount", "Headcount"],
-    ...(started.length ? [["turnout", "Turnout"]] : []),
-    ["reminders", "Reminders"],
+    ...(started.length ? [["turnout", "Turnout"] as [string, string]] : []),
+    ...(events.length > 0 && guests.length > 0 ? [["reminders", "Reminders"] as [string, string]] : []),
     ["functions", "Functions"],
     ["guests", "Guests"],
     ["add", "Add guests"],
@@ -86,7 +87,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
         }
         action={
           events.length > 0 && (
-            <a href={`/weddings/${wedding.id}/export`} className={buttonClass("secondary")}>
+            <a href={`/weddings/${wedding.id}/export`} className={buttonClass("secondary", "md", "w-full sm:w-auto")}>
               ↓ Caterer CSV
             </a>
           )
@@ -109,20 +110,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
         />
       </div>
 
-      <nav
-        aria-label="Sections"
-        className="sticky top-[61px] z-20 -mx-4 overflow-x-auto bg-paper/85 px-4 py-2 backdrop-blur-md sm:mx-0 sm:rounded-full sm:border sm:border-line sm:px-2"
-      >
-        <ul className="flex gap-1 text-sm whitespace-nowrap">
-          {sections.map(([anchor, label]) => (
-            <li key={anchor}>
-              <a href={`#${anchor}`} className={buttonClass("ghost", "sm")}>
-                {label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <SectionTabs sections={sections} />
 
       <Card id="headcount" className="scroll-mt-32">
         <SectionTitle title="Headcount" hint="Coming and Maybe count people. Can't come and No reply count invites." />
@@ -130,7 +118,39 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
           <p className="text-muted">Add a function below to start counting.</p>
         ) : (
           <>
-            <div className="-mx-5 overflow-x-auto sm:-mx-6">
+            <ul className="flex flex-col gap-3 sm:hidden">
+              {counts.map((c, i) => (
+                <li key={c.eventId} className="rounded-xl border border-line bg-paper p-4">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <p className="font-display text-lg font-semibold">{c.name}</p>
+                    <p className="text-right">
+                      <span className="font-display text-3xl font-semibold text-brand">
+                        <CountUp value={predictions[i].expected} />
+                      </span>
+                      <span className="block text-xs text-muted tabular-nums">
+                        expected · {predictions[i].low}–{predictions[i].high}
+                      </span>
+                    </p>
+                  </div>
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    {[
+                      ["Coming", c.attending.people, `${c.attending.veg} veg · ${c.attending.nonVeg} non-veg`],
+                      ["Maybe", c.maybe.people, "people"],
+                      ["Can't come", c.declined, "invites"],
+                      ["No reply", c.noReply, "invites"],
+                    ].map(([k, v, sub]) => (
+                      <div key={k} className="rounded-lg bg-sunken px-3 py-2">
+                        <dt className="text-[11px] text-muted">{k}</dt>
+                        <dd className="font-semibold tabular-nums">
+                          {v} <span className="text-[11px] font-normal text-muted">{sub}</span>
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </li>
+              ))}
+            </ul>
+            <div className="-mx-6 hidden overflow-x-auto sm:block">
               <table className="w-full text-left text-sm">
                 <thead className="bg-sunken">
                   <tr>
@@ -285,7 +305,49 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
         {guests.length === 0 ? (
           <p className="text-muted">No guests yet. Add them below or import a CSV.</p>
         ) : (
-          <div className="-mx-5 overflow-x-auto sm:-mx-6">
+          <ul className="flex flex-col divide-y divide-line sm:hidden">
+            {guests.map((g) => {
+              const link = inviteLink(g.token, base);
+              const text = inviteMessage({ guestName: g.name, weddingName: wedding.name, link, deadline: wedding.rsvpDeadline });
+              return (
+                <li key={g.id} className="py-4 first:pt-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <Link href={`/weddings/${wedding.id}/guests/${g.id}`} aria-label={`Edit ${g.name}`} className="font-medium">
+                        {g.name}
+                      </Link>
+                      <p className="truncate text-xs text-muted capitalize">
+                        {g.side} · {g.relation} · <span className="font-mono normal-case">{g.phone}</span>
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-xs text-muted">{g.invitedAt ? `Invited ${ago(g.invitedAt, now)}` : "Not invited"}</p>
+                  </div>
+                  {events.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1.5 text-xs">
+                      {events.map((e) => (
+                        <span key={e.id} className="flex items-center gap-1.5">
+                          <span className="text-muted">{e.name}</span>
+                          <Reply r={g.rsvps.find((r) => r.eventId === e.id)} />
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <WhatsAppSendButton
+                      href={whatsappUrl(g.phone, text)}
+                      label={g.invitedAt ? "Resend invite" : "Send on WhatsApp"}
+                      ariaLabel={`Send invite to ${g.name} on WhatsApp`}
+                      onSend={markSent.bind(null, g.id, "invite")}
+                    />
+                    <CopyLinkButton link={link} guestName={g.name} />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {guests.length > 0 && (
+          <div className="-mx-6 hidden overflow-x-auto sm:block">
             <table className="w-full text-left text-sm">
               <thead className="bg-sunken">
                 <tr>

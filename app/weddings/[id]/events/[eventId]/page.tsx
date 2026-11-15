@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -6,6 +5,7 @@ import { requirePlanner } from "@/lib/auth";
 import { istDate } from "@/lib/rsvp";
 import { deleteEvent, updateEvent } from "@/app/actions";
 import { AddEventForm, DeleteButton } from "@/app/ui/forms";
+import { BackLink } from "@/app/ui/kit";
 
 export default function EditEventPage(props: PageProps<"/weddings/[id]/events/[eventId]">) {
   return (
@@ -36,10 +36,8 @@ async function EditEvent({ params }: { params: Promise<{ id: string; eventId: st
   return (
     <>
       <header>
-        <Link href={`/weddings/${id}`} className="draw text-sm text-muted hover:text-ink">
-          ← {event.wedding.name}
-        </Link>
-        <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">Edit {event.name}</h1>
+        <BackLink href={`/weddings/${id}`} label={event.wedding.name} />
+        <h1 className="mt-5 font-display text-3xl font-semibold tracking-tight sm:text-4xl">Edit {event.name}</h1>
         <p className="text-sm text-muted">
           Guests see the new name, time and venue the next time they open their invite.
         </p>
