@@ -12,6 +12,9 @@ model Planner {
   email        String    @unique
   name         String
   passwordHash String
+  // Login lockout: see lib/lockout.ts. Stored in the DB because serverless runs many copies of the app.
+  failedLogins Int       @default(0)
+  lockedUntil  DateTime?
   createdAt    DateTime  @default(now())
   sessions     Session[]
   weddings     Wedding[]

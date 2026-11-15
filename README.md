@@ -3,7 +3,7 @@
 WhatsApp-based guest RSVP and headcount prediction for Indian wedding planners.
 
 ## Status
-Day 8: expected turnout per function, with a range, learning from real turnout.
+Day 9: hardening before going live (login lockout, race-safe saves, error pages). Deploy and Postgres come next.
 
 ## Run locally
 ```bash
@@ -81,3 +81,5 @@ RSVPs overpromise: people say "Coming" and don't show, and some who never replie
 ## Security notes
 - Passwords hashed with scrypt (Node built-in). Sessions stored server-side; DB keeps only a SHA-256 of the cookie token.
 - Every wedding query is scoped to the logged-in planner; other planners' weddings return 404.
+- Login pauses for 15 minutes after 5 wrong passwords (stored in the DB, so it holds across server instances). Every failure shows the same message, so nobody can tell which emails have accounts.
+- Two requests saving the same email or phone at once get a clear message instead of a crash.
