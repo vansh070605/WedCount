@@ -37,30 +37,69 @@ export function validateGuest(raw: Record<string, string>): GuestInput | string 
 
 export type CsvResult = { guests: GuestInput[]; errors: string[] };
 
-// Header row required: name,phone,side,relation (any order, relation optional).
-// shortcut: no quoted fields, so names can't contain commas; switch to a CSV library if planners hit that.
-export function parseGuestCsv(text: string): CsvResult {
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  if (lines.length === 0) return { guests: [], errors: ["File is empty"] };
+// Splits CSV text into rows of cells (RFC 4180): quoted fields may hold commas, newlines and "" for a quote.
+// Each row keeps the file line it starts on, so errors can point at the right line. Blank rows are dropped.
+export function parseCsv(text: string): { cells: string[]; line: number }[] {
+  const rows: { cells: string[]; line: number }[] = [];
+  let cells: string[] = [];
+  let cell = "";
+  let quoted = false;
+  let line = 1;
+  let rowLine = 1;
+  const endRow = () => {
+    cells.push(cell);
+    if (cells.some((c) => c.trim() !== "")) rows.push({ cells, line: rowLine });
+    cells = [];
+    cell = "";
+  };
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (quoted) {
+      if (ch === '"' && text[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else if (ch === '"') quoted = false;
+      else {
+        if (ch === "\n") line++;
+        cell += ch;
+      }
+    } else if (ch === '"') quoted = true;
+    else if (ch === ",") {
+      cells.push(cell);
+      cell = "";
+    }
+    else if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && text[i + 1] === "\n") i++;
+      endRow();
+      line++;
+      rowLine = line;
+    } else cell += ch;
+  }
+  endRow();
+  return rows;
+}
 
-  const header = lines[0].split(",").map((h) => h.trim().toLowerCase());
+// Header row required: name,phone,side,relation (any order, relation optional).
+export function parseGuestCsv(text: string): CsvResult {
+  const rows = parseCsv(text);
+  if (rows.length === 0) return { guests: [], errors: ["File is empty"] };
+
+  const header = rows[0].cells.map((h) => h.trim().toLowerCase());
   const missing = ["name", "phone", "side"].filter((h) => !header.includes(h));
   if (missing.length) return { guests: [], errors: [`Header is missing: ${missing.join(", ")}`] };
 
   const guests: GuestInput[] = [];
   const errors: string[] = [];
   const seen = new Set<string>();
-  lines.slice(1).forEach((line, i) => {
-    const cells = line.split(",");
+  for (const { cells, line } of rows.slice(1)) {
     const row = Object.fromEntries(header.map((h, j) => [h, (cells[j] ?? "").trim()]));
     const result = validateGuest(row);
-    const rowNo = i + 2; // 1-based, after header
-    if (typeof result === "string") errors.push(`Row ${rowNo}: ${result}`);
-    else if (seen.has(result.phone)) errors.push(`Row ${rowNo}: duplicate phone ${result.phone}`);
+    if (typeof result === "string") errors.push(`Row ${line}: ${result}`);
+    else if (seen.has(result.phone)) errors.push(`Row ${line}: duplicate phone ${result.phone}`);
     else {
       seen.add(result.phone);
       guests.push(result);
     }
-  });
+  }
   return { guests, errors };
 }

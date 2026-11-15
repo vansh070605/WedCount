@@ -67,7 +67,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
         <Link href="/dashboard" className="text-sm text-zinc-600 underline dark:text-zinc-400">
           ← All weddings
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">{wedding.name}</h1>
+        <h1 className="mt-2 font-display text-3xl font-semibold">{wedding.name}</h1>
         <p className={muted}>
           {wedding.city ?? "No city"} · {guests.length} invites
           {wedding.rsvpDeadline && ` · RSVP by ${ist(wedding.rsvpDeadline, { dateStyle: "medium" })}`}
@@ -226,7 +226,13 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
           <ul className={`mb-4 ${muted}`}>
             {events.map((e) => (
               <li key={e.id}>
-                <span className="font-medium text-zinc-900 dark:text-zinc-100">{e.name}</span> ·{" "}
+                <Link
+                  href={`/weddings/${wedding.id}/events/${e.id}`}
+                  className="font-medium text-zinc-900 underline decoration-zinc-400 underline-offset-2 hover:decoration-rose-600 dark:text-zinc-100"
+                >
+                  {e.name}
+                </Link>{" "}
+                ·{" "}
                 {ist(e.startsAt, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}
                 {e.venue && ` · ${e.venue}`}
               </li>
@@ -280,7 +286,15 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                   });
                   return (
                     <tr key={g.id} className="border-t border-zinc-200 dark:border-zinc-800">
-                      <td className="px-3 py-2">{g.name}</td>
+                      <td className="px-3 py-2">
+                        <Link
+                          href={`/weddings/${wedding.id}/guests/${g.id}`}
+                          aria-label={`Edit ${g.name}`}
+                          className="underline decoration-zinc-400 underline-offset-2 hover:decoration-rose-600"
+                        >
+                          {g.name}
+                        </Link>
+                      </td>
                       <td className="px-3 py-2 font-mono">{g.phone}</td>
                       <td className="px-3 py-2 capitalize">
                         {g.side} · {g.relation}

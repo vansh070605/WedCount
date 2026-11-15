@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { requirePlanner } from "@/lib/auth";
-import { createWedding, logout } from "@/app/actions";
+import { createWedding } from "@/app/actions";
 import { CreateWeddingForm } from "@/app/ui/forms";
 
 export default function DashboardPage() {
@@ -25,14 +25,9 @@ async function Dashboard() {
 
   return (
     <>
-      <header className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Your weddings</h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Logged in as {planner.name}</p>
-        </div>
-        <form action={logout}>
-          <button className="text-sm font-medium text-zinc-700 underline dark:text-zinc-300">Log out</button>
-        </form>
+      <header>
+        <h1 className="font-display text-3xl font-semibold">Your weddings</h1>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">Namaste, {planner.name}</p>
       </header>
 
       <section className="rounded-lg border border-zinc-200 p-5 dark:border-zinc-800">

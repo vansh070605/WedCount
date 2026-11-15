@@ -31,7 +31,9 @@ export function RsvpForm({
 
   return (
     <form
-      // Not action={formAction}: React resets the form after every submit, wiping answers on a validation error.
+      // action: fallback if the guest submits before the page finishes loading (slow phones).
+      // onSubmit: once loaded, skips React's automatic reset, which would wipe answers on a validation error.
+      action={formAction}
       onSubmit={(ev) => {
         ev.preventDefault();
         const fd = new FormData(ev.currentTarget);
