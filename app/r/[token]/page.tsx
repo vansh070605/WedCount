@@ -52,7 +52,7 @@ async function Rsvp({ params }: { params: Promise<{ token: string }> }) {
     <>
       <header>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">Namaste {guest.name},</p>
-        <h1 className="mt-1 text-2xl font-semibold">You&apos;re invited to {wedding.name}</h1>
+        <h1 className="mt-1 font-display text-3xl font-semibold">You&apos;re invited to {wedding.name}</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           {wedding.city}
           {wedding.rsvpDeadline &&

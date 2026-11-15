@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { findOwnedWedding } from "@/lib/owned";
 
 const COOKIE = "wc_session";
 const SESSION_DAYS = 30;
@@ -50,7 +51,7 @@ export async function requirePlanner() {
 
 // Returns the wedding only if it belongs to this planner; 404 otherwise, so ids can't be probed.
 export async function requireOwnedWedding(plannerId: string, weddingId: string) {
-  const wedding = await prisma.wedding.findFirst({ where: { id: weddingId, plannerId } });
+  const wedding = await findOwnedWedding(plannerId, weddingId);
   if (!wedding) notFound();
   return wedding;
 }

@@ -8,6 +8,7 @@ import { hashPassword, verifyPassword } from "@/lib/password";
 import { newGuestToken, parseGuestCsv, validateGuest, type GuestInput } from "@/lib/guests";
 import { isRsvpOpen, parseRsvpForm } from "@/lib/rsvp";
 import { LOGIN_FAILED, afterFailure, isLocked } from "@/lib/lockout";
+import { findOwnedEvent, findOwnedGuest } from "@/lib/owned";
 import { Prisma } from "@prisma/client";
 
 // Two requests inserting the same unique value at once: the database rejects the second with P2002.
@@ -176,33 +177,92 @@ export async function saveRsvp(token: string, _: FormState, fd: FormData): Promi
   return { message: "Saved. Thank you!" };
 }
 
-export async function addEvent(weddingId: string, _: FormState, fd: FormData): Promise<FormState> {
-  const planner = await requirePlanner();
-  await requireOwnedWedding(planner.id, weddingId);
+// Shared by add and edit. Date and time are entered in IST.
+function parseEventForm(fd: FormData) {
   const name = text(fd, "name");
   const date = text(fd, "date");
   const time = text(fd, "time");
   const venue = text(fd, "venue") || null;
-  if (!name) return { error: "Function name is required." };
-  if (name.length > 60) return { error: "Function name is too long." };
-  // Date and time are entered in IST.
+  if (!name) return "Function name is required.";
+  if (name.length > 60) return "Function name is too long.";
   const startsAt = new Date(`${date}T${time}:00+05:30`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time) || isNaN(startsAt.getTime()))
-    return { error: "Enter a valid date and time." };
+    return "Enter a valid date and time.";
+  return { name, startsAt, venue };
+}
 
-  await prisma.event.create({ data: { weddingId, name, startsAt, venue } });
+export async function addEvent(weddingId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const planner = await requirePlanner();
+  await requireOwnedWedding(planner.id, weddingId);
+  const data = parseEventForm(fd);
+  if (typeof data === "string") return { error: data };
+
+  await prisma.event.create({ data: { weddingId, ...data } });
   revalidatePath(`/weddings/${weddingId}`);
-  return { message: `Added ${name}.` };
+  return { message: `Added ${data.name}.` };
+}
+
+
+export async function updateEvent(eventId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const planner = await requirePlanner();
+  const event = await findOwnedEvent(planner.id, eventId);
+  if (!event) return { error: "Function not found." };
+  const data = parseEventForm(fd);
+  if (typeof data === "string") return { error: data };
+
+  await prisma.event.update({ where: { id: eventId }, data });
+  revalidatePath(`/weddings/${event.weddingId}`, "layout");
+  return { message: "Saved." };
+}
+
+// Also deletes every reply for this function (cascade). The button asks first.
+export async function deleteEvent(eventId: string) {
+  const planner = await requirePlanner();
+  const event = await findOwnedEvent(planner.id, eventId);
+  if (!event) return;
+  await prisma.event.delete({ where: { id: eventId } });
+  revalidatePath(`/weddings/${event.weddingId}`, "layout");
+  redirect(`/weddings/${event.weddingId}`);
+}
+
+export async function updateGuest(guestId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const planner = await requirePlanner();
+  const guest = await findOwnedGuest(planner.id, guestId);
+  if (!guest) return { error: "Guest not found." };
+  const result = validateGuest({
+    name: text(fd, "name"),
+    phone: text(fd, "phone"),
+    side: text(fd, "side"),
+    relation: text(fd, "relation"),
+  });
+  if (typeof result === "string") return { error: result };
+
+  try {
+    // Token stays the same, so links already sent keep working.
+    await prisma.guest.update({ where: { id: guestId }, data: result });
+  } catch (e) {
+    if (isDuplicate(e)) return { error: `Another guest on this wedding already has ${result.phone}.` };
+    throw e;
+  }
+  revalidatePath(`/weddings/${guest.weddingId}`, "layout");
+  return { message: "Saved." };
+}
+
+// Also deletes the guest's replies (cascade), and their invite link stops working. The button asks first.
+export async function deleteGuest(guestId: string) {
+  const planner = await requirePlanner();
+  const guest = await findOwnedGuest(planner.id, guestId);
+  if (!guest) return;
+  await prisma.guest.delete({ where: { id: guestId } });
+  revalidatePath(`/weddings/${guest.weddingId}`, "layout");
+  redirect(`/weddings/${guest.weddingId}`);
 }
 
 // Called when the planner clicks a WhatsApp invite / reminder button. Best effort: a click, not proof of delivery.
 export async function markSent(guestId: string, kind: "invite" | "reminder") {
   if (kind !== "invite" && kind !== "reminder") return; // bound args come from the client, so check them
   const planner = await requirePlanner();
-  const guest = await prisma.guest.findFirst({
-    where: { id: guestId, wedding: { plannerId: planner.id } },
-    select: { weddingId: true },
-  });
+  const guest = await findOwnedGuest(planner.id, guestId);
   if (!guest) return;
   const now = new Date();
   await prisma.guest.update({
@@ -215,7 +275,7 @@ export async function markSent(guestId: string, kind: "invite" | "reminder") {
 export async function recordActual(eventId: string, _: FormState, fd: FormData): Promise<FormState> {
   const planner = await requirePlanner();
   const event = await prisma.event.findFirst({
-    where: { id: eventId, wedding: { plannerId: planner.id } },
+    where: { id: eventId, wedding: { plannerId: planner.id } }, // same scoping as findOwnedEvent, plus startsAt
     select: { weddingId: true, startsAt: true },
   });
   if (!event) return { error: "Function not found." };

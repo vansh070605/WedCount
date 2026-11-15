@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 import type { FormState } from "@/app/actions";
 
 type Action = (state: FormState, fd: FormData) => Promise<FormState>;
@@ -18,6 +18,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </label>
   );
 }
+
+// Edit forms submit without React's automatic form reset, which would flash the old values back in.
+// Use together with action={formAction}: before the page finishes loading, that still saves via the server
+// action; once loaded, this handler's preventDefault takes over.
+const keepValues = (formAction: (fd: FormData) => void) => (ev: React.FormEvent<HTMLFormElement>) => {
+  ev.preventDefault();
+  const fd = new FormData(ev.currentTarget);
+  startTransition(() => formAction(fd));
+};
 
 function Status({ state }: { state: FormState }) {
   return (
@@ -88,24 +97,31 @@ export function CreateWeddingForm({ action }: { action: Action }) {
   );
 }
 
-export function AddGuestForm({ action }: { action: Action }) {
+type GuestDefaults = { name: string; phone: string; side: string; relation: string };
+
+// Adds a guest, or edits one when `guest` is given.
+export function AddGuestForm({ action, guest }: { action: Action; guest?: GuestDefaults }) {
   const [state, formAction, pending] = useActionState(action, {});
   return (
-    <form action={formAction} className="grid gap-3 sm:grid-cols-4 sm:items-end">
+    <form
+      action={formAction}
+      onSubmit={guest ? keepValues(formAction) : undefined}
+      className="grid gap-3 sm:grid-cols-4 sm:items-end"
+    >
       <Field label="Name">
-        <input name="name" required className={input} />
+        <input name="name" required defaultValue={guest?.name} className={input} />
       </Field>
       <Field label="WhatsApp number">
-        <input name="phone" type="tel" required placeholder="98765 43210" className={input} />
+        <input name="phone" type="tel" required placeholder="98765 43210" defaultValue={guest?.phone} className={input} />
       </Field>
       <Field label="Side">
-        <select name="side" required className={input}>
+        <select name="side" required defaultValue={guest?.side} className={input}>
           <option value="bride">Bride</option>
           <option value="groom">Groom</option>
         </select>
       </Field>
       <Field label="Relation">
-        <select name="relation" className={input}>
+        <select name="relation" defaultValue={guest?.relation} className={input}>
           <option value="family">Family</option>
           <option value="friend">Friend</option>
           <option value="colleague">Colleague</option>
@@ -115,7 +131,7 @@ export function AddGuestForm({ action }: { action: Action }) {
       <div className="sm:col-span-4">
         <Status state={state} />
         <button disabled={pending} className={`${button} mt-2`}>
-          {pending ? "Adding…" : "Add guest"}
+          {pending ? "Saving…" : guest ? "Save changes" : "Add guest"}
         </button>
       </div>
     </form>
@@ -160,12 +176,19 @@ export function CopyLinkButton({ link, guestName }: { link: string; guestName: s
   );
 }
 
-export function AddEventForm({ action }: { action: Action }) {
+type EventDefaults = { name: string; date: string; time: string; venue: string | null };
+
+// Adds a function, or edits one when `event` is given (date as YYYY-MM-DD and time as HH:MM, both IST).
+export function AddEventForm({ action, event }: { action: Action; event?: EventDefaults }) {
   const [state, formAction, pending] = useActionState(action, {});
   return (
-    <form action={formAction} className="grid gap-3 sm:grid-cols-4 sm:items-end">
+    <form
+      action={formAction}
+      onSubmit={event ? keepValues(formAction) : undefined}
+      className="grid gap-3 sm:grid-cols-4 sm:items-end"
+    >
       <Field label="Function">
-        <input name="name" required placeholder="Sangeet" list="function-names" className={input} />
+        <input name="name" required placeholder="Sangeet" list="function-names" defaultValue={event?.name} className={input} />
         <datalist id="function-names">
           {["Haldi", "Mehendi", "Sangeet", "Wedding", "Reception"].map((n) => (
             <option key={n} value={n} />
@@ -173,18 +196,18 @@ export function AddEventForm({ action }: { action: Action }) {
         </datalist>
       </Field>
       <Field label="Date">
-        <input name="date" type="date" required className={input} />
+        <input name="date" type="date" required defaultValue={event?.date} className={input} />
       </Field>
       <Field label="Time (IST)">
-        <input name="time" type="time" required className={input} />
+        <input name="time" type="time" required defaultValue={event?.time} className={input} />
       </Field>
       <Field label="Venue">
-        <input name="venue" placeholder="Rambagh Lawns" className={input} />
+        <input name="venue" placeholder="Rambagh Lawns" defaultValue={event?.venue ?? undefined} className={input} />
       </Field>
       <div className="sm:col-span-4">
         <Status state={state} />
         <button disabled={pending} className={`${button} mt-2`}>
-          {pending ? "Adding…" : "Add function"}
+          {pending ? "Saving…" : event ? "Save changes" : "Add function"}
         </button>
       </div>
     </form>
@@ -238,6 +261,22 @@ export function ActualCountForm({ action, current, eventName }: { action: Action
         {pending ? "Saving…" : current == null ? "Save" : "Update"}
       </button>
       <Status state={state} />
+    </form>
+  );
+}
+
+// Server-side delete behind a browser confirm. The message should say what else goes with it.
+export function DeleteButton({ action, confirmText, label }: { action: () => Promise<void>; confirmText: string; label: string }) {
+  return (
+    <form
+      action={action}
+      onSubmit={(ev) => {
+        if (!window.confirm(confirmText)) ev.preventDefault();
+      }}
+    >
+      <button className="rounded-md border border-red-700 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-500 dark:text-red-400 dark:hover:bg-red-950">
+        {label}
+      </button>
     </form>
   );
 }

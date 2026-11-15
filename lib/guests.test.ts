@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizePhone, parseGuestCsv, validateGuest } from "./guests";
+import { normalizePhone, parseCsv, parseGuestCsv, validateGuest } from "./guests";
 import { hashPassword, verifyPassword } from "./password";
 
 test("normalizePhone accepts common Indian formats", () => {
@@ -55,4 +55,25 @@ test("password hash verifies only the right password", async () => {
   assert.equal(await verifyPassword("correct horse", stored), true);
   assert.equal(await verifyPassword("wrong horse", stored), false);
   assert.equal(await verifyPassword("x", "garbage"), false);
+});
+
+test("parseCsv handles quoted commas, escaped quotes and newlines inside quotes", () => {
+  const rows = parseCsv('name,phone\r\n"Sharma, Ramesh",98765 43210\n"Neha ""Nini"" Kapoor",9123456789\n"Line\nBreak",9000011111\n\n');
+  assert.deepEqual(
+    rows.map((r) => r.cells),
+    [
+      ["name", "phone"],
+      ["Sharma, Ramesh", "98765 43210"],
+      ['Neha "Nini" Kapoor', "9123456789"],
+      ["Line\nBreak", "9000011111"],
+    ],
+  );
+  // Rows keep the file line they start on, even after a multi-line cell.
+  assert.deepEqual(rows.map((r) => r.line), [1, 2, 3, 4]);
+});
+
+test("parseGuestCsv imports a name with a comma and reports real line numbers past blank lines", () => {
+  const { guests, errors } = parseGuestCsv('name,phone,side\n"Sharma, Ramesh",9876543210,bride\n\nBad,123,groom\n');
+  assert.deepEqual(guests.map((g) => g.name), ["Sharma, Ramesh"]);
+  assert.deepEqual(errors.map((e) => e.split(":")[0]), ["Row 4"]);
 });

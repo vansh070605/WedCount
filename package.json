@@ -10,7 +10,8 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "postinstall": "prisma generate",
-    "test": "node --import tsx --test lib/*.test.ts"
+    "test": "node --import tsx --test lib/*.test.ts",
+    "test:db": "node scripts/test-db.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

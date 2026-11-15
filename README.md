@@ -20,7 +20,8 @@ Demo login (local seed data only): `demo@wedcount.test` / `demo-planner-123`
 ```bash
 npm run build
 npm run lint
-npm test
+npm test          # unit tests
+npm run test:db   # database tests on a throwaway SQLite file
 ```
 
 ## Data model
@@ -28,6 +29,11 @@ npm test
 - **Rsvp** is one guest's answer for one event: status, veg and non-veg counts, arrival time.
 - Headcount = vegCount + nonVegCount. No RSVP row means the guest has not replied.
 - Each guest has a secret `token` for their personal invite link.
+
+## Managing guests and functions
+- Click a guest's name to edit them or remove them. Their invite link stays the same after an edit.
+- Click a function's name to change its name, date, time or venue, or delete it.
+- Deleting asks for confirmation and says what goes with it (the guest's or function's replies).
 
 ## Guest CSV format
 ```csv
@@ -37,7 +43,8 @@ College Friend,+91 90000 11111,groom,friend
 ```
 - `side` is `bride` or `groom`. `relation` is `family`, `friend`, `colleague` or `other` (defaults to `other`).
 - Phones are Indian mobiles in any common format; stored as `+91XXXXXXXXXX`.
-- If any row is invalid, nothing is imported. Guests already on the list are skipped.
+- Names with commas work when quoted, as Excel and Google Sheets save them: `"Sharma, Ramesh",98765 43210,bride,family`.
+- If any row is invalid, nothing is imported (errors give the file's line number). Guests already on the list are skipped.
 
 ## Guest RSVP
 - Each guest has a private link `/r/<token>`. The token is 128 random bits; it is the guest's only credential.
