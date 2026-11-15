@@ -3,7 +3,7 @@
 WhatsApp-based guest RSVP and headcount prediction for Indian wedding planners.
 
 ## Status
-Day 6: live headcount per function, caterer CSV export, planners add functions.
+Day 7: reminders for guests who haven't replied, with invite tracking.
 
 ## Run locally
 ```bash
@@ -49,6 +49,12 @@ College Friend,+91 90000 11111,groom,friend
 - Guest list shows each guest's reply per function.
 - **Download for caterer (CSV)** gives one row per function with those numbers. Opens cleanly in Excel (UTF-8, formula-safe).
 - Planners add functions (Haldi, Sangeet, ...) with date, time in IST and venue.
+
+## Reminders
+- Clicking a WhatsApp invite or reminder button records the time (a click, not proof of delivery). The guest list shows "Invited today / 3 days ago" or "Not invited yet".
+- The **Reminders** section lists guests who were invited, still haven't answered every function, and haven't been contacted in the last 2 days.
+- The reminder message names the functions they haven't answered and the deadline.
+- After the RSVP deadline, reminders switch off.
 
 ## Sending invites
 - Each guest row has a **WhatsApp** button. It opens WhatsApp (app or web) to that guest's number with the invite message and their personal link already typed. The planner presses send.

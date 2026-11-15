@@ -66,6 +66,10 @@ model Guest {
   // Set in code with crypto randomness (lib/guests.ts newGuestToken): cuid() is guessable.
   token     String   @unique
   createdAt DateTime @default(now())
+  // When the planner last opened WhatsApp to invite / remind this guest. A click, not proof of delivery.
+  invitedAt     DateTime?
+  remindedAt    DateTime?
+  reminderCount Int       @default(0)
   rsvps     Rsvp[]
 
   @@unique([weddingId, phone])
