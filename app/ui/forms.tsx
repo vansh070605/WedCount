@@ -190,3 +190,31 @@ export function AddEventForm({ action }: { action: Action }) {
     </form>
   );
 }
+
+// Opens WhatsApp in a new tab and records the send. The link opens even if recording fails.
+export function WhatsAppSendButton({
+  href,
+  label,
+  ariaLabel,
+  onSend,
+}: {
+  href: string;
+  label: string;
+  ariaLabel: string;
+  onSend: () => Promise<void>;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={ariaLabel}
+      onClick={() => {
+        onSend().catch(() => {});
+      }}
+      className="rounded-md bg-green-700 px-2 py-1 text-xs font-medium whitespace-nowrap text-white hover:bg-green-800"
+    >
+      {label}
+    </a>
+  );
+}

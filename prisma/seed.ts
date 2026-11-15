@@ -50,6 +50,8 @@ async function main() {
         side: i % 2 === 0 ? "bride" : "groom",
         relation: relations[i % relations.length],
         token: newGuestToken(),
+        // Mix for the Reminders demo: invited 0-3 days ago, every 5th guest not invited yet.
+        invitedAt: i % 5 === 4 ? null : new Date(Date.now() - (i % 4) * 24 * 60 * 60 * 1000),
       },
     });
 

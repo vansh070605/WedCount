@@ -2,9 +2,10 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { requireOwnedWedding, requirePlanner } from "@/lib/auth";
-import { addEvent, addGuest, importGuests } from "@/app/actions";
-import { AddEventForm, AddGuestForm, CopyLinkButton, ImportGuestsForm } from "@/app/ui/forms";
-import { appUrl, inviteLink, inviteMessage, whatsappUrl } from "@/lib/invite";
+import { addEvent, addGuest, importGuests, markSent } from "@/app/actions";
+import { AddEventForm, AddGuestForm, CopyLinkButton, ImportGuestsForm, WhatsAppSendButton } from "@/app/ui/forms";
+import { appUrl, inviteLink, inviteMessage, reminderMessage, whatsappUrl } from "@/lib/invite";
+import { REMIND_EVERY_DAYS, ago, missingEvents, reminderStatus } from "@/lib/reminders";
 import { countHeadcount } from "@/lib/headcount";
 
 export default function WeddingPage(props: PageProps<"/weddings/[id]">) {
@@ -41,6 +42,10 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
   ]);
   const counts = countHeadcount(events, guests);
   const base = appUrl();
+  const now = new Date();
+  const statuses = guests.map((g) => ({ guest: g, status: reminderStatus(g, events, wedding.rsvpDeadline, now) }));
+  const tally = (s: string) => statuses.filter((x) => x.status === s).length;
+  const due = statuses.filter((x) => x.status === "due").map((x) => x.guest);
 
   return (
     <>
@@ -103,6 +108,57 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
           </div>
         )}
       </section>
+
+      {events.length > 0 && guests.length > 0 && (
+        <section className={card}>
+          <h2 className="mb-1 font-semibold">Reminders</h2>
+          <p className={`mb-4 ${muted}`}>
+            {tally("complete")} replied to everything · {tally("due")} due a reminder · {tally("recent")} contacted in
+            the last {REMIND_EVERY_DAYS} days · {tally("not-invited")} not invited yet
+            {tally("closed") > 0 && ` · ${tally("closed")} missed the deadline`}
+          </p>
+          {due.length === 0 ? (
+            <p className={muted}>
+              {tally("closed") > 0
+                ? "The RSVP deadline has passed, so reminders are off."
+                : "Nobody needs a reminder right now."}
+              {tally("not-invited") > 0 && " Send invites from the guest list below first."}
+            </p>
+          ) : (
+            <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+              {due.map((g) => {
+                const missing = missingEvents(g, events).map((e) => e.name);
+                const text = reminderMessage({
+                  guestName: g.name,
+                  weddingName: wedding.name,
+                  link: inviteLink(g.token, base),
+                  deadline: wedding.rsvpDeadline,
+                  missing,
+                });
+                return (
+                  <li key={g.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                    <div>
+                      <p className="font-medium">{g.name}</p>
+                      <p className={muted}>
+                        No reply for {missing.join(", ")} ·{" "}
+                        {g.remindedAt
+                          ? `reminded ${ago(g.remindedAt, now)} (${g.reminderCount}x)`
+                          : `invited ${ago(g.invitedAt!, now)}`}
+                      </p>
+                    </div>
+                    <WhatsAppSendButton
+                      href={whatsappUrl(g.phone, text)}
+                      label="Send reminder"
+                      ariaLabel={`Send reminder to ${g.name} on WhatsApp`}
+                      onSend={markSent.bind(null, g.id, "reminder")}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      )}
 
       <section className={card}>
         <h2 className="mb-1 font-semibold">Functions ({events.length})</h2>
@@ -176,17 +232,17 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                       ))}
                       <td className="px-3 py-2">
                         <div className="flex gap-2">
-                          <a
+                          <WhatsAppSendButton
                             href={whatsappUrl(g.phone, text)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={`Send invite to ${g.name} on WhatsApp`}
-                            className="rounded-md bg-green-700 px-2 py-1 text-xs font-medium text-white hover:bg-green-800"
-                          >
-                            WhatsApp
-                          </a>
+                            label={g.invitedAt ? "Resend" : "WhatsApp"}
+                            ariaLabel={`Send invite to ${g.name} on WhatsApp`}
+                            onSend={markSent.bind(null, g.id, "invite")}
+                          />
                           <CopyLinkButton link={link} guestName={g.name} />
                         </div>
+                        <p className="mt-1 text-xs text-zinc-500">
+                          {g.invitedAt ? `Invited ${ago(g.invitedAt, now)}` : "Not invited yet"}
+                        </p>
                       </td>
                     </tr>
                   );

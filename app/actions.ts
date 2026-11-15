@@ -162,3 +162,20 @@ export async function addEvent(weddingId: string, _: FormState, fd: FormData): P
   revalidatePath(`/weddings/${weddingId}`);
   return { message: `Added ${name}.` };
 }
+
+// Called when the planner clicks a WhatsApp invite / reminder button. Best effort: a click, not proof of delivery.
+export async function markSent(guestId: string, kind: "invite" | "reminder") {
+  if (kind !== "invite" && kind !== "reminder") return; // bound args come from the client, so check them
+  const planner = await requirePlanner();
+  const guest = await prisma.guest.findFirst({
+    where: { id: guestId, wedding: { plannerId: planner.id } },
+    select: { weddingId: true },
+  });
+  if (!guest) return;
+  const now = new Date();
+  await prisma.guest.update({
+    where: { id: guestId },
+    data: kind === "invite" ? { invitedAt: now } : { remindedAt: now, reminderCount: { increment: 1 } },
+  });
+  revalidatePath(`/weddings/${guest.weddingId}`);
+}
