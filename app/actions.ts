@@ -7,6 +7,11 @@ import { createSession, destroySession, requireOwnedWedding, requirePlanner } fr
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { newGuestToken, parseGuestCsv, validateGuest, type GuestInput } from "@/lib/guests";
 import { isRsvpOpen, parseRsvpForm } from "@/lib/rsvp";
+import { LOGIN_FAILED, afterFailure, isLocked } from "@/lib/lockout";
+import { Prisma } from "@prisma/client";
+
+// Two requests inserting the same unique value at once: the database rejects the second with P2002.
+const isDuplicate = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
 
 export type FormState = { error?: string; message?: string; errors?: string[] };
 
@@ -23,9 +28,13 @@ export async function signup(_: FormState, fd: FormData): Promise<FormState> {
   if (await prisma.planner.findUnique({ where: { email } }))
     return { error: "An account with this email already exists." };
 
-  const planner = await prisma.planner.create({
-    data: { name, email, passwordHash: await hashPassword(password) },
-  });
+  let planner;
+  try {
+    planner = await prisma.planner.create({ data: { name, email, passwordHash: await hashPassword(password) } });
+  } catch (e) {
+    if (isDuplicate(e)) return { error: "An account with this email already exists." };
+    throw e;
+  }
   await createSession(planner.id);
   redirect("/dashboard");
 }
@@ -34,9 +43,21 @@ export async function login(_: FormState, fd: FormData): Promise<FormState> {
   const email = text(fd, "email").toLowerCase();
   const password = String(fd.get("password") ?? "");
   const planner = await prisma.planner.findUnique({ where: { email } });
-  // Same message for unknown email and wrong password, so emails can't be enumerated.
-  if (!planner || !(await verifyPassword(password, planner.passwordHash)))
-    return { error: "Wrong email or password." };
+  if (!planner || isLocked(planner.lockedUntil)) return { error: LOGIN_FAILED };
+
+  if (!(await verifyPassword(password, planner.passwordHash))) {
+    // Atomic increment, so parallel guesses can't each read the same old count.
+    const { failedLogins } = await prisma.planner.update({
+      where: { id: planner.id },
+      data: { failedLogins: { increment: 1 } },
+      select: { failedLogins: true },
+    });
+    const next = afterFailure(failedLogins);
+    if (next.lockedUntil) await prisma.planner.update({ where: { id: planner.id }, data: next });
+    return { error: LOGIN_FAILED };
+  }
+
+  if (planner.failedLogins > 0) await prisma.planner.update({ where: { id: planner.id }, data: { failedLogins: 0 } });
   await createSession(planner.id);
   redirect("/dashboard");
 }
@@ -76,10 +97,17 @@ async function saveGuests(weddingId: string, guests: GuestInput[]) {
   });
   const taken = new Set(existing.map((g) => g.phone));
   const fresh = guests.filter((g) => !taken.has(g.phone));
-  if (fresh.length)
-    await prisma.guest.createMany({ data: fresh.map((g) => ({ ...g, weddingId, token: newGuestToken() })) });
+  try {
+    // One statement, so either all fresh guests are saved or none are.
+    if (fresh.length)
+      await prisma.guest.createMany({ data: fresh.map((g) => ({ ...g, weddingId, token: newGuestToken() })) });
+  } catch (e) {
+    if (isDuplicate(e)) return null; // someone saved the same phone at the same moment
+    throw e;
+  }
   return { added: fresh.length, skipped: [...taken] };
 }
+const SAVE_RACE = "Someone else just added some of these guests. Nothing was saved; refresh and try again.";
 
 export async function addGuest(weddingId: string, _: FormState, fd: FormData): Promise<FormState> {
   const planner = await requirePlanner();
@@ -92,7 +120,9 @@ export async function addGuest(weddingId: string, _: FormState, fd: FormData): P
   });
   if (typeof result === "string") return { error: result };
 
-  const { added } = await saveGuests(weddingId, [result]);
+  const saved = await saveGuests(weddingId, [result]);
+  if (!saved) return { error: SAVE_RACE };
+  const { added } = saved;
   revalidatePath(`/weddings/${weddingId}`);
   return added ? { message: `Added ${result.name}.` } : { error: `${result.phone} is already on the guest list.` };
 }
@@ -110,7 +140,9 @@ export async function importGuests(weddingId: string, _: FormState, fd: FormData
   // All-or-nothing: a planner fixes the file and re-uploads, instead of guessing which rows landed.
   if (errors.length) return { error: `Nothing imported. Fix ${errors.length} row(s):`, errors: errors.slice(0, 20) };
 
-  const { added, skipped } = await saveGuests(weddingId, guests);
+  const saved = await saveGuests(weddingId, guests);
+  if (!saved) return { error: SAVE_RACE };
+  const { added, skipped } = saved;
   revalidatePath(`/weddings/${weddingId}`);
   return {
     message: `Imported ${added} guest(s).` + (skipped.length ? ` Skipped ${skipped.length} already on the list.` : ""),

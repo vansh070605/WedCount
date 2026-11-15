@@ -12,6 +12,8 @@ const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
 export async function createSession(plannerId: string) {
   const token = randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+  // Housekeeping: drop this planner's expired sessions so the table doesn't grow forever.
+  await prisma.session.deleteMany({ where: { plannerId, expiresAt: { lt: new Date() } } });
   await prisma.session.create({ data: { id: sha256(token), plannerId, expiresAt } });
   (await cookies()).set(COOKIE, token, {
     httpOnly: true,
