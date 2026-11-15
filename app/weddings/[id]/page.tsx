@@ -2,11 +2,20 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { requireOwnedWedding, requirePlanner } from "@/lib/auth";
-import { addEvent, addGuest, importGuests, markSent } from "@/app/actions";
-import { AddEventForm, AddGuestForm, CopyLinkButton, ImportGuestsForm, WhatsAppSendButton } from "@/app/ui/forms";
+import { addEvent, addGuest, importGuests, markSent, recordActual } from "@/app/actions";
+import {
+  ActualCountForm,
+  AddEventForm,
+  AddGuestForm,
+  CopyLinkButton,
+  ImportGuestsForm,
+  WhatsAppSendButton,
+} from "@/app/ui/forms";
 import { appUrl, inviteLink, inviteMessage, reminderMessage, whatsappUrl } from "@/lib/invite";
 import { REMIND_EVERY_DAYS, ago, missingEvents, reminderStatus } from "@/lib/reminders";
 import { countHeadcount } from "@/lib/headcount";
+import { errorPct, predictEvent } from "@/lib/predict";
+import { plannerCalibration } from "@/lib/calibrate";
 
 export default function WeddingPage(props: PageProps<"/weddings/[id]">) {
   return (
@@ -23,6 +32,8 @@ const ist = (d: Date, opts: Intl.DateTimeFormatOptions) =>
 const card = "rounded-lg border border-zinc-200 p-5 dark:border-zinc-800";
 const muted = "text-sm text-zinc-600 dark:text-zinc-400";
 
+const signed = (pct: number) => (pct > 0 ? `+${pct}%` : `${pct}%`);
+
 // Short per-event reply for the guest list, e.g. "3 coming", "maybe 2", "no".
 function replyLabel(r: { status: string; vegCount: number; nonVegCount: number } | undefined) {
   if (!r) return "—";
@@ -36,13 +47,16 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const planner = await requirePlanner();
   const wedding = await requireOwnedWedding(planner.id, id);
-  const [events, guests] = await Promise.all([
+  const [events, guests, calibration] = await Promise.all([
     prisma.event.findMany({ where: { weddingId: wedding.id }, orderBy: { startsAt: "asc" } }),
     prisma.guest.findMany({ where: { weddingId: wedding.id }, orderBy: { name: "asc" }, include: { rsvps: true } }),
+    plannerCalibration(planner.id),
   ]);
   const counts = countHeadcount(events, guests);
+  const predictions = events.map((e) => predictEvent(e.id, guests, calibration.factor));
   const base = appUrl();
   const now = new Date();
+  const started = events.map((e, i) => ({ e, i })).filter(({ e }) => e.startsAt <= now);
   const statuses = guests.map((g) => ({ guest: g, status: reminderStatus(g, events, wedding.rsvpDeadline, now) }));
   const tally = (s: string) => statuses.filter((x) => x.status === s).length;
   const due = statuses.filter((x) => x.status === "due").map((x) => x.guest);
@@ -84,11 +98,12 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                   <th className="py-2 pr-4 font-medium">Veg / Non-veg</th>
                   <th className="py-2 pr-4 font-medium">Maybe</th>
                   <th className="py-2 pr-4 font-medium">Can&apos;t come</th>
-                  <th className="py-2 font-medium">No reply</th>
+                  <th className="py-2 pr-4 font-medium">No reply</th>
+                  <th className="py-2 font-medium">Expected</th>
                 </tr>
               </thead>
               <tbody>
-                {counts.map((c) => (
+                {counts.map((c, i) => (
                   <tr key={c.eventId} className="border-t border-zinc-200 dark:border-zinc-800">
                     <td className="py-2 pr-4 font-medium">{c.name}</td>
                     <td className="py-2 pr-4 text-lg font-semibold">{c.attending.people}</td>
@@ -97,7 +112,15 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                     </td>
                     <td className="py-2 pr-4">{c.maybe.people} people</td>
                     <td className="py-2 pr-4">{c.declined} invites</td>
-                    <td className="py-2">{c.noReply} invites</td>
+                    <td className="py-2 pr-4">{c.noReply} invites</td>
+                    <td className="py-2 whitespace-nowrap">
+                      <span className="text-lg font-semibold text-rose-700 dark:text-rose-400">
+                        {predictions[i].expected}
+                      </span>{" "}
+                      <span className={muted}>
+                        ({predictions[i].low}–{predictions[i].high})
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -105,9 +128,46 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
             <p className={`mt-3 ${muted}`}>
               Coming and Maybe count people. Can&apos;t come and No reply count invites (one per guest row).
             </p>
+            <details className={`mt-2 ${muted}`}>
+              <summary className="cursor-pointer font-medium">How &ldquo;Expected&rdquo; is worked out</summary>
+              <p className="mt-2">
+                Each reply is weighted by how often that kind of guest really turns up: a family &ldquo;Coming&rdquo;
+                counts more than a colleague&apos;s, a &ldquo;Maybe&rdquo; counts for less, and a guest who never
+                replied still counts a little at the average party size. The range in brackets is where the real number
+                should land about 9 times out of 10.{" "}
+                {calibration.events === 0
+                  ? "These weights are starting assumptions. Record real turnout after each function and the predictions adjust to your guests."
+                  : `Adjusted using real turnout from ${calibration.events} past function${calibration.events === 1 ? "" : "s"} (scaled by ${calibration.factor.toFixed(2)}).`}
+              </p>
+            </details>
           </div>
         )}
       </section>
+
+      {started.length > 0 && (
+        <section className={card}>
+          <h2 className="mb-1 font-semibold">Actual turnout</h2>
+          <p className={`mb-4 ${muted}`}>
+            After a function, enter how many people came. It shows how close the prediction was and improves the next
+            ones.
+          </p>
+          <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+            {started.map(({ e, i }) => (
+              <li key={e.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <div>
+                  <p className="font-medium">{e.name}</p>
+                  <p className={muted}>
+                    {e.actualCount == null
+                      ? `Expected ${predictions[i].expected}. Not recorded yet.`
+                      : `Came: ${e.actualCount} · Expected: ${predictions[i].expected} (${signed(errorPct(predictions[i].expected, e.actualCount))}) · Counting only "Coming": ${counts[i].attending.people} (${signed(errorPct(counts[i].attending.people, e.actualCount))})`}
+                  </p>
+                </div>
+                <ActualCountForm action={recordActual.bind(null, e.id)} current={e.actualCount} eventName={e.name} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {events.length > 0 && guests.length > 0 && (
         <section className={card}>

@@ -3,7 +3,7 @@
 WhatsApp-based guest RSVP and headcount prediction for Indian wedding planners.
 
 ## Status
-Day 7: reminders for guests who haven't replied, with invite tracking.
+Day 8: expected turnout per function, with a range, learning from real turnout.
 
 ## Run locally
 ```bash
@@ -49,6 +49,23 @@ College Friend,+91 90000 11111,groom,friend
 - Guest list shows each guest's reply per function.
 - **Download for caterer (CSV)** gives one row per function with those numbers. Opens cleanly in Excel (UTF-8, formula-safe).
 - Planners add functions (Haldi, Sangeet, ...) with date, time in IST and venue.
+
+## Expected turnout
+RSVPs overpromise: people say "Coming" and don't show, and some who never replied turn up. WedCount gives the caterer one number per function, with a range.
+
+- **Model:** each guest's party comes or doesn't with a probability that depends on their answer and relation:
+
+  | | Family | Friend | Colleague | Other |
+  |---|---|---|---|---|
+  | Coming | 0.95 | 0.85 | 0.75 | 0.80 |
+  | Maybe | 0.60 | 0.45 | 0.30 | 0.40 |
+  | No reply | 0.35 | 0.20 | 0.10 | 0.15 |
+
+  Coming / Maybe use the stated party size; No reply uses the function's average party size; Can't come counts 0.
+  Expected = sum(size x p). The range is +/- 1.645 standard deviations (about 90%), treating parties as independent.
+- **These rates are starting assumptions, not measured data.** After each function the planner enters how many people actually came. The app then scales predictions by `(actual + 100) / (predicted + 100)` across all their past functions (capped 0.5 to 1.5), so a planner whose guests show up less than assumed gets lower numbers next time.
+- **Accuracy is shown, not claimed:** for every recorded function the page compares the expected number and the naive "count only Coming" number against what really happened.
+- The caterer CSV includes Expected, low and high.
 
 ## Reminders
 - Clicking a WhatsApp invite or reminder button records the time (a click, not proof of delivery). The guest list shows "Invited today / 3 days ago" or "Not invited yet".
