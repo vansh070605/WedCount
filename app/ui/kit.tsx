@@ -55,7 +55,7 @@ export const inputClass = cx(
 );
 
 export function Card({ className, ...props }: ComponentProps<"section">) {
-  return <section className={cx("rounded-card border border-line bg-surface p-5 shadow-card sm:p-6", className)} {...props} />;
+  return <section className={cx("reveal rounded-card border border-line bg-surface p-5 shadow-card sm:p-6", className)} {...props} />;
 }
 
 export function SectionTitle({ title, hint, action }: { title: string; hint?: ReactNode; action?: ReactNode }) {
@@ -84,7 +84,7 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <header className="flex flex-wrap items-end justify-between gap-4">
+    <header className="rise flex flex-wrap items-end justify-between gap-4">
       <div>
         {back && <BackLink href={back.href} label={back.label} />}
         {eyebrow && <p className="mt-5 text-xs font-semibold tracking-[0.18em] text-gold uppercase">{eyebrow}</p>}
@@ -113,7 +113,7 @@ export function BackLink({ href, label }: { href: string; label: string }) {
 export function Stat({ label, value, sub, tone = "ink" }: { label: string; value: ReactNode; sub?: ReactNode; tone?: "ink" | "brand" | "gold" }) {
   const color = { ink: "text-ink", brand: "text-brand", gold: "text-gold" }[tone];
   return (
-    <div className="rounded-card border border-line bg-surface p-4 shadow-card">
+    <div className="spot lift rounded-card border border-line bg-surface p-4 shadow-card">
       <p className="text-xs font-medium tracking-wide text-muted uppercase">{label}</p>
       <p className={cx("mt-1 font-display text-3xl font-semibold tabular-nums", color)}>{value}</p>
       {sub && <p className="mt-0.5 text-xs text-muted">{sub}</p>}

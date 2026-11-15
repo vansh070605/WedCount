@@ -26,6 +26,8 @@ const EXAMPLE = {
   ],
 };
 
+const FUNCTIONS = ["Haldi", "Mehendi", "Sangeet", "Wedding", "Reception", "Cocktail", "Sagai"];
+
 const steps = [
   {
     title: "Add guests and functions",
@@ -290,12 +292,43 @@ export function Landing() {
           });
         });
 
-        // The problem in three numbers, scrubbed with the scroll: invited, said yes, came.
+        // Hero drifts away as you scroll past it: copy and product frame at different speeds (parallax).
         gsap
+          .timeline({ scrollTrigger: { trigger: "[data-hero]", start: "top top", end: "bottom top", scrub: 0.4 } })
+          .to("[data-hero-copy]", { y: -70, opacity: 0.25, ease: "none" }, 0)
+          .to("[data-hero-parallax]", { y: -140, ease: "none" }, 0);
+
+        // The problem in three numbers, scrubbed with the scroll: invited, said yes, came. The numbers count
+        // with the scroll too, and count back down if you scroll back up.
+        const problem = gsap
           .timeline({ scrollTrigger: { trigger: "[data-problem]", start: "top 70%", end: "center 45%", scrub: 0.6 } })
-          .from("[data-problem-num]", { y: 40, opacity: 0, stagger: 0.3 })
+          .from("[data-problem-num]", { y: 40, opacity: 0, stagger: 0.3 });
+        gsap.utils.toArray<HTMLElement>("[data-problem-count]").forEach((el, i) => {
+          const end = Number(el.dataset.problemCount);
+          const n = { v: 0 };
+          problem.fromTo(
+            n,
+            { v: 0 },
+            { v: end, duration: 0.7, ease: "power1.out", onUpdate: () => (el.textContent = Math.round(n.v).toString()) },
+            i * 0.3,
+          );
+        });
+        problem
           .from("[data-problem-strike]", { scaleX: 0, transformOrigin: "left center", duration: 0.6 })
           .from("[data-problem-note]", { y: 20, opacity: 0 });
+
+        // Function names slide in opposite directions while the band crosses the screen.
+        gsap
+          .timeline({ scrollTrigger: { trigger: "[data-marquee]", start: "top bottom", end: "bottom top", scrub: 0.5 } })
+          .fromTo('[data-marquee-row="0"]', { xPercent: 0 }, { xPercent: -30, ease: "none" }, 0)
+          .fromTo('[data-marquee-row="1"]', { xPercent: -30 }, { xPercent: 0, ease: "none" }, 0);
+
+        // The closing marigold turns as the last section scrolls into view.
+        gsap.fromTo(
+          "[data-cta-mark]",
+          { rotate: -120, scale: 0.6 },
+          { rotate: 0, scale: 1, ease: "none", scrollTrigger: { trigger: "[data-cta-mark]", start: "top bottom", end: "center 55%", scrub: 0.5 } },
+        );
 
         // Section headings and blocks rise in as they enter.
         gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el) => {
@@ -365,10 +398,10 @@ export function Landing() {
 
       <main>
         {/* Hero */}
-        <section className="relative">
+        <section data-hero className="relative">
           <Petals />
           <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pt-10 pb-20 sm:px-6 lg:min-h-[calc(100svh-4.5rem)] lg:grid-cols-[1.1fr_1fr] lg:pb-24">
-            <div>
+            <div data-hero-copy>
               <p data-hero-fade className="text-xs font-semibold tracking-[0.2em] text-gold uppercase">
                 For Indian wedding planners
               </p>
@@ -400,7 +433,9 @@ export function Landing() {
                 </ButtonLink>
               </div>
             </div>
-            <HeadcountFrame />
+            <div data-hero-parallax>
+              <HeadcountFrame />
+            </div>
           </div>
         </section>
 
@@ -415,7 +450,9 @@ export function Landing() {
                 ["280", "actually came"],
               ].map(([n, label]) => (
                 <div key={label} data-problem-num>
-                  <p className="font-display text-5xl font-semibold tabular-nums sm:text-8xl">{n}</p>
+                  <p data-problem-count={n} className="font-display text-5xl font-semibold tabular-nums sm:text-8xl">
+                    {n}
+                  </p>
                   <p className="mt-2 text-sm text-muted sm:text-base">{label}</p>
                 </div>
               ))}
@@ -435,6 +472,28 @@ export function Landing() {
               </p>
             </div>
           </div>
+        </section>
+
+        {/* Function names sliding past in opposite directions as you scroll. Decorative. */}
+        <section aria-hidden data-marquee className="overflow-hidden border-b border-line py-8 sm:py-12">
+          {[0, 1].map((row) => (
+            <div
+              key={row}
+              data-marquee-row={row}
+              className={`flex w-max gap-8 font-display text-4xl font-semibold whitespace-nowrap sm:gap-12 sm:text-7xl ${
+                row ? "mt-3 text-transparent [-webkit-text-stroke:1px_var(--gold)] sm:mt-5" : "text-ink"
+              }`}
+            >
+              {[0, 1, 2].flatMap((k) =>
+                FUNCTIONS.map((f) => (
+                  <span key={`${k}-${f}`} className="flex items-center gap-8 sm:gap-12">
+                    {f}
+                    <Mark className="size-6 sm:size-9" />
+                  </span>
+                )),
+              )}
+            </div>
+          ))}
         </section>
 
         {/* How it works: pinned story on wide screens */}
@@ -477,7 +536,7 @@ export function Landing() {
             </div>
             <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {features.map((f) => (
-                <li key={f.title} data-card className="lift rounded-card border border-line bg-paper p-6">
+                <li key={f.title} data-card className="spot lift rounded-card border border-line bg-paper p-6">
                   <span aria-hidden className="flex size-11 items-center justify-center rounded-xl bg-gold-soft text-xl">
                     {f.icon}
                   </span>
@@ -583,7 +642,9 @@ export function Landing() {
         <section className="relative overflow-hidden">
           <div className="jaali absolute inset-0 opacity-60" aria-hidden />
           <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-4 py-20 text-center sm:px-6 sm:py-28">
-            <Mark className="size-12" />
+            <span data-cta-mark className="inline-block">
+              <Mark className="size-14" />
+            </span>
             <h2 data-reveal className="mt-6 max-w-3xl font-display text-[2.1rem] leading-tight font-semibold tracking-tight sm:text-6xl">
               Plan the food for the guests who&apos;ll actually come
             </h2>
