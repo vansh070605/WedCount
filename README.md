@@ -283,7 +283,7 @@ Each step is a pull request with what changed, why, and how it was tested, and a
 | + | Go live on Vercel + Neon, functions in Singapore | [#15](https://github.com/vansh070605/WedCount/pull/15) |
 | + | Signup limit, analytics, error logging | [#16](https://github.com/vansh070605/WedCount/pull/16) |
 | + | Password reset by email (Resend) | [#17](https://github.com/vansh070605/WedCount/pull/17) |
-| + | Tester feedback: send queue, per-function invites, names, duplicates, RSVP closing | this PR |
+| + | Tester feedback: send queue, per-function invites, names, duplicates, RSVP closing | [#18](https://github.com/vansh070605/WedCount/pull/18) |
 
 ## 🗺 Roadmap
 
