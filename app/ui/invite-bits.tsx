@@ -28,7 +28,9 @@ export function Countdown({ to, initialDays }: { to: string; initialDays: number
       {parts.map(([n, label]) => (
         <div key={label} className="w-16 rounded-xl border border-[var(--inv-gold)]/50 bg-white/80 py-2.5 text-center shadow-sm sm:w-20">
           <p className="text-2xl font-semibold tabular-nums sm:text-3xl" style={{ color: "var(--brand)" }}>
-            {typeof n === "number" ? String(n).padStart(2, "0") : n}
+            <span key={String(n)} className="tick inline-block">
+              {typeof n === "number" ? String(n).padStart(2, "0") : n}
+            </span>
           </p>
           <p className="mt-0.5 text-[9px] tracking-[0.1em] text-[var(--inv-ink)]/60 uppercase">{label}</p>
         </div>
@@ -110,7 +112,7 @@ export function ScratchCard({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded-2xl border border-[var(--inv-gold)]/60 bg-white shadow-lg">
-      <div className="px-6 py-8 text-center">{children}</div>
+      <div className={`px-6 py-8 text-center ${done ? "revealed" : ""}`}>{children}</div>
       {!done && (
         <>
           <div ref={foil} data-cover aria-hidden className="foil absolute inset-0" />

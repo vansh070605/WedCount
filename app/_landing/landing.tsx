@@ -154,7 +154,7 @@ export function Landing() {
   return (
     <div className="flex flex-1 flex-col">
       <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur">
-        <Garland className="pointer-events-none absolute inset-x-0 -bottom-px h-3.5 w-full opacity-90" />
+        <Garland className="garland-drop pointer-events-none absolute inset-x-0 -bottom-px h-3.5 w-full opacity-90" />
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-6 px-4 sm:px-6">
           <Wordmark />
           <nav aria-label="Main" className="hidden items-center gap-7 text-sm text-muted md:flex">
@@ -317,7 +317,7 @@ export function Landing() {
         <section className="border-b border-line bg-surface">
           <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-2">
             <div className="reveal order-2 lg:order-1">
-              <div data-invite="royal" className="mx-auto max-w-sm overflow-hidden rounded-[2rem] border-8 border-ink shadow-lift">
+              <div data-invite="royal" className="float mx-auto max-w-sm overflow-hidden rounded-[2rem] border-8 border-ink shadow-lift">
                 <div className="relative bg-[var(--inv-deep)] px-6 pt-9 pb-8 text-center text-[var(--inv-on-deep)]">
                   <Garland id="toran-mock" className="absolute inset-x-0 top-0 h-5 w-full" />
                   <p className="text-xs italic opacity-80">With the blessings of our families</p>

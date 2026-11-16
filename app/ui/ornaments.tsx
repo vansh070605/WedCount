@@ -32,8 +32,10 @@ export function Garland({ className = "h-7 w-full", style, id = "toran" }: { cla
 export function Diya({ className = "size-8" }: { className?: string }) {
   return (
     <svg viewBox="0 0 48 48" aria-hidden className={className}>
-      <path d="M24 6c4 6 5 10 0 15-5-5-4-9 0-15z" fill="#f6b52a" />
-      <path d="M24 11c2 3 2.5 5 0 7.5-2.5-2.5-2-4.5 0-7.5z" fill="#fff3c4" />
+      <g className="flame">
+        <path d="M24 6c4 6 5 10 0 15-5-5-4-9 0-15z" fill="#f6b52a" />
+        <path d="M24 11c2 3 2.5 5 0 7.5-2.5-2.5-2-4.5 0-7.5z" fill="#fff3c4" />
+      </g>
       <path d="M6 26h36c-2 9-9 14-18 14S8 35 6 26z" fill="currentColor" />
       <path d="M10 26h28" stroke="#f6b52a" strokeWidth="2" strokeLinecap="round" />
       <path d="M17 40h14l-2 3H19z" fill="currentColor" opacity="0.8" />

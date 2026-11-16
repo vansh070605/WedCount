@@ -20,6 +20,28 @@ const ist = (d: Date, opts: Intl.DateTimeFormatOptions) => d.toLocaleString("en-
 const script = "font-[family-name:var(--font-script)] font-normal";
 const MAIN = /wedding|shaadi|vivah|pheras|muhurtham|nikah|anand karaj/i;
 
+// A one-time shower of marigold petals when the invitation opens (see .petal in globals.css).
+const PETALS = [
+  [6, 0, 30, 12], [16, 300, -20, 9], [27, 120, 40, 14], [38, 520, -30, 10], [49, 60, 25, 13], [58, 380, -40, 9],
+  [67, 180, 35, 12], [76, 640, -25, 11], [85, 240, 30, 14], [93, 460, -35, 10], [21, 820, 20, 8], [72, 900, -15, 9],
+];
+function Petals() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {PETALS.map(([left, delay, dx, size], i) => (
+        <svg
+          key={i}
+          viewBox="0 0 10 16"
+          className="petal absolute -top-6"
+          style={{ left: `${left}%`, width: size, "--d": `${delay}ms`, "--dx": `${dx}px`, "--spin": `${i % 2 ? -1 : 1}turn` } as React.CSSProperties}
+        >
+          <ellipse cx="5" cy="8" rx="4.2" ry="7.5" fill={i % 3 ? "#f6b52a" : "#ef8f12"} />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return <p className="text-[11px] font-semibold tracking-[0.3em] text-[var(--inv-gold)] uppercase">{children}</p>;
 }
@@ -79,11 +101,18 @@ async function Invitation({ params }: { params: Promise<{ token: string }> }) {
       <input type="checkbox" id="open-invite" className="peer sr-only" aria-label="Open the invitation" />
       <label
         htmlFor="open-invite"
-        className="invite-cover fixed inset-0 z-50 flex cursor-pointer flex-col items-center justify-center gap-8 bg-[var(--inv-deep)] px-6 text-center text-[var(--inv-on-deep)]"
+        className="invite-cover fixed inset-0 z-50 flex cursor-pointer flex-col items-center justify-center gap-8 px-6 text-center text-[var(--inv-on-deep)]"
       >
-        <Garland id="toran-cover" className="absolute inset-x-0 top-0 h-7 w-full" />
-        <MandalaCorner className="absolute top-10 left-3 size-20 text-[var(--inv-gold)] opacity-60" />
-        <MandalaCorner className="absolute top-10 right-3 size-20 -scale-x-100 text-[var(--inv-gold)] opacity-60" />
+        {/* Two doors meeting in the middle; they swing apart when the seal is tapped. */}
+        <span aria-hidden className="door door-l absolute inset-y-0 left-0 w-1/2 bg-[var(--inv-deep)]">
+          <MandalaCorner className="absolute top-10 left-3 size-20 text-[var(--inv-gold)] opacity-60" />
+          <span className="absolute inset-y-0 right-0 w-px bg-[var(--inv-gold)]/40" />
+        </span>
+        <span aria-hidden className="door door-r absolute inset-y-0 right-0 w-1/2 bg-[var(--inv-deep)]">
+          <MandalaCorner className="absolute top-10 right-3 size-20 -scale-x-100 text-[var(--inv-gold)] opacity-60" />
+        </span>
+        <Garland id="toran-cover" className="cover-garland absolute inset-x-0 top-0 h-7 w-full" />
+        <span className="cover-content relative flex flex-col items-center gap-8">
         <p className={`${script} text-3xl text-[var(--inv-gold)]`}>An invitation awaits</p>
         <span
           className="seal flex size-28 items-center justify-center rounded-full border-4 border-[var(--inv-gold)] shadow-2xl"
@@ -93,6 +122,7 @@ async function Invitation({ params }: { params: Promise<{ token: string }> }) {
         </span>
         <p className="text-xs font-semibold tracking-[0.35em] uppercase opacity-80">Tap the seal</p>
         <p className="text-sm opacity-70">for {guest.name}</p>
+        </span>
       </label>
       <noscript>
         <style>{".invite-cover{display:none}"}</style>
@@ -102,25 +132,36 @@ async function Invitation({ params }: { params: Promise<{ token: string }> }) {
         {/* Names */}
         <section className="relative overflow-hidden bg-[var(--inv-deep)] px-6 pt-14 pb-16 text-center text-[var(--inv-on-deep)]">
           <Garland id="toran-hero" className="absolute inset-x-0 top-0 h-7 w-full" />
+          <Petals />
           <div className="mx-auto flex max-w-xl flex-col items-center">
-            <div className="flex w-full items-start justify-between text-[var(--inv-gold)]">
+            <div className="inv-in flex w-full items-start justify-between text-[var(--inv-gold)]">
               <Diya className="size-9" />
               <Diya className="size-9" />
             </div>
-            <p className="mt-2 max-w-md text-sm italic opacity-85">
+            <p className="inv-in mt-2 max-w-md text-sm italic opacity-85" style={{ "--d": "120ms" } as React.CSSProperties}>
               {wedding.blessing || "With the blessings of our families, we invite you to celebrate with us"}
             </p>
             {couple ? (
               <h1 className={`${script} mt-6 flex flex-col items-center leading-[0.95]`}>
-                <span className="text-6xl sm:text-7xl">{couple[0]}</span>
-                <span className="my-2 text-3xl text-[var(--inv-gold)]">weds</span>
-                <span className="text-6xl sm:text-7xl">{couple[1]}</span>
+                <span className="inv-in text-6xl sm:text-7xl" style={{ "--d": "260ms" } as React.CSSProperties}>
+                  {couple[0]}
+                </span>
+                <span className="inv-in my-2 text-3xl text-[var(--inv-gold)]" style={{ "--d": "520ms" } as React.CSSProperties}>
+                  weds
+                </span>
+                <span className="inv-in text-6xl sm:text-7xl" style={{ "--d": "700ms" } as React.CSSProperties}>
+                  {couple[1]}
+                </span>
               </h1>
             ) : (
               <h1 className={`${script} mt-6 text-5xl sm:text-6xl`}>{wedding.name}</h1>
             )}
-            {wedding.city && <p className="mt-6 text-xs tracking-[0.3em] uppercase opacity-80">{wedding.city}</p>}
-            <Divider className="mt-6 w-56 text-[var(--inv-gold)]" />
+            {wedding.city && (
+              <p className="inv-in mt-6 text-xs tracking-[0.3em] uppercase opacity-80" style={{ "--d": "950ms" } as React.CSSProperties}>
+                {wedding.city}
+              </p>
+            )}
+            <Divider className="inv-draw mt-6 w-56 text-[var(--inv-gold)]" />
           </div>
         </section>
 
@@ -131,7 +172,7 @@ async function Invitation({ params }: { params: Promise<{ token: string }> }) {
 
           {/* Families */}
           {(wedding.brideParents || wedding.groomParents) && couple && (
-            <section className="relative w-full rounded-2xl border border-[var(--inv-gold)]/50 bg-white/70 px-6 py-10">
+            <section className="reveal relative w-full rounded-2xl border border-[var(--inv-gold)]/50 bg-white/70 px-6 py-10">
               <MandalaCorner className="absolute top-2 left-2 size-12 text-[var(--inv-gold)]" />
               <MandalaCorner className="absolute top-2 right-2 size-12 -scale-x-100 text-[var(--inv-gold)]" />
               <MandalaCorner className="absolute bottom-2 left-2 size-12 -scale-y-100 text-[var(--inv-gold)]" />
@@ -147,8 +188,8 @@ async function Invitation({ params }: { params: Promise<{ token: string }> }) {
 
           {/* The couple and the countdown */}
           {next && (
-            <section className="flex flex-col items-center gap-6">
-              <CoupleArt className="w-52" />
+            <section className="reveal flex flex-col items-center gap-6">
+              <CoupleArt className="float w-52" />
               <p className={`${script} text-4xl text-[var(--brand)]`}>Counting down to {next.name}</p>
               <Countdown to={next.startsAt.toISOString()} initialDays={Math.max(0, Math.floor((next.startsAt.getTime() - now.getTime()) / 86400000))} />
             </section>
@@ -156,7 +197,7 @@ async function Invitation({ params }: { params: Promise<{ token: string }> }) {
 
           {/* Scratch to reveal the big day */}
           {main && (
-            <section className="w-full">
+            <section className="reveal w-full">
               <Eyebrow>Scratch the gold to reveal the date</Eyebrow>
               <div className="mt-5">
                 <ScratchCard>
@@ -178,7 +219,7 @@ async function Invitation({ params }: { params: Promise<{ token: string }> }) {
                 {mine.map((e) => {
                   const tone = functionTone(e.name) ?? "var(--brand)";
                   return (
-                    <li key={e.id} className="overflow-hidden rounded-2xl border border-[var(--inv-gold)]/40 bg-white shadow-sm">
+                    <li key={e.id} className="reveal lift overflow-hidden rounded-2xl border border-[var(--inv-gold)]/40 bg-white shadow-sm">
                       <div className="h-1.5" style={{ background: tone }} />
                       <div className="flex items-start gap-4 p-5">
                         <div className="flex w-14 shrink-0 flex-col items-center rounded-xl py-2 text-white" style={{ background: tone }}>

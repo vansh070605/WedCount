@@ -2,6 +2,7 @@
 // so the look stays consistent and changes in one place.
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
+import { CountUp } from "@/app/ui/motion";
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
@@ -113,9 +114,17 @@ export function BackLink({ href, label }: { href: string; label: string }) {
 export function Stat({ label, value, sub, tone = "ink" }: { label: string; value: ReactNode; sub?: ReactNode; tone?: "ink" | "brand" | "gold" }) {
   const color = { ink: "text-ink", brand: "text-brand", gold: "text-gold" }[tone];
   return (
-    <div className="rounded-card border border-line bg-surface p-4 shadow-card">
+    <div className="lift rounded-card border border-line bg-surface p-4 shadow-card">
       <p className="text-[13px] font-medium text-muted">{label}</p>
-      <p className={cx("mt-1 text-3xl font-semibold tracking-tight tabular-nums", color)}>{value}</p>
+      <p className={cx("mt-1 text-3xl font-semibold tracking-tight tabular-nums", color)}>
+        {typeof value === "number" ? (
+          <CountUp value={value} />
+        ) : typeof value === "string" && /^\d+%$/.test(value) ? (
+          <CountUp value={parseInt(value)} suffix="%" />
+        ) : (
+          value
+        )}
+      </p>
       {sub && <p className="mt-0.5 text-xs text-muted">{sub}</p>}
     </div>
   );

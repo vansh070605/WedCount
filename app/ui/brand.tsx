@@ -29,7 +29,7 @@ export function Wordmark({ href = "/" }: { href?: string }) {
 export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-paper">
-      <Garland className="pointer-events-none absolute inset-x-0 -bottom-px h-3.5 w-full opacity-90" />
+      <Garland className="garland-drop pointer-events-none absolute inset-x-0 -bottom-px h-3.5 w-full opacity-90" />
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
         <Wordmark href="/home" />
         <nav className="flex items-center gap-2 text-sm">
@@ -119,7 +119,7 @@ export function SiteFooter() {
 export function SiteHeader({ section }: { section?: string }) {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-paper/90 backdrop-blur">
-      <Garland className="pointer-events-none absolute inset-x-0 -bottom-px h-3.5 w-full opacity-90" />
+      <Garland className="garland-drop pointer-events-none absolute inset-x-0 -bottom-px h-3.5 w-full opacity-90" />
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex items-center gap-3">
           <Wordmark />
