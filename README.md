@@ -288,7 +288,7 @@ Each step is a pull request with what changed, why, and how it was tested, and a
 | + | Password reset by email (Resend) | [#17](https://github.com/vansh070605/WedCount/pull/17) |
 | + | Tester feedback: send queue, per-function invites, names, duplicates, RSVP closing | [#18](https://github.com/vansh070605/WedCount/pull/18) |
 | + | Planner home page, no past dates | [#19](https://github.com/vansh070605/WedCount/pull/19) |
-| + | Festive invitation (4 themes, seal, countdown, scratch card) and warm wedding look | this PR |
+| + | Festive invitation (4 themes, seal, countdown, scratch card) and warm wedding look | [#20](https://github.com/vansh070605/WedCount/pull/20) |
 
 ## 🗺 Roadmap
 
