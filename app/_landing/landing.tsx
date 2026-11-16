@@ -1,20 +1,9 @@
-"use client";
-
-// Marketing page. All motion lives in one useGSAP scope:
-// - full motion only when the visitor hasn't asked for reduced motion (gsap.matchMedia);
-// - every animated element is rendered in its final state on the server, so with reduced motion,
-//   no JS or a failed script the page is complete and readable;
-// - the pinned story runs on wide screens only; phones get the same steps stacked.
-
-import { useRef } from "react";
+// Marketing page. Plain server-rendered HTML: the product's own UI is the picture, motion is limited to
+// the shared hover states and the CSS scroll reveals in globals.css.
 import Link from "next/link";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
-import { Mark, Wordmark } from "@/app/ui/brand";
-import { ButtonLink, Ornament } from "@/app/ui/kit";
-
-gsap.registerPlugin(useGSAP, ScrollTrigger);
+import type { ReactNode } from "react";
+import { SiteFooter, Wordmark } from "@/app/ui/brand";
+import { ButtonLink } from "@/app/ui/kit";
 
 // One example wedding, used consistently across every mock on the page.
 const EXAMPLE = {
@@ -26,109 +15,115 @@ const EXAMPLE = {
   ],
 };
 
-const FUNCTIONS = ["Haldi", "Mehendi", "Sangeet", "Wedding", "Reception", "Cocktail", "Sagai"];
-
 const steps = [
-  {
-    title: "Add guests and functions",
-    body: "Type them in or import the family's spreadsheet. Add Haldi, Sangeet, Wedding, Reception with times and venues.",
-  },
-  {
-    title: "Invite on WhatsApp",
-    body: "One tap opens WhatsApp with each guest's personal link already typed. It goes from your own number, so families trust it.",
-  },
-  {
-    title: "Guests reply per function",
-    body: "Coming, Maybe or Can't come for each function, how many people, veg or non-veg, and when they'll arrive.",
-  },
-  {
-    title: "Your caterer gets one number",
-    body: "Live totals per function, an expected turnout with a likely range, and a CSV the caterer can open in Excel.",
-  },
+  { title: "Add guests and functions", body: "Type them in or import the family's spreadsheet. Add Haldi, Sangeet, Wedding and Reception with times and venues." },
+  { title: "Invite on WhatsApp", body: "One tap opens WhatsApp with each guest's personal link already typed, sent from your own number." },
+  { title: "Guests reply per function", body: "Coming, Maybe or Can't come for each function, with party size, veg or non-veg, and arrival time." },
+  { title: "Give the caterer one number", body: "Live totals per function, an expected turnout with a likely range, and a CSV that opens in Excel." },
 ];
+
+// 24px stroke icons, drawn in currentColor.
+const icon = (d: ReactNode) => (
+  <svg viewBox="0 0 24 24" aria-hidden className="size-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    {d}
+  </svg>
+);
 
 const features = [
-  { icon: "🗓️", title: "Every function, separately", body: "Haldi and Reception aren't the same crowd. Replies and counts are kept per function." },
-  { icon: "🥗", title: "Veg and non-veg split", body: "Each reply carries its own veg and non-veg count, so the menu is planned from real numbers." },
-  { icon: "🔔", title: "Reminders that don't nag", body: "See who hasn't replied and nudge them in one tap, never more than once every two days." },
-  { icon: "📊", title: "Predictions that learn", body: "Record real turnout after each function and future estimates adjust to your guests." },
-  { icon: "📄", title: "Caterer-ready export", body: "One CSV per wedding: expected people, range, and the food split for every function." },
-  { icon: "🔒", title: "Private by default", body: "Each guest sees only their own invite. Planners see only their own weddings." },
+  {
+    icon: icon(<><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></>),
+    title: "Every function, separately",
+    body: "Haldi and Reception aren't the same crowd. Replies and counts are kept per function.",
+  },
+  {
+    icon: icon(<><circle cx="12" cy="12" r="9" /><path d="M12 3v9l7.8 4.5" /></>),
+    title: "Veg and non-veg split",
+    body: "Each reply carries its own veg and non-veg count, so the menu is planned from real numbers.",
+  },
+  {
+    icon: icon(<><path d="M6 16v-5a6 6 0 1 1 12 0v5l2 2H4z" /><path d="M10 20a2 2 0 0 0 4 0" /></>),
+    title: "Reminders that don't nag",
+    body: "See who hasn't replied and nudge them in one tap, at most once every two days.",
+  },
+  {
+    icon: icon(<path d="M3 20h18M6 16v-5M11 16V6M16 16v-8" />),
+    title: "Predictions that learn",
+    body: "Record real turnout after each function and future estimates adjust to your guests.",
+  },
+  {
+    icon: icon(<><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M12 11v6M9 14l3 3 3-3" /></>),
+    title: "Caterer-ready export",
+    body: "One CSV per wedding: expected people, range, and the food split for every function.",
+  },
+  {
+    icon: icon(<><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></>),
+    title: "Private by default",
+    body: "Each guest sees only their own invite. Planners see only their own weddings.",
+  },
 ];
 
-function Petals() {
-  // A few marigold petals drifting through the hero. Decorative, hidden under reduced motion.
-  const petals = [
-    { left: "8%", delay: "0s", dur: "14s", dx: "60px", size: 14 },
-    { left: "22%", delay: "-6s", dur: "18s", dx: "-40px", size: 10 },
-    { left: "47%", delay: "-3s", dur: "16s", dx: "30px", size: 12 },
-    { left: "68%", delay: "-9s", dur: "20s", dx: "-70px", size: 16 },
-    { left: "84%", delay: "-12s", dur: "15s", dx: "40px", size: 11 },
-    { left: "93%", delay: "-2s", dur: "19s", dx: "-30px", size: 9 },
-  ];
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      {petals.map((p, i) => (
-        <svg
-          key={i}
-          viewBox="0 0 10 16"
-          className="petal absolute top-0"
-          style={
-            {
-              left: p.left,
-              width: p.size,
-              animation: `drift ${p.dur} linear ${p.delay} infinite`,
-              "--dx": p.dx,
-              "--spin": `${(i % 2 ? -1 : 1) * (280 + i * 30)}deg`,
-            } as React.CSSProperties
-          }
-        >
-          <ellipse cx="5" cy="8" rx="4.2" ry="7.5" fill="var(--gold)" opacity="0.55" />
-        </svg>
-      ))}
-    </div>
-  );
+function Eyebrow({ children }: { children: ReactNode }) {
+  return <p className="text-sm font-medium text-brand">{children}</p>;
 }
 
-function HeadcountFrame() {
-  // The product's real headcount table, as live HTML (not a screenshot).
+function H2({ children }: { children: ReactNode }) {
+  return <h2 className="mt-3 text-3xl font-semibold tracking-tight text-balance sm:text-[2.6rem] sm:leading-[1.1]">{children}</h2>;
+}
+
+// The product's real wedding screen, as live HTML (not a screenshot).
+function ProductFrame() {
+  const stats = [
+    ["Invites", "412", "18 not sent yet"],
+    ["Replied to all", "318", "77% of invites"],
+    ["Due a reminder", "37", "quiet for 2+ days"],
+    ["Expected · Sangeet", "212", "likely 196–228"],
+  ];
   return (
-    <div data-hero-frame className="relative rounded-[1.25rem] border border-line bg-surface p-2 shadow-lift">
+    <div className="rounded-2xl border border-line bg-surface p-1.5 shadow-lift">
       <div className="flex items-center gap-1.5 px-3 py-2">
         <span className="size-2.5 rounded-full bg-line" />
         <span className="size-2.5 rounded-full bg-line" />
         <span className="size-2.5 rounded-full bg-line" />
-        <span className="ml-3 truncate rounded-full bg-sunken px-3 py-0.5 text-xs text-muted">wedcount.app/weddings/priya-rohit</span>
+        <span className="ml-3 truncate rounded-md bg-sunken px-3 py-0.5 text-xs text-muted">wedcount.app/weddings/priya-rohit</span>
       </div>
-      <div className="rounded-xl bg-paper p-4 sm:p-5">
-        <div className="flex items-baseline justify-between gap-3">
-          <p className="font-display text-lg font-semibold">{EXAMPLE.couple}</p>
+      <div className="rounded-xl border border-line bg-paper p-4 text-left sm:p-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <p className="text-lg font-semibold tracking-tight">{EXAMPLE.couple}</p>
           <p className="text-xs text-muted">Jaipur · RSVP by 1 Dec</p>
         </div>
-        <div className="mt-4 overflow-hidden rounded-xl border border-line bg-surface">
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {stats.map(([k, v, sub], i) => (
+            <div key={k} className="rounded-lg border border-line bg-surface p-3">
+              <p className="text-xs font-medium text-muted">{k}</p>
+              <p className={`mt-1 text-2xl font-semibold tracking-tight tabular-nums ${i === 3 ? "text-brand" : ""}`}>{v}</p>
+              <p className="text-[11px] text-muted">{sub}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 overflow-hidden rounded-lg border border-line bg-surface">
           <table className="w-full text-left text-xs sm:text-sm">
             <thead className="bg-sunken text-muted">
               <tr>
                 <th className="px-3 py-2 font-medium">Function</th>
                 <th className="px-3 py-2 font-medium">Coming</th>
                 <th className="hidden px-3 py-2 font-medium sm:table-cell">Veg / Non-veg</th>
+                <th className="hidden px-3 py-2 font-medium sm:table-cell">Maybe</th>
+                <th className="hidden px-3 py-2 font-medium sm:table-cell">No reply</th>
                 <th className="px-3 py-2 font-medium">Expected</th>
               </tr>
             </thead>
             <tbody>
               {EXAMPLE.rows.map((r) => (
-                <tr key={r.fn} data-row className="border-t border-line">
+                <tr key={r.fn} className="border-t border-line">
                   <td className="px-3 py-2.5 font-medium">{r.fn}</td>
-                  <td className="px-3 py-2.5 tabular-nums" data-count={r.coming}>
-                    {r.coming}
-                  </td>
+                  <td className="px-3 py-2.5 tabular-nums">{r.coming}</td>
                   <td className="hidden px-3 py-2.5 tabular-nums sm:table-cell">
                     {r.veg} / {r.nonVeg}
                   </td>
+                  <td className="hidden px-3 py-2.5 tabular-nums sm:table-cell">{r.maybe}</td>
+                  <td className="hidden px-3 py-2.5 tabular-nums sm:table-cell">{r.noReply}</td>
                   <td className="px-3 py-2.5">
-                    <span className="font-display text-base font-semibold text-brand tabular-nums" data-count={r.expected}>
-                      {r.expected}
-                    </span>{" "}
+                    <span className="font-semibold text-brand tabular-nums">{r.expected}</span>{" "}
                     <span className="text-muted tabular-nums">
                       ({r.low}–{r.high})
                     </span>
@@ -139,408 +134,113 @@ function HeadcountFrame() {
           </table>
         </div>
       </div>
-
-      {/* WhatsApp reply bubble overlapping the frame: what the planner's day actually looks like. */}
-      <div
-        data-hero-bubble
-        className="absolute -bottom-16 -left-6 hidden w-64 rounded-2xl rounded-bl-sm border border-line bg-surface p-3 text-xs shadow-lift sm:block"
-      >
-        <p className="flex items-center gap-1.5 font-medium text-wa">
-          <span className="relative flex size-2">
-            <span className="absolute inset-0 rounded-full bg-wa" style={{ animation: "pulse-dot 1.8s ease-in-out infinite" }} />
-            <span className="relative size-2 rounded-full bg-wa" />
-          </span>
-          New reply · Sharma Uncle
-        </p>
-        <p className="mt-1 text-muted">Sangeet: Coming, 4 people (3 veg, 1 non-veg), arriving 7:30 pm</p>
-      </div>
     </div>
-  );
-}
-
-function Phone({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="relative mx-auto w-[280px] rounded-[2.4rem] border border-line bg-ink p-2.5 shadow-lift">
-      <div className="relative h-[520px] overflow-hidden rounded-[1.9rem] bg-paper">
-        <div className="absolute top-2 left-1/2 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-ink" />
-        {children}
-      </div>
-    </div>
-  );
-}
-
-// The four story screens, stacked; the scroll timeline shows one at a time.
-function StoryScreens() {
-  const r = EXAMPLE.rows[1];
-  return (
-    <Phone>
-      <div data-screen className="absolute inset-0 flex flex-col gap-3 bg-sunken p-4 pt-10">
-        <p className="text-center text-xs font-semibold text-muted">Guest list · 46 guests</p>
-        {["Sharma Uncle · family", "Neha Kapoor · friend", "Arjun Nair · colleague", "Kavya Iyer · friend", "Rahul Jain · family"].map((g) => (
-          <div key={g} className="flex items-center justify-between rounded-xl bg-surface px-3 py-2.5 text-sm shadow-card">
-            <span>{g}</span>
-            <span className="rounded-full bg-wa px-2 py-0.5 text-[10px] font-medium text-white">WhatsApp</span>
-          </div>
-        ))}
-        <div className="mt-auto rounded-xl border border-dashed border-line p-3 text-center text-xs text-muted">+ Import guests.csv</div>
-      </div>
-
-      <div data-screen className="absolute inset-0 flex flex-col bg-[#e9e2d7] p-4 pt-10 dark:bg-[#1f1915]">
-        <p className="text-center text-xs font-semibold text-muted">Sharma Uncle</p>
-        <div className="mt-4 ml-auto max-w-[88%] rounded-2xl rounded-br-sm bg-[#d8f3c6] p-3 text-[13px] leading-snug text-[#1f2a1a] shadow-card">
-          Namaste Sharma Uncle! You&apos;re invited to {EXAMPLE.couple}.
-          <br />
-          <br />
-          Please tell us which functions you&apos;ll attend and how many of you are coming by 1 December:
-          <br />
-          <span className="text-[#0b7a43] underline">wedcount.app/r/7Hq2…</span>
-          <p className="mt-1 text-right text-[10px] text-[#1f2a1a]/60">10:42 ✓✓</p>
-        </div>
-        <div className="mt-3 max-w-[70%] rounded-2xl rounded-bl-sm bg-surface p-3 text-[13px] shadow-card">
-          Will reply tonight beta 🙏
-        </div>
-      </div>
-
-      <div data-screen className="absolute inset-0 flex flex-col gap-3 p-4 pt-10">
-        <p className="text-center font-display text-lg font-semibold">You&apos;re invited</p>
-        <Ornament className="px-6" />
-        <div className="rounded-xl border border-line bg-surface p-3 shadow-card">
-          <p className="font-display font-semibold">Sangeet</p>
-          <p className="text-[11px] text-muted">Thu 10 Dec, 7:00 pm · Rambagh Lawns</p>
-          <div className="mt-2 flex gap-1.5 text-[11px]">
-            <span data-chip className="rounded-full bg-brand px-2.5 py-1 font-medium text-white">Coming</span>
-            <span className="rounded-full border border-line px-2.5 py-1">Maybe</span>
-            <span className="rounded-full border border-line px-2.5 py-1">Can&apos;t come</span>
-          </div>
-          <div className="mt-2 grid grid-cols-2 gap-1.5 text-[11px]">
-            <span className="rounded-lg bg-sunken px-2 py-1.5">Veg 3</span>
-            <span className="rounded-lg bg-sunken px-2 py-1.5">Non-veg 1</span>
-          </div>
-        </div>
-        <div className="rounded-xl border border-line bg-surface p-3 shadow-card">
-          <p className="font-display font-semibold">Wedding</p>
-          <div className="mt-2 flex gap-1.5 text-[11px]">
-            <span className="rounded-full bg-brand px-2.5 py-1 font-medium text-white">Coming</span>
-            <span className="rounded-full border border-line px-2.5 py-1">Maybe</span>
-          </div>
-        </div>
-        <span className="mt-auto rounded-full bg-brand py-2.5 text-center text-sm font-medium text-white">Save my reply</span>
-      </div>
-
-      <div data-screen className="absolute inset-0 flex flex-col gap-3 p-4 pt-10">
-        <p className="text-center text-xs font-semibold text-muted">Sangeet · headcount</p>
-        <div className="rounded-xl border border-line bg-surface p-4 text-center shadow-card">
-          <p className="text-xs text-muted">Expected</p>
-          <p className="font-display text-6xl font-semibold text-brand tabular-nums" data-count={r.expected}>
-            {r.expected}
-          </p>
-          <p className="text-xs text-muted">
-            likely {r.low}–{r.high}
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          {[
-            ["Coming", r.coming],
-            ["Maybe", r.maybe],
-            ["Veg", r.veg],
-            ["Non-veg", r.nonVeg],
-          ].map(([k, v]) => (
-            <div key={k} className="rounded-xl border border-line bg-surface p-3 shadow-card">
-              <p className="text-[11px] text-muted">{k}</p>
-              <p className="font-semibold tabular-nums">{v}</p>
-            </div>
-          ))}
-        </div>
-        <span className="mt-auto rounded-full border border-line py-2.5 text-center text-sm font-medium">Download for caterer</span>
-      </div>
-    </Phone>
   );
 }
 
 export function Landing() {
-  const root = useRef<HTMLDivElement>(null);
-
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia();
-
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
-        // Hero: headline lines rise out of their masks, then the product frame and reply bubble.
-        // Skipped when scripts arrive late (slow phone): the visitor is already reading the hero, and hiding it
-        // to replay the entrance would look like a glitch.
-        const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
-        intro
-          .from("[data-hero-line]", { yPercent: 110, duration: 0.9, stagger: 0.09 })
-          .from("[data-hero-fade]", { y: 16, opacity: 0, duration: 0.7, stagger: 0.08 }, "-=0.5")
-          .from("[data-hero-frame]", { y: 60, opacity: 0, duration: 1.1 }, "-=0.7")
-          .from("[data-row]", { x: -12, opacity: 0, duration: 0.5, stagger: 0.08 }, "-=0.6")
-          .from("[data-hero-bubble]", { y: 24, scale: 0.9, opacity: 0, duration: 0.7, ease: "back.out(1.6)" }, "-=0.2");
-        if (performance.now() > 1500) intro.progress(1); // late scripts: show the hero as it already is
-
-        // Numbers count up from zero the first time they come into view.
-        const late = performance.now() > 1500;
-        gsap.utils.toArray<HTMLElement>("[data-count]").forEach((el) => {
-          if (late && ScrollTrigger.isInViewport(el)) return; // already read on screen: don't reset it to 0
-          const end = Number(el.dataset.count);
-          const counter = { v: 0 };
-          gsap.to(counter, {
-            v: end,
-            duration: 1.4,
-            ease: "power2.out",
-            onUpdate: () => (el.textContent = Math.round(counter.v).toString()),
-            scrollTrigger: { trigger: el, start: "top 92%", once: true },
-          });
-        });
-
-        // Hero drifts away as you scroll past it: copy and product frame at different speeds (parallax).
-        gsap
-          .timeline({ scrollTrigger: { trigger: "[data-hero]", start: "top top", end: "bottom top", scrub: 0.4 } })
-          .to("[data-hero-copy]", { y: -70, opacity: 0.25, ease: "none" }, 0)
-          .to("[data-hero-parallax]", { y: -140, ease: "none" }, 0);
-
-        // The problem in three numbers, scrubbed with the scroll: invited, said yes, came. The numbers count
-        // with the scroll too, and count back down if you scroll back up.
-        const problem = gsap
-          .timeline({ scrollTrigger: { trigger: "[data-problem]", start: "top 70%", end: "center 45%", scrub: 0.6 } })
-          .from("[data-problem-num]", { y: 40, opacity: 0, stagger: 0.3 });
-        gsap.utils.toArray<HTMLElement>("[data-problem-count]").forEach((el, i) => {
-          const end = Number(el.dataset.problemCount);
-          const n = { v: 0 };
-          problem.fromTo(
-            n,
-            { v: 0 },
-            { v: end, duration: 0.7, ease: "power1.out", onUpdate: () => (el.textContent = Math.round(n.v).toString()) },
-            i * 0.3,
-          );
-        });
-        problem
-          .from("[data-problem-strike]", { scaleX: 0, transformOrigin: "left center", duration: 0.6 })
-          .from("[data-problem-note]", { y: 20, opacity: 0 });
-
-        // Function names slide in opposite directions while the band crosses the screen.
-        gsap
-          .timeline({ scrollTrigger: { trigger: "[data-marquee]", start: "top bottom", end: "bottom top", scrub: 0.5 } })
-          .fromTo('[data-marquee-row="0"]', { xPercent: 0 }, { xPercent: -30, ease: "none" }, 0)
-          .fromTo('[data-marquee-row="1"]', { xPercent: -30 }, { xPercent: 0, ease: "none" }, 0);
-
-        // The closing marigold turns as the last section scrolls into view.
-        gsap.fromTo(
-          "[data-cta-mark]",
-          { rotate: -120, scale: 0.6 },
-          { rotate: 0, scale: 1, ease: "none", scrollTrigger: { trigger: "[data-cta-mark]", start: "top bottom", end: "center 55%", scrub: 0.5 } },
-        );
-
-        // Section headings and blocks rise in as they enter.
-        gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el) => {
-          gsap.from(el, { y: 36, opacity: 0, duration: 0.9, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 85%" } });
-        });
-
-        // Feature cards arrive in a wave.
-        gsap.set("[data-card]", { y: 40, opacity: 0 });
-        ScrollTrigger.batch("[data-card]", {
-          start: "top 88%",
-          onEnter: (batch) => gsap.to(batch, { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power3.out" }),
-          once: true,
-        });
-
-        // Prediction bars grow to their value.
-        gsap.from("[data-bar]", {
-          scaleX: 0,
-          transformOrigin: "left center",
-          duration: 1.2,
-          stagger: 0.15,
-          ease: "power3.out",
-          scrollTrigger: { trigger: "[data-bars]", start: "top 75%" },
-        });
-
-      });
-
-      // Pinned story: wide screens only. Each step of the scroll swaps the phone screen and lights its step.
-      mm.add("(prefers-reduced-motion: no-preference) and (min-width: 1024px)", () => {
-        const screens = gsap.utils.toArray<HTMLElement>("[data-screen]");
-        const items = gsap.utils.toArray<HTMLElement>("[data-step]");
-        gsap.set(screens.slice(1), { autoAlpha: 0, yPercent: 8 });
-        gsap.set(items.slice(1), { opacity: 0.35 });
-        gsap.set("[data-story-progress]", { scaleY: 1 / screens.length });
-
-        const tl = gsap.timeline({
-          scrollTrigger: { trigger: "[data-story]", start: "top top", end: `+=${screens.length * 70}%`, pin: true, scrub: 0.6 },
-        });
-        screens.forEach((screen, i) => {
-          if (i === 0) return;
-          tl.to(screens[i - 1], { autoAlpha: 0, yPercent: -8, duration: 0.5 }, i)
-            .to(screen, { autoAlpha: 1, yPercent: 0, duration: 0.5 }, i)
-            .to(items[i - 1], { opacity: 0.35, duration: 0.3 }, i)
-            .to(items[i], { opacity: 1, duration: 0.3 }, i)
-            .to("[data-story-progress]", { scaleY: (i + 1) / screens.length, duration: 0.5 }, i);
-        });
-        tl.from("[data-chip]", { scale: 0.6, duration: 0.3, ease: "back.out(2)" }, 2.2);
-      });
-    },
-    { scope: root },
-  );
+  const sangeet = EXAMPLE.rows[1];
+  const max = sangeet.coming + sangeet.maybe;
 
   return (
-    <div ref={root} className="flex flex-1 flex-col overflow-x-clip">
-      <header className="sticky top-0 z-40 border-b border-line/60 bg-paper/80 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+    <div className="flex flex-1 flex-col">
+      <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-6 px-4 sm:px-6">
           <Wordmark />
-          <nav className="flex items-center gap-2">
+          <nav aria-label="Main" className="hidden items-center gap-7 text-sm text-muted md:flex">
+            <Link href="#features" className="hover:text-ink">
+              Features
+            </Link>
+            <Link href="#how" className="hover:text-ink">
+              How it works
+            </Link>
+            <Link href="#prediction" className="hover:text-ink">
+              Expected turnout
+            </Link>
+            <Link href="/docs" className="hover:text-ink">
+              Docs
+            </Link>
+          </nav>
+          <div className="flex items-center gap-2">
             <ButtonLink href="/login" variant="ghost" size="sm">
               Log in
             </ButtonLink>
             <ButtonLink href="/signup" size="sm">
-              Start planning
+              Get started
             </ButtonLink>
-          </nav>
+          </div>
         </div>
       </header>
 
       <main>
         {/* Hero */}
-        <section data-hero className="relative">
-          <Petals />
-          <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pt-10 pb-20 sm:px-6 lg:min-h-[calc(100svh-4.5rem)] lg:grid-cols-[1.1fr_1fr] lg:pb-24">
-            <div data-hero-copy>
-              <p data-hero-fade className="text-xs font-semibold tracking-[0.2em] text-gold uppercase">
-                For Indian wedding planners
-              </p>
-              <h1 className="mt-4 font-display text-[2.5rem] leading-[1.05] font-semibold tracking-tight sm:text-5xl xl:text-[3.4rem]">
-                {["WhatsApp RSVPs,", "an honest headcount", "for every function."].map((line, i) => (
-                  <span key={line} className="block overflow-hidden pb-1 sm:whitespace-nowrap">
-                    <span data-hero-line className="block">
-                      {i === 1 ? (
-                        <>
-                          an <em className="text-brand not-italic">honest</em> headcount
-                        </>
-                      ) : (
-                        line
-                      )}
-                    </span>
-                  </span>
-                ))}
-              </h1>
-              <p data-hero-fade className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-                Send each guest a personal link on WhatsApp. They reply for Haldi, Sangeet and Wedding separately, and you
-                give the caterer one number per function, with a likely range.
-              </p>
-              <div data-hero-fade className="mt-8 flex flex-wrap gap-3">
-                <ButtonLink href="/signup" size="lg" className="w-full sm:w-auto">
-                  Start planning a wedding
-                </ButtonLink>
-                <ButtonLink href="#how" variant="secondary" size="lg" className="w-full sm:w-auto">
-                  See how it works
-                </ButtonLink>
-              </div>
+        <section className="border-b border-line bg-[linear-gradient(to_bottom,var(--surface),var(--paper))]">
+          <div className="mx-auto flex w-full max-w-6xl flex-col items-center px-4 pt-16 pb-16 text-center sm:px-6 sm:pt-24 sm:pb-20">
+            <p className="rise inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-[13px] text-muted shadow-card">
+              <span className="size-1.5 rounded-full bg-ok" />
+              For Indian wedding planners
+            </p>
+            <h1 className="rise mt-6 max-w-4xl text-[2.6rem] leading-[1.05] font-semibold tracking-[-0.03em] text-balance [--d:60ms] sm:text-6xl lg:text-7xl">
+              WhatsApp RSVPs and an expected headcount for every function.
+            </h1>
+            <p className="rise mt-6 max-w-2xl text-lg leading-relaxed text-muted [--d:120ms]">
+              Send each guest a personal link on WhatsApp. They reply for Haldi, Sangeet and Wedding separately, and you give
+              the caterer one number per function, with a likely range.
+            </p>
+            <div className="rise mt-9 flex w-full flex-col justify-center gap-3 [--d:180ms] sm:w-auto sm:flex-row">
+              <ButtonLink href="/signup" size="lg">
+                Start planning a wedding
+              </ButtonLink>
+              <ButtonLink href="#how" variant="secondary" size="lg">
+                See how it works
+              </ButtonLink>
             </div>
-            <div data-hero-parallax>
-              <HeadcountFrame />
+            <p className="rise mt-5 text-[13px] text-muted [--d:220ms]">No app for guests · Sent from your own number · Free while in beta</p>
+            <div className="rise mt-14 w-full max-w-5xl [--d:260ms]">
+              <ProductFrame />
             </div>
           </div>
         </section>
 
         {/* The problem */}
-        <section data-problem className="border-y border-line bg-surface">
-          <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-            <h2 className="sr-only">The guest-count problem</h2>
-            <div className="grid grid-cols-3 gap-4 text-center sm:gap-10">
+        <section className="border-b border-line bg-surface">
+          <div className="mx-auto grid w-full max-w-6xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_1.2fr] lg:items-center">
+            <div className="reveal">
+              <Eyebrow>The problem</Eyebrow>
+              <H2>Everyone says yes. Not everyone comes.</H2>
+              <p className="mt-5 text-lg leading-relaxed text-muted">
+                Guest counts are still worked out on WhatsApp and gut feel. The caterer cooks for every &ldquo;of course
+                we&apos;ll come&rdquo;, and the family pays for the plates nobody eats.
+              </p>
+            </div>
+            <dl className="reveal grid grid-cols-2 overflow-hidden rounded-card border border-line sm:grid-cols-4">
               {[
-                ["400", "invited"],
-                ["400", "said they'd come"],
-                ["280", "actually came"],
-              ].map(([n, label]) => (
-                <div key={label} data-problem-num>
-                  <p data-problem-count={n} className="font-display text-5xl font-semibold tabular-nums sm:text-8xl">
-                    {n}
-                  </p>
-                  <p className="mt-2 text-sm text-muted sm:text-base">{label}</p>
+                ["400", "invited", ""],
+                ["400", "said they'd come", ""],
+                ["280", "actually came", ""],
+                ["120", "plates wasted", "text-danger"],
+              ].map(([n, label, tone], i) => (
+                <div key={label} className={`bg-paper p-5 ${i % 2 ? "border-l" : ""} ${i > 1 ? "border-t sm:border-t-0" : ""} ${i === 2 ? "sm:border-l" : ""} border-line`}>
+                  <dt className="text-[13px] text-muted">{label}</dt>
+                  <dd className={`mt-1 text-4xl font-semibold tracking-tight tabular-nums ${tone}`}>{n}</dd>
                 </div>
               ))}
-            </div>
-            <div data-problem-note className="mx-auto mt-10 max-w-2xl text-center sm:mt-14">
-              <p className="font-display text-2xl leading-snug sm:text-3xl">
-                The caterer still cooked for 400. That&apos;s{" "}
-                <span className="relative inline-block whitespace-nowrap text-brand">
-                  120 plates
-                  <span data-problem-strike className="absolute top-1/2 left-0 h-[3px] w-full -rotate-2 rounded bg-brand" />
-                </span>{" "}
-                nobody ate.
-              </p>
-              <p className="mt-4 text-muted">
-                &ldquo;Of course we&apos;ll come&rdquo; isn&apos;t a headcount. WedCount turns replies into a number you can
-                plan food around.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Function names sliding past in opposite directions as you scroll. Decorative. */}
-        <section aria-hidden data-marquee className="overflow-hidden border-b border-line py-8 sm:py-12">
-          {[0, 1].map((row) => (
-            <div
-              key={row}
-              data-marquee-row={row}
-              className={`flex w-max gap-8 font-display text-4xl font-semibold whitespace-nowrap sm:gap-12 sm:text-7xl ${
-                row ? "mt-3 text-transparent [-webkit-text-stroke:1px_var(--gold)] sm:mt-5" : "text-ink"
-              }`}
-            >
-              {[0, 1, 2].flatMap((k) =>
-                FUNCTIONS.map((f) => (
-                  <span key={`${k}-${f}`} className="flex items-center gap-8 sm:gap-12">
-                    {f}
-                    <Mark className="size-6 sm:size-9" />
-                  </span>
-                )),
-              )}
-            </div>
-          ))}
-        </section>
-
-        {/* How it works: pinned story on wide screens */}
-        <section id="how" data-story className="relative">
-          <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:min-h-svh lg:grid-cols-2">
-            <div>
-              <p className="text-xs font-semibold tracking-[0.2em] text-gold uppercase">How it works</p>
-              <h2 className="mt-3 font-display text-[2rem] leading-tight font-semibold tracking-tight sm:text-5xl">From invite to headcount</h2>
-              <div className="relative mt-10 pl-8">
-                <span className="absolute top-1 bottom-1 left-[11px] w-0.5 rounded bg-line" />
-                <span
-                  data-story-progress
-                  className="absolute top-1 bottom-1 left-[11px] w-0.5 origin-top rounded bg-brand"
-                />
-                <ol className="flex flex-col gap-8">
-                  {steps.map((s, i) => (
-                    <li key={s.title} data-step className="relative">
-                      <span className="absolute top-0.5 -left-8 flex size-6 items-center justify-center rounded-full border-2 border-brand bg-paper text-xs font-semibold text-brand">
-                        {i + 1}
-                      </span>
-                      <p className="font-display text-xl font-semibold">{s.title}</p>
-                      <p className="mt-1.5 max-w-md text-muted">{s.body}</p>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </div>
-            <div className="hidden lg:block">
-              <StoryScreens />
-            </div>
+            </dl>
           </div>
         </section>
 
         {/* Features */}
-        <section className="border-t border-line bg-surface">
-          <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-            <div data-reveal className="max-w-2xl">
-              <p className="text-xs font-semibold tracking-[0.2em] text-gold uppercase">What planners get</p>
-              <h2 className="mt-3 font-display text-[2rem] leading-tight font-semibold tracking-tight sm:text-5xl">Built around how Indian weddings run</h2>
+        <section id="features" className="scroll-mt-16 border-b border-line">
+          <div className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
+            <div className="reveal max-w-2xl">
+              <Eyebrow>Features</Eyebrow>
+              <H2>Built around how Indian weddings run</H2>
             </div>
-            <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="mt-12 grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
               {features.map((f) => (
-                <li key={f.title} data-card className="spot lift rounded-card border border-line bg-paper p-6">
-                  <span aria-hidden className="flex size-11 items-center justify-center rounded-xl bg-gold-soft text-xl">
-                    {f.icon}
-                  </span>
-                  <p className="mt-5 font-display text-lg font-semibold">{f.title}</p>
+                <li key={f.title} className="reveal bg-surface p-7">
+                  <span className="flex size-10 items-center justify-center rounded-lg border border-line bg-paper text-ink">{f.icon}</span>
+                  <p className="mt-5 font-semibold">{f.title}</p>
                   <p className="mt-2 text-sm leading-relaxed text-muted">{f.body}</p>
                 </li>
               ))}
@@ -548,132 +248,130 @@ export function Landing() {
           </div>
         </section>
 
-        {/* Prediction */}
-        <section>
-          <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2">
-            <div data-reveal>
-              <p className="text-xs font-semibold tracking-[0.2em] text-gold uppercase">Expected turnout</p>
-              <h2 className="mt-3 font-display text-[2rem] leading-tight font-semibold tracking-tight sm:text-5xl">
-                &ldquo;Coming&rdquo; doesn&apos;t always mean coming
-              </h2>
-              <p className="mt-5 text-lg leading-relaxed text-muted">
-                Each reply is weighted by how reliably that kind of guest turns up. Family counts more than colleagues, a
-                Maybe counts for less, and even silent invites count a little. Record real turnout after each function
-                and the numbers adjust to your families.
-              </p>
+        {/* How it works */}
+        <section id="how" className="scroll-mt-16 border-b border-line bg-surface">
+          <div className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
+            <div className="reveal max-w-2xl">
+              <Eyebrow>How it works</Eyebrow>
+              <H2>From invite to headcount in four steps</H2>
             </div>
-            <div data-bars className="rounded-card border border-line bg-surface p-6 shadow-card sm:p-8">
-              <p className="font-display text-lg font-semibold">Sangeet · {EXAMPLE.couple}</p>
-              {(() => {
-                const r = EXAMPLE.rows[1];
-                const max = r.coming + r.maybe;
-                const bars = [
-                  { label: "Said Coming", value: r.coming, cls: "bg-line" },
-                  { label: "Coming + Maybe", value: r.coming + r.maybe, cls: "bg-line" },
-                  { label: "Expected", value: r.expected, cls: "bg-brand" },
-                ];
-                return (
-                  <div className="mt-6 flex flex-col gap-5">
-                    {bars.map((b) => (
-                      <div key={b.label}>
-                        <div className="flex justify-between text-sm">
-                          <span className={b.cls === "bg-brand" ? "font-semibold text-brand" : "text-muted"}>{b.label}</span>
-                          <span className="font-semibold tabular-nums">{b.value}</span>
-                        </div>
-                        <div className="mt-2 h-3 overflow-hidden rounded-full bg-sunken">
-                          <div data-bar className={`h-full rounded-full ${b.cls}`} style={{ width: `${(b.value / max) * 100}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                    <div className="relative mt-1 h-3 rounded-full bg-sunken">
-                      <div
-                        data-bar
-                        className="absolute h-full rounded-full bg-gold/70"
-                        style={{ left: `${(r.low / max) * 100}%`, width: `${((r.high - r.low) / max) * 100}%` }}
-                      />
+            <ol className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {steps.map((s, i) => (
+                <li key={s.title} className="reveal border-t-2 border-line pt-5 first:border-ink">
+                  <p className="text-sm font-medium text-muted tabular-nums">0{i + 1}</p>
+                  <p className="mt-2 font-semibold">{s.title}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{s.body}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* Prediction */}
+        <section id="prediction" className="scroll-mt-16 border-b border-line">
+          <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-2">
+            <div className="reveal">
+              <Eyebrow>Expected turnout</Eyebrow>
+              <H2>&ldquo;Coming&rdquo; doesn&apos;t always mean coming</H2>
+              <p className="mt-5 text-lg leading-relaxed text-muted">
+                Each reply is weighted by how reliably that kind of guest turns up. Family counts more than colleagues, a Maybe
+                counts for less, and silent invites count a little. Record real turnout after each function and the numbers
+                adjust to your families.
+              </p>
+              <Link href="/docs/features" className="draw mt-6 inline-block text-sm font-medium text-brand">
+                Read how the model works
+              </Link>
+            </div>
+            <div className="reveal rounded-card border border-line bg-surface p-6 shadow-card sm:p-8">
+              <div className="flex items-baseline justify-between">
+                <p className="font-semibold">Sangeet</p>
+                <p className="text-xs text-muted">{EXAMPLE.couple}</p>
+              </div>
+              <div className="mt-6 flex flex-col gap-5">
+                {[
+                  { label: "Said Coming", value: sangeet.coming, bar: "bg-line" },
+                  { label: "Coming + Maybe", value: sangeet.coming + sangeet.maybe, bar: "bg-line" },
+                  { label: "Expected", value: sangeet.expected, bar: "bg-brand" },
+                ].map((b) => (
+                  <div key={b.label}>
+                    <div className="flex justify-between text-sm">
+                      <span className={b.bar === "bg-brand" ? "font-medium text-ink" : "text-muted"}>{b.label}</span>
+                      <span className="font-semibold tabular-nums">{b.value}</span>
                     </div>
-                    <p className="text-sm text-muted">
-                      Likely range{" "}
-                      <span className="font-semibold text-ink tabular-nums">
-                        {r.low}–{r.high}
-                      </span>
-                    </p>
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-sunken">
+                      <div className={`h-full rounded-full ${b.bar}`} style={{ width: `${(b.value / max) * 100}%` }} />
+                    </div>
                   </div>
-                );
-              })()}
+                ))}
+                <div className="flex items-center justify-between border-t border-line pt-4 text-sm">
+                  <span className="text-muted">Likely range (90%)</span>
+                  <span className="font-semibold tabular-nums">
+                    {sangeet.low}–{sangeet.high}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* For guests */}
-        <section className="border-y border-line bg-surface">
-          <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1fr_1.1fr]">
-            <div data-reveal className="order-2 lg:order-1">
-              <div className="jaali mx-auto max-w-sm rounded-card border border-line bg-paper p-6 shadow-lift">
+        <section className="border-b border-line bg-surface">
+          <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-2">
+            <div className="reveal order-2 lg:order-1">
+              <div className="mx-auto max-w-sm rounded-card border border-line bg-paper p-6 shadow-lift">
                 <p className="text-center text-sm text-muted">Namaste Sharma Uncle,</p>
-                <p className="mt-1 text-center font-display text-2xl font-semibold">{EXAMPLE.couple}</p>
-                <Ornament className="mt-4" />
-                <div className="mt-5 rounded-xl border border-line bg-surface p-4">
-                  <p className="font-display font-semibold">Wedding</p>
+                <p className="mt-1 text-center text-sm font-medium text-brand">You&apos;re invited to</p>
+                <p className="mt-1 text-center text-2xl font-semibold tracking-tight">{EXAMPLE.couple}</p>
+                <div className="mt-5 rounded-lg border border-line bg-surface p-4">
+                  <p className="font-semibold">Wedding</p>
                   <p className="text-xs text-muted">Fri 11 Dec, 8:00 pm · Rambagh Lawns</p>
-                  <div className="mt-3 flex gap-2 text-xs">
-                    <span className="rounded-full bg-brand px-3 py-1.5 font-medium text-white">Coming</span>
-                    <span className="rounded-full border border-line px-3 py-1.5">Maybe</span>
-                    <span className="rounded-full border border-line px-3 py-1.5">Can&apos;t come</span>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                    <span className="rounded-lg bg-ink py-2 text-center font-medium text-white">Coming</span>
+                    <span className="rounded-lg border border-line py-2 text-center">Maybe</span>
+                    <span className="rounded-lg border border-line py-2 text-center">Can&apos;t come</span>
                   </div>
                 </div>
               </div>
             </div>
-            <div data-reveal className="order-1 lg:order-2">
-              <p className="text-xs font-semibold tracking-[0.2em] text-gold uppercase">For guests</p>
-              <h2 className="mt-3 font-display text-[2rem] leading-tight font-semibold tracking-tight sm:text-5xl">
-                An invite that feels like an invite
-              </h2>
+            <div className="reveal order-1 lg:order-2">
+              <Eyebrow>For guests</Eyebrow>
+              <H2>No app, no login, one link</H2>
               <p className="mt-5 text-lg leading-relaxed text-muted">
-                No app, no login. Guests open their link from WhatsApp, tap Coming, Maybe or Can&apos;t come for each
-                function, and can change their mind until the deadline. It works on any phone, even before the page
-                fully loads.
+                Guests open their link from WhatsApp, answer for each function, and can change their mind until the deadline.
+                It works on any phone, even before the page has fully loaded.
               </p>
             </div>
           </div>
         </section>
 
         {/* Call to action */}
-        <section className="relative overflow-hidden">
-          <div className="jaali absolute inset-0 opacity-60" aria-hidden />
-          <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-4 py-20 text-center sm:px-6 sm:py-28">
-            <span data-cta-mark className="inline-block">
-              <Mark className="size-14" />
-            </span>
-            <h2 data-reveal className="mt-6 max-w-3xl font-display text-[2.1rem] leading-tight font-semibold tracking-tight sm:text-6xl">
-              Plan the food for the guests who&apos;ll actually come
-            </h2>
-            <div data-reveal className="mt-8 flex flex-wrap justify-center gap-3">
-              <ButtonLink href="/signup" size="lg">
-                Start planning a wedding
-              </ButtonLink>
-              <ButtonLink href="/login" variant="secondary" size="lg">
-                Log in
-              </ButtonLink>
+        <section className="bg-ink text-white">
+          <div className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-8 px-4 py-20 sm:px-6 lg:flex-row lg:items-center">
+            <div>
+              <h2 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-[2.6rem] sm:leading-[1.1]">
+                Plan the food for the guests who will actually come.
+              </h2>
+              <p className="mt-4 text-white/70">Set up a wedding in minutes. Guests need nothing but WhatsApp.</p>
+            </div>
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+              <Link
+                href="/signup"
+                className="press inline-flex h-12 items-center justify-center rounded-lg bg-white px-6 font-medium text-ink hover:bg-white/90"
+              >
+                Create an account
+              </Link>
+              <Link
+                href="/docs"
+                className="press inline-flex h-12 items-center justify-center rounded-lg border border-white/25 px-6 font-medium text-white hover:bg-white/10"
+              >
+                Read the docs
+              </Link>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-line">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-8 text-sm text-muted sm:px-6">
-          <Wordmark />
-          <p>Made in India, for Indian weddings.</p>
-          <nav className="flex gap-4">
-            <Link href="/login" className="draw hover:text-ink">
-              Log in
-            </Link>
-            <Link href="/signup" className="draw hover:text-ink">
-              Create account
-            </Link>
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -5,12 +5,10 @@ import { isRsvpOpen } from "@/lib/rsvp";
 import { saveRsvp } from "@/app/actions";
 import { RsvpForm, type EventAnswer } from "@/app/ui/rsvp-form";
 import { Mark } from "@/app/ui/brand";
-import { Ornament } from "@/app/ui/kit";
 
 export default function RsvpPage(props: PageProps<"/r/[token]">) {
   return (
     <main className="relative flex-1">
-      <div aria-hidden className="jaali absolute inset-x-0 top-0 h-72 opacity-60 [mask-image:linear-gradient(to_bottom,black,transparent)]" />
       <div className="stagger relative mx-auto flex w-full max-w-xl flex-col gap-8 px-4 py-12">
       <Suspense fallback={<p className="text-center text-muted">Loading your invite…</p>}>
         <Rsvp params={props.params} />
@@ -58,9 +56,9 @@ async function Rsvp({ params }: { params: Promise<{ token: string }> }) {
       <header className="flex flex-col items-center text-center">
         <Mark className="size-10" />
         <p className="mt-5 text-sm text-muted">Namaste {guest.name},</p>
-        <p className="mt-1 text-xs font-semibold tracking-[0.2em] text-gold uppercase">You&apos;re invited to</p>
+        <p className="mt-1 text-sm font-medium text-brand">You&apos;re invited to</p>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">{wedding.name}</h1>
-        <Ornament className="mt-5 w-full max-w-xs" />
+        <span aria-hidden className="mt-5 h-px w-16 bg-line" />
         <p className="mt-4 text-sm text-muted">
           {wedding.city}
           {wedding.rsvpDeadline &&

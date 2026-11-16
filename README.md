@@ -4,7 +4,7 @@
 
 # WedCount
 
-### WhatsApp RSVPs and an honest headcount for every function of an Indian wedding.
+### WhatsApp RSVPs and an expected headcount for every function of an Indian wedding.
 
 *400 invited. 400 said yes. 280 came. The caterer cooked for 400.*
 **WedCount turns "of course we'll come" into a number you can plan food around.**
@@ -15,18 +15,16 @@
 ![React](https://img.shields.io/badge/React_19-149eca?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178c6?logo=typescript&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-2d3748?logo=prisma&logoColor=white)
+![Postgres on Neon](https://img.shields.io/badge/Postgres-Neon-00e599?logo=postgresql&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000?logo=vercel&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-06b6d4?logo=tailwindcss&logoColor=white)
-![GSAP](https://img.shields.io/badge/GSAP-0ae448?logo=greensock&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-41_passing-2f7a4f)
 
-[The problem](#-the-problem) · [Features](#-what-it-does) · [How it works](#-how-it-works) · [Prediction model](#-the-prediction-model) · [Engineering](#-engineering-highlights) · [Run it](#-run-it-locally)
+[The problem](#-the-problem) · [Features](#-what-it-does) · [How it works](#-how-it-works) · [Prediction model](#-the-prediction-model) · [Engineering](#-engineering-highlights) · [Docs](#-documentation) · [Run it](#-run-it-locally)
 
 <br />
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/landing-dark.png" />
-  <img src="docs/screenshots/landing-hero.png" alt="WedCount landing page: WhatsApp RSVPs and an honest headcount for every function, next to a live headcount table" width="100%" />
-</picture>
+<img src="docs/screenshots/landing-hero.png" alt="WedCount landing page: WhatsApp RSVPs and an expected headcount for every function, above the product's wedding screen" width="100%" />
 
 </div>
 
@@ -87,13 +85,11 @@ Guests open their link from WhatsApp, so the RSVP page is designed as an invitat
 
 Planners get card layouts instead of cramped tables, sticky section tabs that follow the scroll, and full-width actions.
 
-Light and dark themes follow the device.
-
 </td>
 </tr>
 </table>
 
-<img src="docs/screenshots/dashboard-dark.png" alt="Planner dashboard in dark mode with wedding cards and reply progress" width="100%" />
+<img src="docs/screenshots/dashboard.png" alt="Planner dashboard with wedding cards and reply progress" width="100%" />
 
 ## 🧭 How it works
 
@@ -109,7 +105,7 @@ flowchart LR
     G -. calibrates .-> D
 ```
 
-<img src="docs/screenshots/landing-story.png" alt="Scroll-driven 'From invite to headcount' story on the landing page" width="100%" />
+<img src="docs/screenshots/landing-features.png" alt="Feature grid on the landing page" width="100%" />
 
 ## 📈 The prediction model
 
@@ -160,13 +156,12 @@ across all of that planner's past functions. The `+100` stops one odd function f
 </details>
 
 <details>
-<summary><b>Design system and motion</b></summary>
+<summary><b>Design system</b></summary>
 
-- Colour **tokens** in `app/globals.css` (sindoor red, marigold gold, ivory paper) with a dark theme; components in `app/ui/kit.tsx`. Re-theming is one file.
-- Fraunces for headings, Geist for text.
-- Landing page animated with **GSAP + ScrollTrigger**: hero entrance and parallax, numbers that count with the scroll, a sliding band of function names, and a pinned "invite to headcount" story with a phone mock.
-- App pages use the browser's **native scroll timelines** for reveals (no JavaScript), a scroll progress bar, a cursor ring and card spotlights.
-- Everything is server-rendered in its final state: with **reduced motion** or without JavaScript the page is complete and still.
+- Light theme with neutral colour **tokens** in `app/globals.css` (ink for primary actions, one blue accent); components in `app/ui/kit.tsx`. Re-theming is one file.
+- Geist for all text, tabular figures for every number.
+- The landing page is plain server-rendered HTML that shows the product's real UI; no animation library.
+- Motion is limited to hover states and short reveals on the browser's **native scroll timelines**, all off under **reduced motion**.
 
 </details>
 
@@ -176,29 +171,34 @@ across all of that planner's past functions. The `+100` stops one odd function f
 |---|---|
 | Framework | Next.js 16 (App Router, Server Actions, Cache Components), React 19 |
 | Language | TypeScript |
-| Data | Prisma 6 · SQLite in development (Postgres planned for production) |
-| UI | Tailwind CSS v4, design tokens, Fraunces + Geist |
-| Motion | GSAP + ScrollTrigger, CSS scroll-driven animations |
+| Data | Prisma 6 · Postgres on Neon (local: `npx prisma dev`, no Docker) |
+| Hosting | Vercel |
+| UI | Tailwind CSS v4, design tokens, Geist |
 | Messaging | WhatsApp `wa.me` deep links (no paid API needed) |
 | Tests | Node's built-in test runner via `tsx` |
 
 ```text
 app/
-  _landing/      animated marketing page (GSAP)
+  _landing/      marketing page
   dashboard/     planner's weddings
   weddings/[id]/ headcount, reminders, functions, guests, caterer CSV export
   r/[token]/     guest RSVP page (public, token = credential)
+  docs/, llms*/  documentation for people and AI agents
+  privacy/, terms/  legal pages
   ui/            design-system kit, forms, cursor, section tabs
-lib/             pure logic: rsvp, guests/CSV, headcount, predict, reminders, invite, lockout (+ tests)
+lib/             pure logic: rsvp, guests/CSV, headcount, predict, reminders, invite, lockout, docs (+ tests)
+docs/            agents, requirements, features, architecture, decision, playbook, hacks, tips
 prisma/          schema, migrations, demo seed
 ```
 
 ## 🚀 Run it locally
 
 ```bash
-cp .env.example .env
 npm install
-npm run db:migrate     # creates prisma/dev.db and seeds demo data
+cp .env.example .env
+npx prisma dev --name wedcount --detach   # local Postgres, no Docker
+npx prisma migrate deploy
+npx prisma db seed
 npm run dev
 ```
 
@@ -206,7 +206,7 @@ Open **http://localhost:3000** and log in with the local demo account: `demo@wed
 
 ```bash
 npm test          # 38 unit tests
-npm run test:db   # 3 database tests on a throwaway SQLite file
+npm run test:db   # 3 database tests in a throwaway Postgres schema
 npm run lint
 npm run build
 ```
@@ -228,6 +228,22 @@ Sharma Uncle,98765 43210,bride,family
 
 </details>
 
+## 📚 Documentation
+
+Everything about the project lives in [`docs/`](docs) as Markdown, rendered in the app at `/docs` and served to AI agents at `/llms.txt`.
+
+| Doc | What it answers |
+|---|---|
+| [Agent guide](docs/agents.md) | How AI agents should work here: read order, hard rules, decision protocol |
+| [Requirements](docs/requirements.md) | Users, functional and non-functional requirements |
+| [Features](docs/features.md) | Every feature and where its code lives |
+| [Architecture](docs/architecture.md) | System design, data model, flows, security |
+| [Decision log](docs/decision.md) | Why things are the way they are |
+| [Playbook](docs/playbook.md) | Run, ship, migrate, deploy to Vercel + Neon, run a real wedding |
+| [Hacks](docs/hacks.md) and [Tips](docs/tips.md) | Known shortcuts, traps and practical advice |
+
+<img src="docs/screenshots/docs.png" alt="Architecture page in the WedCount docs" width="100%" />
+
 ## 📅 Built day by day
 
 Each step is a pull request with what changed, why, and how it was tested, and a `day-N` tag on `main`.
@@ -246,10 +262,13 @@ Each step is a pull request with what changed, why, and how it was tested, and a
 | + | Edit / delete, quoted CSV, ownership tests | [#9](https://github.com/vansh070605/WedCount/pull/9) |
 | + | Design system and animated redesign | [#10](https://github.com/vansh070605/WedCount/pull/10) |
 | + | Mobile polish | [#11](https://github.com/vansh070605/WedCount/pull/11) |
+| + | Scroll motion, README | [#12](https://github.com/vansh070605/WedCount/pull/12) |
+| + | Light redesign, docs for agents, Postgres on Neon | [#13](https://github.com/vansh070605/WedCount/pull/13) |
 
 ## 🗺 Roadmap
 
-- [ ] Go live on Vercel with Postgres
+- [x] Postgres (Neon-ready) with a Vercel build script
+- [ ] Go live on Vercel + Neon
 - [ ] Real-wedding test: record turnout and publish predicted vs actual
 - [ ] Password reset by email
 - [ ] Automatic WhatsApp sending through the Cloud API

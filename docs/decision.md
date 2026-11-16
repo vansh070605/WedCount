@@ -1,0 +1,90 @@
+# Decision log
+
+| | |
+|---|---|
+| Purpose | Why things are the way they are. One entry per decision that would be expensive to reverse |
+| Read when | Before changing a dependency, the data model, auth, or deployment |
+
+Each entry has a status: **Accepted** (in force), **Superseded** (replaced by a later entry), or **Proposed** (not yet in force). To change an accepted decision, add a new entry that supersedes it; never rewrite history.
+
+Template:
+
+```text
+## D<n>. <Title>
+Status · Date
+Context: what forced a choice.
+Decision: what we chose.
+Consequences: what gets easier, what gets harder, and when to revisit.
+```
+
+## D1. One Next.js app, no separate API
+
+Accepted · 2026-11-10
+
+**Context.** A single developer, a small team of users, and server-rendered pages that mostly read data.
+**Decision.** Next.js App Router with Server Components for reads and Server Actions for writes. No REST or GraphQL layer.
+**Consequences.** Less code and one deploy. A mobile app or third-party integration would need an API later; add route handlers then.
+
+## D2. WhatsApp deep links instead of the WhatsApp Cloud API
+
+Accepted · 2026-11-12
+
+**Context.** Indian families trust messages from a known number, and the Cloud API needs Meta business verification, templates and per-message fees.
+**Decision.** Build `wa.me` links that open WhatsApp with the message typed; the planner taps send.
+**Consequences.** Free and trusted. No delivery receipts, and the planner taps once per guest. Revisit when a planner has more than about 500 guests or asks for automatic reminders.
+
+## D3. Own email and password auth
+
+Accepted · 2026-11-11
+
+**Context.** Planners need accounts; the data is small and the threat model is ordinary.
+**Decision.** scrypt hashes (Node built-in), database sessions storing only `sha256(token)`, lockout after 5 failures, stored in the database so it works across serverless instances.
+**Consequences.** No vendor and no extra cost. Password reset and email verification are missing until an email provider is added. Revisit if social login or teams are needed: Neon Auth or Auth.js would then be cheaper than building it.
+
+## D4. Guest token as the only guest credential
+
+Accepted · 2026-11-12
+
+**Context.** Guests will not sign up.
+**Decision.** Each guest gets a 128-bit random token in their link. Guest ids are never exposed.
+**Consequences.** Anyone with the link can answer for that guest, which matches how invites work. A leaked link affects one guest only.
+
+## D5. Prediction with fixed show rates and a calibration factor
+
+Accepted · 2026-11-14
+
+**Context.** No historical data exists yet, but "sum of Coming" is known to overcount.
+**Decision.** Per-party Bernoulli model with show rates by answer and relation, a 90% range, and a per-planner calibration factor from recorded turnout, damped with +100 and capped to 0.5 – 1.5.
+**Consequences.** Simple, explainable, testable. The show rates are assumptions; the first real wedding is the first out-of-sample test. Revisit after five recorded weddings.
+
+## D6. SQLite in development
+
+Superseded by D8 · 2026-11-10
+
+**Context.** Fastest way to start.
+**Decision.** Prisma on a local SQLite file.
+**Consequences.** SQLite cannot run on Vercel and differs from Postgres in types and locking.
+
+## D7. Light theme, neutral design system, no decorative motion
+
+Accepted · 2026-11-16
+
+**Context.** The earlier design used a pink accent, emoji icons, a cursor trail, drifting petals and a pinned scroll story. It read as a demo, not a product.
+**Decision.** Light theme only. Neutral greys, ink for primary actions, one blue accent, Geist for all text. Motion limited to hover states and short scroll reveals that are off under reduced motion. GSAP removed.
+**Consequences.** Smaller bundle and calmer UI. Anything decorative now needs a reason in this log.
+
+## D8. Postgres on Neon, deployed on Vercel
+
+Accepted · 2026-11-16
+
+**Context.** Going live needs a hosted database that works with serverless functions. The developer does not want Docker locally.
+**Decision.** Prisma with `provider = "postgresql"`. Neon in production through the Vercel integration: `DATABASE_URL` is the pooled URL for the app, `DATABASE_URL_UNPOOLED` the direct URL for migrations. Locally, `npx prisma dev` runs a Postgres-compatible server without Docker. SQLite migrations were replaced by a single Postgres baseline (`0_init`).
+**Consequences.** Same engine in every environment, free tier to start, branch-per-preview possible. The local server accepts one connection at a time, so local URLs set `connection_limit=1` and `pgbouncer=true` (see [Hacks](hacks.md)).
+
+## D9. Docs as Markdown, served to people and agents
+
+Accepted · 2026-11-16
+
+**Context.** AI agents do much of the work on this repo and need the same context a new engineer would.
+**Decision.** All project knowledge lives in `docs/*.md`. The app renders them at `/docs` and serves them raw at `/llms.txt`, `/llms-full.txt` and `/llms/<slug>.md`. `AGENTS.md` at the root points agents to `docs/agents.md`.
+**Consequences.** One source of truth that is versioned with the code. Docs must be updated in the same PR as the behaviour they describe.

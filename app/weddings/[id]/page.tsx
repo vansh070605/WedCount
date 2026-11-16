@@ -12,7 +12,6 @@ import {
   WhatsAppSendButton,
 } from "@/app/ui/forms";
 import { Badge, Card, PageHeader, SectionTitle, Stat, buttonClass } from "@/app/ui/kit";
-import { CountUp } from "@/app/ui/count-up";
 import { SectionTabs } from "@/app/ui/section-tabs";
 import { appUrl, inviteLink, inviteMessage, reminderMessage, whatsappUrl } from "@/lib/invite";
 import { REMIND_EVERY_DAYS, ago, missingEvents, reminderStatus } from "@/lib/reminders";
@@ -95,16 +94,16 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
       />
 
       <div className="rise grid grid-cols-2 gap-4 [--d:120ms] lg:grid-cols-4">
-        <Stat label="Invites" value={<CountUp value={guests.length} />} sub={`${tally("not-invited")} not sent yet`} />
+        <Stat label="Invites" value={guests.length} sub={`${tally("not-invited")} not sent yet`} />
         <Stat
           label="Replied to all"
-          value={<CountUp value={events.length ? replied : 0} />}
+          value={events.length ? replied : 0}
           sub={guests.length && events.length ? `${Math.round((replied / guests.length) * 100)}% of invites` : "Waiting for functions"}
         />
-        <Stat label="Due a reminder" value={<CountUp value={tally("due")} />} sub={`quiet for ${REMIND_EVERY_DAYS}+ days`} tone="gold" />
+        <Stat label="Due a reminder" value={tally("due")} sub={`quiet for ${REMIND_EVERY_DAYS}+ days`} tone="gold" />
         <Stat
           label={next ? `Expected · ${next.e.name}` : "Expected"}
-          value={next ? <CountUp value={predictions[next.i].expected} /> : "—"}
+          value={next ? predictions[next.i].expected : "—"}
           sub={next ? `likely ${predictions[next.i].low}–${predictions[next.i].high}` : "No upcoming function"}
           tone="brand"
         />
@@ -125,7 +124,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                     <p className="font-display text-lg font-semibold">{c.name}</p>
                     <p className="text-right">
                       <span className="font-display text-3xl font-semibold text-brand">
-                        <CountUp value={predictions[i].expected} />
+                        {predictions[i].expected}
                       </span>
                       <span className="block text-xs text-muted tabular-nums">
                         expected · {predictions[i].low}–{predictions[i].high}
@@ -169,7 +168,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                       <td className={`${td} font-medium`}>{c.name}</td>
                       <td className={`${td} whitespace-nowrap`}>
                         <span className="font-display text-2xl font-semibold text-brand">
-                          <CountUp value={predictions[i].expected} />
+                          {predictions[i].expected}
                         </span>{" "}
                         <span className="text-xs text-muted tabular-nums">
                           {predictions[i].low}–{predictions[i].high}
@@ -286,7 +285,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
           <ul className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {events.map((e) => (
               <li key={e.id}>
-                <Link href={`/weddings/${wedding.id}/events/${e.id}`} className="spot lift block rounded-xl border border-line bg-paper p-4">
+                <Link href={`/weddings/${wedding.id}/events/${e.id}`} className="lift block rounded-xl border border-line bg-paper p-4">
                   <p className="font-display text-lg font-semibold">{e.name}</p>
                   <p className="mt-1 text-sm text-muted">
                     {ist(e.startsAt, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}

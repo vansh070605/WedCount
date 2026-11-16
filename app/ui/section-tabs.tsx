@@ -61,7 +61,7 @@ export function SectionTabs({ sections }: { sections: [id: string, label: string
               href={`#${id}`}
               data-tab={id}
               aria-current={active === id ? "location" : undefined}
-              className="press inline-flex h-9 items-center rounded-full px-4 text-sm font-medium text-muted hover:text-ink aria-[current]:bg-brand aria-[current]:text-white"
+              className="press inline-flex h-9 items-center rounded-lg px-3.5 text-sm font-medium text-muted hover:text-ink aria-[current]:bg-ink aria-[current]:text-white"
             >
               {label}
             </a>

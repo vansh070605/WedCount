@@ -1,4 +1,4 @@
-// Runs against a real, throwaway SQLite database: `npm run test:db` (see scripts/test-db.mjs).
+// Runs against a real, throwaway Postgres schema: `npm run test:db` (see scripts/test-db.mjs).
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { prisma } from "./db";

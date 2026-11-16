@@ -2,9 +2,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Postgres on Neon in production. DATABASE_URL is the pooled connection the app uses;
+// DATABASE_URL_UNPOOLED bypasses the pooler for migrations. Locally both point at `npx prisma dev`.
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model Planner {
