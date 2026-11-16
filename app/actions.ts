@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { createSession, destroySession, requireOwnedWedding, requirePlanner } from "@/lib/auth";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { nameKey, newGuestToken, parseGuestCsv, validateGuest, type GuestInput } from "@/lib/guests";
-import { deadlineProblem, invitedEvents, isEventOpen, parseRsvpForm } from "@/lib/rsvp";
+import { deadlineProblem, invitedEvents, isEventOpen, parseRsvpForm, pastProblem } from "@/lib/rsvp";
 import { LOGIN_FAILED, afterFailure, isLocked } from "@/lib/lockout";
 import { findOwnedEvent, findOwnedGuest } from "@/lib/owned";
 import { Prisma } from "@prisma/client";
@@ -45,7 +45,7 @@ export async function signup(_: FormState, fd: FormData): Promise<FormState> {
     throw e;
   }
   await createSession(planner.id);
-  redirect("/dashboard");
+  redirect("/home");
 }
 
 // At most `limit` attempts of an action per client IP per hour (signups, reset emails), so one script can't flood them.
@@ -80,7 +80,7 @@ export async function login(_: FormState, fd: FormData): Promise<FormState> {
 
   if (planner.failedLogins > 0) await prisma.planner.update({ where: { id: planner.id }, data: { failedLogins: 0 } });
   await createSession(planner.id);
-  redirect("/dashboard");
+  redirect("/home");
 }
 
 // Emails a one-time reset link. Replies the same way whether or not the email has an account.
@@ -124,7 +124,7 @@ export async function resetPassword(token: string, _: FormState, fd: FormData): 
   });
   if (!changed) return { error: "This link has expired or was already used. Ask for a new one." };
   await createSession(reset!.plannerId);
-  redirect("/dashboard");
+  redirect("/home");
 }
 
 export async function logout() {
@@ -150,15 +150,19 @@ export async function createWedding(_: FormState, fd: FormData): Promise<FormSta
   const planner = await requirePlanner();
   const data = parseWeddingForm(fd);
   if (typeof data === "string") return { error: data };
+  const past = pastProblem(data.rsvpDeadline, "deadline");
+  if (past) return { error: past };
   const wedding = await prisma.wedding.create({ data: { plannerId: planner.id, ...data } });
   redirect(`/weddings/${wedding.id}`);
 }
 
 export async function updateWedding(weddingId: string, _: FormState, fd: FormData): Promise<FormState> {
   const planner = await requirePlanner();
-  await requireOwnedWedding(planner.id, weddingId);
+  const current = await requireOwnedWedding(planner.id, weddingId);
   const data = parseWeddingForm(fd);
   if (typeof data === "string") return { error: data };
+  const past = pastProblem(data.rsvpDeadline, "deadline", new Date(), current.rsvpDeadline);
+  if (past) return { error: past };
   const events = await prisma.event.findMany({ where: { weddingId }, select: { name: true, startsAt: true } });
   const late = deadlineProblem(data.rsvpDeadline, events);
   if (late) return { error: late };
@@ -357,6 +361,8 @@ export async function addEvent(weddingId: string, _: FormState, fd: FormData): P
   await requireOwnedWedding(planner.id, weddingId);
   const data = parseEventForm(fd);
   if (typeof data === "string") return { error: data };
+  const past = pastProblem(data.startsAt, "function");
+  if (past) return { error: past };
   const wedding = await prisma.wedding.findUniqueOrThrow({ where: { id: weddingId }, select: { rsvpDeadline: true } });
   const late = deadlineProblem(wedding.rsvpDeadline, [data]);
   if (late) return { error: `${late} Move the deadline earlier in Settings, or pick a later date.` };
@@ -373,6 +379,9 @@ export async function updateEvent(eventId: string, _: FormState, fd: FormData): 
   if (!event) return { error: "Function not found." };
   const data = parseEventForm(fd);
   if (typeof data === "string") return { error: data };
+  // A function that already happened can still be renamed; only a new or changed time must be in the future.
+  const past = pastProblem(data.startsAt, "function", new Date(), event.startsAt);
+  if (past) return { error: past };
   const wedding = await prisma.wedding.findUniqueOrThrow({ where: { id: event.weddingId }, select: { rsvpDeadline: true } });
   const late = deadlineProblem(wedding.rsvpDeadline, [data]);
   if (late) return { error: `${late} Move the deadline earlier in Settings, or pick a later date.` };

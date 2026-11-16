@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { requirePlanner } from "@/lib/auth";
 import { createWedding } from "@/app/actions";
 import { CreateWeddingForm } from "@/app/ui/forms";
+import { minPickDate } from "@/lib/rsvp";
 import { Badge, Card, PageHeader, SectionTitle, buttonClass } from "@/app/ui/kit";
 import { Mark } from "@/app/ui/brand";
 
@@ -108,7 +109,7 @@ async function Dashboard() {
 
       <Card id="new" className="scroll-mt-24">
         <SectionTitle title="New wedding" hint="You can add functions, guests and the RSVP deadline next." />
-        <CreateWeddingForm action={createWedding} />
+        <CreateWeddingForm action={createWedding} minDate={minPickDate()} />
       </Card>
     </div>
   );

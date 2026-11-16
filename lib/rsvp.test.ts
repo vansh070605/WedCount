@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { closesAt, deadlineProblem, invitedEvents, isEventOpen, isRsvpOpen, istDate, parseNames, parseRsvpForm } from "./rsvp";
+import { minPickDate, pastProblem, closesAt, deadlineProblem, invitedEvents, isEventOpen, isRsvpOpen, istDate, parseNames, parseRsvpForm } from "./rsvp";
 
 const events = [
   { id: "e1", name: "Sangeet", startsAt: new Date("2026-12-10T19:00:00+05:30") },
@@ -90,4 +90,23 @@ test("the RSVP deadline must fall before the first function's day", () => {
 test("no invitation rows means every function; rows limit it", () => {
   assert.deepEqual(invitedEvents({}, events).map((e) => e.id), ["e1", "e2"]);
   assert.deepEqual(invitedEvents({ invitations: [{ eventId: "e2" }] }, events).map((e) => e.id), ["e2"]);
+});
+
+test("past dates are refused for new or changed values, and stay allowed when unchanged", () => {
+  const now = new Date("2026-11-17T12:00:00+05:30");
+  assert.equal(pastProblem(new Date("2026-11-17T18:00:00+05:30"), "function", now), null);
+  assert.match(pastProblem(new Date("2026-11-16T18:00:00+05:30"), "function", now)!, /already passed/);
+  assert.match(pastProblem(new Date("2026-11-16T23:59:59+05:30"), "deadline", now)!, /can't be in the past/);
+  // Today's end-of-day deadline is still in the future.
+  assert.equal(pastProblem(new Date("2026-11-17T23:59:59+05:30"), "deadline", now), null);
+  const old = new Date("2025-02-14T19:00:00+05:30");
+  assert.equal(pastProblem(old, "function", now, old), null);
+  assert.equal(pastProblem(null, "deadline", now), null);
+});
+
+test("date pickers start today in India, or earlier when editing an older value", () => {
+  const now = new Date("2026-11-16T20:00:00Z"); // already the 17th in India
+  assert.equal(minPickDate(now), "2026-11-17");
+  assert.equal(minPickDate(now, new Date("2025-02-14T19:00:00+05:30")), "2025-02-14");
+  assert.equal(minPickDate(now, new Date("2026-12-10T19:00:00+05:30")), "2026-11-17");
 });

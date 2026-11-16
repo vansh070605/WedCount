@@ -17,7 +17,7 @@ WedCount is one Next.js 16 application (App Router, React 19, TypeScript) deploy
  │  Next.js 16 (App Router, Cache Components)                    │
  │                                                               │
  │  /r/[token]        guest RSVP page      ─┐                    │
- │  /dashboard        planner's weddings    │  Server Components │
+ │  /home, /dashboard planner home, weddings│  Server Components │
  │  /weddings/[id]    headcount, guests     │  read via Prisma   │
  │  /docs, /llms.txt  documentation        ─┘                    │
  │                                                               │

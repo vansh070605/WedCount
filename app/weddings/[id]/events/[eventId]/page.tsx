@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requirePlanner } from "@/lib/auth";
-import { istDate } from "@/lib/rsvp";
+import { istDate, minPickDate } from "@/lib/rsvp";
 import { deleteEvent, updateEvent } from "@/app/actions";
 import { AddEventForm, DeleteButton } from "@/app/ui/forms";
 import { BackLink } from "@/app/ui/kit";
@@ -46,6 +46,7 @@ async function EditEvent({ params }: { params: Promise<{ id: string; eventId: st
       <section className="rounded-card border border-line bg-surface p-5 shadow-card sm:p-6">
         <AddEventForm
           action={updateEvent.bind(null, event.id)}
+          minDate={minPickDate(new Date(), event.startsAt)}
           event={{ name: event.name, date: istDate(event.startsAt), time, venue: event.venue }}
         />
       </section>

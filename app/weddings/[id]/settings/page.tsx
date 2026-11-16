@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { requireOwnedWedding, requirePlanner } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { istDate } from "@/lib/rsvp";
+import { istDate, minPickDate } from "@/lib/rsvp";
 import { deleteWedding, saveInviteTemplate, updateWedding } from "@/app/actions";
 import { CreateWeddingForm, DeleteButton, InviteTemplateForm } from "@/app/ui/forms";
 import { BackLink } from "@/app/ui/kit";
@@ -41,6 +41,7 @@ async function Settings({ params }: { params: Promise<{ id: string }> }) {
       <section className="rounded-card border border-line bg-surface p-5 shadow-card sm:p-6">
         <CreateWeddingForm
           action={updateWedding.bind(null, id)}
+          minDate={minPickDate(new Date(), wedding.rsvpDeadline)}
           wedding={{
             name: wedding.name,
             city: wedding.city,
