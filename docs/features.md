@@ -19,6 +19,8 @@
 - **Weddings** have a name, city and optional RSVP deadline. The dashboard (`/dashboard`) lists them with reply progress and the next function. Edit or delete a wedding at `/weddings/[id]/settings`; deleting removes its functions, guests and replies, and invite links stop working. Code: `updateWedding`, `deleteWedding` in `app/actions.ts`.
 - **Functions** (Haldi, Sangeet, ...) have a name, start time and venue. Add on the wedding page, edit or delete at `/weddings/[id]/events/[eventId]`.
 - **Guests** have a name, phone, side (bride or groom) and relation (family, friend, colleague, other). Add one at a time, or import a CSV. Edit or delete at `/weddings/[id]/guests/[guestId]`.
+- **Invited to**: each guest can be invited to only some functions (tick them when adding or editing). No ticks stored means every function, so functions added later include the guest. Guests not invited to a function never count, get asked, or get reminded for it. Code: `Invitation` model, `isInvited`/`invitedEvents` in `lib/rsvp.ts`.
+- **Duplicate guests**: a second guest with the same name (ignoring case, spaces and dots) is refused unless the planner ticks "Different person, same name"; CSV import has the same check with an "Allow guests with the same name" box. The same phone number is never allowed twice. Code: `nameKey` in `lib/guests.ts`.
 - **Phone numbers** are normalised to `+91XXXXXXXXXX`, so `98765 43210` and `+91-98765-43210` are the same guest. A wedding cannot hold the same phone twice. Code: `normalizePhone` in `lib/guests.ts`.
 - **CSV import** follows RFC 4180 (quoted names with commas work). If any row is invalid nothing is imported, and each error names its line. Guests already on the list are skipped. Code: `parseCsv`, `parseGuestCsv` in `lib/guests.ts`.
 
@@ -31,19 +33,22 @@ Sharma Uncle,98765 43210,bride,family
 ## Invites and reminders
 
 - **Personal link** per guest: `/r/<token>`, where the token is 128 random bits. Code: `newGuestToken` in `lib/guests.ts`, `inviteLink` in `lib/invite.ts`.
+- **Send queue** (`/weddings/[id]/invite`): one guest at a time with their message, a big WhatsApp button and Skip; after sending, the next guest appears. Two tabs: Not invited yet, and Reminders due.
+- **Your own invite message**: Settings has an editor with a live preview. Fill-ins: `{name}`, `{wedding}`, `{functions}` (only that guest's functions), `{replyBy}`, `{link}` (required). Code: `inviteMessage`, `templateProblem` in `lib/invite.ts`.
 - **One-tap WhatsApp**: the button opens `wa.me` with the guest's number and a ready message containing their link and the deadline. The app records when the planner tapped (not proof of delivery). Code: `whatsappUrl`, `inviteMessage` in `lib/invite.ts`, `markSent` in `app/actions.ts`.
 - **Reminders**: a guest is due a reminder when they were invited, still have unanswered functions, and have been quiet for at least 2 days since the last invite or reminder. The reminder names only the missing functions. Code: `lib/reminders.ts`, `reminderMessage` in `lib/invite.ts`.
 
 ## Guest RSVP page
 
-- Styled as an invitation; no login, no app.
-- For each function: Coming, Maybe or Can't come; veg and non-veg counts (party size is their sum, up to 20); arrival time.
-- Saves in one transaction, so a guest never ends up with half their functions saved. Can be changed until the deadline (end of that day in IST), then shown read only.
+- Opens with an invitation card: the couple, the city, and a schedule of only the functions this guest is invited to, with dates, times and venues. No login, no app.
+- For each function: Coming, Maybe or Can't come; veg and non-veg counts (party size is their sum, up to 20); arrival time; and the **names of everyone coming**, one per line. Coming needs exactly one name per person; Maybe may leave names out.
+- Saves in one transaction, so a guest never ends up with half their functions saved. Answers can change until the earlier of the wedding's deadline and **midnight IST at the start of the function's day**; after that the function shows "Replies closed". The deadline itself must be before the first function's day, and a function can't be added on or before the deadline day. Code: `closesAt`, `isEventOpen`, `deadlineProblem` in `lib/rsvp.ts`.
 - Works before JavaScript loads (server action fallback). Code: `app/r/[token]/page.tsx`, `app/ui/rsvp-form.tsx`, `lib/rsvp.ts`.
 
 ## Headcount and export
 
 - **Per-function table** on the wedding page: Coming (replies and people), veg, non-veg, Maybe, Can't come, No reply, and Expected. Phones get cards instead of the table. Code: `countHeadcount` in `lib/headcount.ts`.
+- **Who's coming**: per function, the names of everyone who said Coming. **Names CSV** (`/weddings/[id]/export?list=names`) gives one row per person per function, for the door list.
 - **Caterer CSV** at `/weddings/[id]/export`: one row per function with expected people, range and the food split. Cells are protected against spreadsheet formula injection. Code: `app/weddings/[id]/export/route.ts`, `csvCell` in `lib/headcount.ts`.
 
 ## Expected turnout (prediction)

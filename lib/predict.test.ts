@@ -65,3 +65,8 @@ test("errorPct is signed and safe at zero", () => {
   assert.equal(errorPct(0, 0), 0);
   assert.equal(errorPct(5, 0), 100);
 });
+
+test("guests not invited to a function add nothing to its prediction", () => {
+  const invitedElsewhere = { relation: "family", rsvps: [], invitations: [{ eventId: "other" }] };
+  assert.deepEqual(predictEvent("e", [invitedElsewhere]), { expected: 0, low: 0, high: 0 });
+});

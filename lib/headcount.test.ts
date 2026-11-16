@@ -45,3 +45,13 @@ test("csvCell defuses spreadsheet formulas", () => {
   assert.equal(csvCell("+91 98765"), "'+91 98765");
   assert.equal(csvCell(-5), "'-5");
 });
+
+test("countHeadcount ignores guests for functions they aren't invited to", () => {
+  const evs = [{ id: "a", name: "Haldi" }, { id: "b", name: "Reception" }];
+  const [haldi, reception] = countHeadcount(evs, [
+    { rsvps: [], invitations: [{ eventId: "b" }] }, // colleague: Reception only, no reply yet
+    { rsvps: [] }, // family: everything
+  ]);
+  assert.equal(haldi.noReply, 1);
+  assert.equal(reception.noReply, 2);
+});

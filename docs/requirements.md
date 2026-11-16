@@ -27,7 +27,10 @@ Indian weddings run over several functions (Haldi, Mehendi, Sangeet, Wedding, Re
 - **R2a** Delete their account and everything in it, after confirming their password.
 - **R3** Add, edit and delete functions (name, date and time, venue).
 - **R4** Add, edit and delete guests (name, phone, side, relation), one at a time or by CSV import.
-- **R5** Send each guest a personal invite through WhatsApp from the planner's own number, with one tap.
+- **R5** Send each guest a personal invite through WhatsApp from the planner's own number, with one tap, one guest after another, using a message the planner can edit.
+- **R5a** Invite a guest to only some functions.
+- **R5b** Never hold the same guest twice: the same phone is refused, and the same name needs explicit confirmation.
+- **R6a** See the names of everyone coming to each function.
 - **R6** See live counts per function: Coming, Maybe, Can't come, No reply, people, veg and non-veg.
 - **R7** See an expected turnout per function with a likely range, not only the sum of "Coming".
 - **R8** See who is due a reminder and send it in one tap, naming only the functions still unanswered.
@@ -37,8 +40,8 @@ Indian weddings run over several functions (Haldi, Mehendi, Sangeet, Wedding, Re
 ### Guest
 
 - **R11** Open a private link with no login and no app.
-- **R12** Answer Coming, Maybe or Can't come for each function separately, with veg and non-veg counts and an arrival time.
-- **R13** Change the answer until the RSVP deadline. After it, see the answer read only.
+- **R12** Answer Coming, Maybe or Can't come for each function they're invited to, with veg and non-veg counts, an arrival time, and the name of everyone coming.
+- **R13** Change the answer until the RSVP deadline, and never on or after a function's day. After that, see the answer read only.
 
 ## Non-functional requirements
 

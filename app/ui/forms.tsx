@@ -3,6 +3,7 @@
 import { startTransition, useActionState, useState } from "react";
 import type { FormState } from "@/app/actions";
 import { buttonClass, inputClass } from "@/app/ui/kit";
+import { DEFAULT_INVITE_TEMPLATE, PLACEHOLDERS, inviteMessage } from "@/lib/invite";
 
 type Action = (state: FormState, fd: FormData) => Promise<FormState>;
 
@@ -107,6 +108,53 @@ export function NewPasswordForm({ action }: { action: Action }) {
   );
 }
 
+// Edits the WhatsApp invite text, with a live preview for one example guest.
+export function InviteTemplateForm({
+  action,
+  current,
+  sample,
+}: {
+  action: Action;
+  current: string | null;
+  sample: { guestName: string; weddingName: string; functions: string[]; deadline: Date | null };
+}) {
+  const [state, formAction, pending] = useActionState(action, {});
+  const [text, setText] = useState(current ?? DEFAULT_INVITE_TEMPLATE);
+  const preview = inviteMessage({ ...sample, link: "https://wedcount.vercel.app/r/…", template: text });
+  return (
+    <form action={formAction} onSubmit={keepValues(formAction)} className="grid gap-5 lg:grid-cols-2">
+      <div className="flex flex-col gap-3">
+        <Field label="Message">
+          <textarea
+            name="template"
+            rows={9}
+            maxLength={1000}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className={`${input} font-mono text-[13px] leading-relaxed`}
+          />
+        </Field>
+        <p className="text-xs text-muted">
+          Fill-ins: {PLACEHOLDERS.map((p) => `{${p}}`).join(" ")}. {"{link}"} is required.
+        </p>
+        <Status state={state} />
+        <div className="flex flex-wrap gap-2">
+          <button disabled={pending} className={button}>
+            {pending ? "Saving…" : "Save message"}
+          </button>
+          <button type="button" onClick={() => setText(DEFAULT_INVITE_TEMPLATE)} className={buttonClass("ghost", "md")}>
+            Use the default
+          </button>
+        </div>
+      </div>
+      <div>
+        <p className="text-sm font-medium text-ink">Preview for {sample.guestName}</p>
+        <div className="mt-1.5 rounded-xl bg-[#e7f6dc] p-4 text-sm leading-relaxed whitespace-pre-wrap text-[#1f2a1a]">{preview}</div>
+      </div>
+    </form>
+  );
+}
+
 type WeddingDefaults = { name: string; city: string | null; rsvpDeadline: string };
 
 // Creates a wedding, or edits one when `wedding` is given.
@@ -161,8 +209,39 @@ export function DeleteAccountForm({ action }: { action: Action }) {
 
 type GuestDefaults = { name: string; phone: string; side: string; relation: string };
 
+// Ticked by default: every function. `invited` null means the guest is invited to all of them.
+function FunctionChoice({ events, invited }: { events: { id: string; name: string }[]; invited: string[] | null }) {
+  if (events.length === 0) return null;
+  return (
+    <fieldset className="sm:col-span-2">
+      <legend className="text-sm font-medium text-ink">Invited to</legend>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {events.map((e) => (
+          <label
+            key={e.id}
+            className="flex cursor-pointer items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-sm has-checked:border-ink has-checked:bg-sunken"
+          >
+            <input type="checkbox" name="events" value={e.id} defaultChecked={!invited || invited.includes(e.id)} className="accent-ink" />
+            {e.name}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 // Adds a guest, or edits one when `guest` is given.
-export function AddGuestForm({ action, guest }: { action: Action; guest?: GuestDefaults }) {
+export function AddGuestForm({
+  action,
+  guest,
+  events = [],
+  invited = null,
+}: {
+  action: Action;
+  guest?: GuestDefaults;
+  events?: { id: string; name: string }[];
+  invited?: string[] | null;
+}) {
   const [state, formAction, pending] = useActionState(action, {});
   return (
     <form
@@ -190,8 +269,14 @@ export function AddGuestForm({ action, guest }: { action: Action; guest?: GuestD
           <option value="other">Other</option>
         </select>
       </Field>
+      <FunctionChoice events={events} invited={invited} />
       <div className="sm:col-span-2">
         <Status state={state} />
+        {state.duplicate && (
+          <label className="mt-2 flex items-center gap-2 text-sm">
+            <input type="checkbox" name="sameNameOk" className="accent-ink" /> Different person, same name
+          </label>
+        )}
         <button disabled={pending} className={`${button} mt-3 w-full sm:w-auto`}>
           {pending ? "Saving…" : guest ? "Save changes" : "Add guest"}
         </button>
@@ -207,6 +292,9 @@ export function ImportGuestsForm({ action }: { action: Action }) {
       <Field label="CSV file (columns: name, phone, side, relation)">
         <input name="file" type="file" accept=".csv,text/csv" required className={input} />
       </Field>
+      <label className="flex items-center gap-2 text-sm text-muted">
+        <input type="checkbox" name="sameNameOk" className="accent-ink" /> Allow guests with the same name
+      </label>
       <Status state={state} />
       <button disabled={pending} className={`${button} self-start`}>
         {pending ? "Importing…" : "Import guests"}
@@ -282,11 +370,13 @@ export function WhatsAppSendButton({
   label,
   ariaLabel,
   onSend,
+  size = "sm",
 }: {
   href: string;
   label: string;
   ariaLabel: string;
   onSend: () => Promise<void>;
+  size?: "sm" | "lg";
 }) {
   return (
     <a
@@ -297,7 +387,7 @@ export function WhatsAppSendButton({
       onClick={() => {
         onSend().catch(() => {});
       }}
-      className={buttonClass("whatsapp", "sm")}
+      className={buttonClass("whatsapp", size)}
     >
       {label}
     </a>

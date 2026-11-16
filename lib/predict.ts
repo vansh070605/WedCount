@@ -8,6 +8,7 @@
 // A calibration factor learned from the planner's past functions then scales the result.
 
 import { RELATIONS } from "@/lib/guests";
+import { isInvited } from "@/lib/rsvp";
 
 type Relation = (typeof RELATIONS)[number];
 type Answer = "attending" | "maybe" | "noReply";
@@ -23,12 +24,13 @@ export const DEFAULT_PARTY = 2;
 const Z90 = 1.645;
 
 type Reply = { eventId: string; status: string; vegCount: number; nonVegCount: number };
-export type PredictGuest = { relation: string; rsvps: Reply[] };
+export type PredictGuest = { relation: string; rsvps: Reply[]; invitations?: { eventId: string }[] };
 export type Prediction = { expected: number; low: number; high: number };
 
 const rel = (r: string): Relation => (RELATIONS.includes(r as Relation) ? (r as Relation) : "other");
 
-export function predictEvent(eventId: string, guests: PredictGuest[], factor = 1): Prediction {
+export function predictEvent(eventId: string, allGuests: PredictGuest[], factor = 1): Prediction {
+  const guests = allGuests.filter((g) => isInvited(g, eventId)); // only guests invited to this function can come
   const replies = guests.map((g) => g.rsvps.find((r) => r.eventId === eventId));
   const sizes = replies.filter((r) => r && r.status !== "declined").map((r) => r!.vegCount + r!.nonVegCount);
   const avgParty = sizes.length ? sizes.reduce((a, b) => a + b, 0) / sizes.length : DEFAULT_PARTY;

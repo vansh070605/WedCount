@@ -8,7 +8,11 @@ import { calibrationFactor, predictEvent } from "@/lib/predict";
 export async function plannerCalibration(plannerId: string) {
   const past = await prisma.event.findMany({
     where: { actualCount: { not: null }, wedding: { plannerId } },
-    select: { id: true, actualCount: true, wedding: { select: { guests: { select: { relation: true, rsvps: true } } } } },
+    select: {
+      id: true,
+      actualCount: true,
+      wedding: { select: { guests: { select: { relation: true, rsvps: true, invitations: { select: { eventId: true } } } } } },
+    },
   });
   const history = past.map((e) => ({
     predicted: predictEvent(e.id, e.wedding.guests).expected,

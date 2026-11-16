@@ -33,9 +33,6 @@ export function AppHeader() {
           <Link href="/dashboard" className={buttonClass("ghost", "sm", "max-sm:hidden")}>
             Weddings
           </Link>
-          <Link href="/docs" className={buttonClass("ghost", "sm", "max-sm:hidden")}>
-            Docs
-          </Link>
           <Link href="/account" className={buttonClass("ghost", "sm")}>
             Account
           </Link>

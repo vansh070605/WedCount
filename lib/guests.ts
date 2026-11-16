@@ -4,6 +4,10 @@ export const SIDES = ["bride", "groom"] as const;
 
 // 128 random bits, URL-safe. The invite link is the guest's only credential.
 export const newGuestToken = () => randomBytes(16).toString("base64url");
+// Comparable form of a name, to catch the same person added twice ("Sharma  Uncle." = "sharma uncle").
+export const nameKey = (name: string) =>
+  name.toLowerCase().replace(/[.,'"]/g, "").replace(/\s+/g, " ").trim();
+
 export const RELATIONS = ["family", "friend", "colleague", "other"] as const;
 
 export type GuestInput = {

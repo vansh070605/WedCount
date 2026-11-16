@@ -5,8 +5,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { createSession, destroySession, requireOwnedWedding, requirePlanner } from "@/lib/auth";
 import { hashPassword, verifyPassword } from "@/lib/password";
-import { newGuestToken, parseGuestCsv, validateGuest, type GuestInput } from "@/lib/guests";
-import { isRsvpOpen, parseRsvpForm } from "@/lib/rsvp";
+import { nameKey, newGuestToken, parseGuestCsv, validateGuest, type GuestInput } from "@/lib/guests";
+import { deadlineProblem, invitedEvents, isEventOpen, parseRsvpForm } from "@/lib/rsvp";
 import { LOGIN_FAILED, afterFailure, isLocked } from "@/lib/lockout";
 import { findOwnedEvent, findOwnedGuest } from "@/lib/owned";
 import { Prisma } from "@prisma/client";
@@ -14,12 +14,13 @@ import { headers } from "next/headers";
 import { HOUR, SIGNUPS_PER_HOUR, clientIp, limitKey, nextWindow } from "@/lib/ratelimit";
 import { RESET_SENT, hashToken, isUsable, newResetToken, resetEmail, resetExpiry } from "@/lib/reset";
 import { sendEmail } from "@/lib/mail";
-import { appUrl } from "@/lib/invite";
+import { appUrl, templateProblem } from "@/lib/invite";
 
 // Two requests inserting the same unique value at once: the database rejects the second with P2002.
 const isDuplicate = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
 
-export type FormState = { error?: string; message?: string; errors?: string[] };
+// `duplicate` asks the form to offer "different person, same name" before saving again.
+export type FormState = { error?: string; message?: string; errors?: string[]; duplicate?: boolean };
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
 
@@ -158,10 +159,27 @@ export async function updateWedding(weddingId: string, _: FormState, fd: FormDat
   await requireOwnedWedding(planner.id, weddingId);
   const data = parseWeddingForm(fd);
   if (typeof data === "string") return { error: data };
+  const events = await prisma.event.findMany({ where: { weddingId }, select: { name: true, startsAt: true } });
+  const late = deadlineProblem(data.rsvpDeadline, events);
+  if (late) return { error: late };
   await prisma.wedding.update({ where: { id: weddingId }, data });
   revalidatePath(`/weddings/${weddingId}`, "layout");
   revalidatePath("/dashboard");
   return { message: "Saved." };
+}
+
+// The planner's own WhatsApp invite text. Empty resets to the default.
+export async function saveInviteTemplate(weddingId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const planner = await requirePlanner();
+  await requireOwnedWedding(planner.id, weddingId);
+  const raw = String(fd.get("template") ?? "").replace(/\r\n/g, "\n").trim();
+  if (raw) {
+    const problem = templateProblem(raw);
+    if (problem) return { error: problem };
+  }
+  await prisma.wedding.update({ where: { id: weddingId }, data: { inviteTemplate: raw || null } });
+  revalidatePath(`/weddings/${weddingId}`, "layout");
+  return { message: raw ? "Saved. New invites use this message." : "Back to the default message." };
 }
 
 // Deletes the wedding with every function, guest and reply in it (cascade); invite links stop working. The button asks first.
@@ -203,6 +221,29 @@ async function saveGuests(weddingId: string, guests: GuestInput[]) {
 }
 const SAVE_RACE = "Someone else just added some of these guests. Nothing was saved; refresh and try again.";
 
+// Which functions the form ticked. All of them (or a wedding with none) is stored as no rows, meaning "every function",
+// so functions added later include this guest automatically.
+async function chosenFunctions(weddingId: string, fd: FormData) {
+  const all = await prisma.event.findMany({ where: { weddingId }, select: { id: true } });
+  if (all.length === 0) return { ids: [] as string[] };
+  const picked = new Set(fd.getAll("events").map(String));
+  const ids = all.map((e) => e.id).filter((id) => picked.has(id)); // ignore ids from other weddings
+  if (ids.length === 0) return { error: "Tick at least one function this guest is invited to." };
+  return { ids: ids.length === all.length ? [] : ids };
+}
+
+// Another guest on this wedding with the same name (ignoring case, spaces and dots), unless the planner said it's fine.
+async function sameNameGuest(weddingId: string, name: string, fd: FormData, exceptId?: string) {
+  if (fd.get("sameNameOk") === "on") return null;
+  const others = await prisma.guest.findMany({ where: { weddingId, NOT: exceptId ? { id: exceptId } : undefined }, select: { name: true, phone: true } });
+  return others.find((g) => nameKey(g.name) === nameKey(name)) ?? null;
+}
+
+const duplicateError = (g: { name: string; phone: string }): FormState => ({
+  error: `${g.name} (${g.phone}) is already on the guest list. If this is a different person, tick "Different person, same name" and save again.`,
+  duplicate: true,
+});
+
 export async function addGuest(weddingId: string, _: FormState, fd: FormData): Promise<FormState> {
   const planner = await requirePlanner();
   await requireOwnedWedding(planner.id, weddingId);
@@ -213,12 +254,26 @@ export async function addGuest(weddingId: string, _: FormState, fd: FormData): P
     relation: text(fd, "relation"),
   });
   if (typeof result === "string") return { error: result };
+  const fns = await chosenFunctions(weddingId, fd);
+  if (fns.error) return { error: fns.error };
+  const same = await sameNameGuest(weddingId, result.name, fd);
+  if (same) return duplicateError(same);
 
-  const saved = await saveGuests(weddingId, [result]);
-  if (!saved) return { error: SAVE_RACE };
-  const { added } = saved;
-  revalidatePath(`/weddings/${weddingId}`);
-  return added ? { message: `Added ${result.name}.` } : { error: `${result.phone} is already on the guest list.` };
+  try {
+    await prisma.guest.create({
+      data: {
+        ...result,
+        weddingId,
+        token: newGuestToken(),
+        invitations: { create: fns.ids!.map((eventId) => ({ eventId })) },
+      },
+    });
+  } catch (e) {
+    if (isDuplicate(e)) return { error: `${result.phone} is already on the guest list.` };
+    throw e;
+  }
+  revalidatePath(`/weddings/${weddingId}`, "layout");
+  return { message: `Added ${result.name}.` };
 }
 
 const MAX_CSV_BYTES = 1024 * 1024;
@@ -231,8 +286,19 @@ export async function importGuests(weddingId: string, _: FormState, fd: FormData
   if (file.size > MAX_CSV_BYTES) return { error: "File is larger than 1 MB." };
 
   const { guests, errors } = parseGuestCsv(await file.text());
+  if (fd.get("sameNameOk") !== "on") {
+    const existing = await prisma.guest.findMany({ where: { weddingId }, select: { name: true, phone: true } });
+    const byKey = new Map(existing.map((g) => [nameKey(g.name), g]));
+    for (const g of guests) {
+      const other = byKey.get(nameKey(g.name));
+      // Same phone is skipped later anyway; same name with another number is the likely double entry.
+      if (other && other.phone !== g.phone) errors.push(`${g.name}: same name as ${other.name} (${other.phone}), already on the list or earlier in the file`);
+      else if (!other) byKey.set(nameKey(g.name), g);
+    }
+    if (errors.length) errors.push('If these are different people with the same name, tick "Allow guests with the same name" and import again.');
+  }
   // All-or-nothing: a planner fixes the file and re-uploads, instead of guessing which rows landed.
-  if (errors.length) return { error: `Nothing imported. Fix ${errors.length} row(s):`, errors: errors.slice(0, 20) };
+  if (errors.length) return { error: `Nothing imported. Fix ${errors.length} row(s):`, errors: errors.slice(0, 21) };
 
   const saved = await saveGuests(weddingId, guests);
   if (!saved) return { error: SAVE_RACE };
@@ -247,12 +313,14 @@ export async function importGuests(weddingId: string, _: FormState, fd: FormData
 export async function saveRsvp(token: string, _: FormState, fd: FormData): Promise<FormState> {
   const guest = await prisma.guest.findUnique({
     where: { token },
-    include: { wedding: { include: { events: true } } },
+    include: { invitations: true, wedding: { include: { events: true } } },
   });
   if (!guest) return { error: "This invite link is not valid. Ask the family for a new one." };
-  if (!isRsvpOpen(guest.wedding.rsvpDeadline)) return { error: "RSVPs for this wedding are closed." };
+  // Only functions this guest is invited to and whose day hasn't come; anything else in the form is ignored.
+  const open = invitedEvents(guest, guest.wedding.events).filter((e) => isEventOpen(e, guest.wedding.rsvpDeadline));
+  if (open.length === 0) return { error: "Replies are closed. Contact the family to change your plans." };
 
-  const { rsvps, errors } = parseRsvpForm(guest.wedding.events, (key) => String(fd.get(key) ?? ""));
+  const { rsvps, errors } = parseRsvpForm(open, (key) => String(fd.get(key) ?? ""));
   if (errors.length) return { error: "Please fix these:", errors };
 
   // One transaction so a guest never ends up with half their events saved.
@@ -289,6 +357,9 @@ export async function addEvent(weddingId: string, _: FormState, fd: FormData): P
   await requireOwnedWedding(planner.id, weddingId);
   const data = parseEventForm(fd);
   if (typeof data === "string") return { error: data };
+  const wedding = await prisma.wedding.findUniqueOrThrow({ where: { id: weddingId }, select: { rsvpDeadline: true } });
+  const late = deadlineProblem(wedding.rsvpDeadline, [data]);
+  if (late) return { error: `${late} Move the deadline earlier in Settings, or pick a later date.` };
 
   await prisma.event.create({ data: { weddingId, ...data } });
   revalidatePath(`/weddings/${weddingId}`);
@@ -302,6 +373,9 @@ export async function updateEvent(eventId: string, _: FormState, fd: FormData): 
   if (!event) return { error: "Function not found." };
   const data = parseEventForm(fd);
   if (typeof data === "string") return { error: data };
+  const wedding = await prisma.wedding.findUniqueOrThrow({ where: { id: event.weddingId }, select: { rsvpDeadline: true } });
+  const late = deadlineProblem(wedding.rsvpDeadline, [data]);
+  if (late) return { error: `${late} Move the deadline earlier in Settings, or pick a later date.` };
 
   await prisma.event.update({ where: { id: eventId }, data });
   revalidatePath(`/weddings/${event.weddingId}`, "layout");
@@ -329,10 +403,18 @@ export async function updateGuest(guestId: string, _: FormState, fd: FormData): 
     relation: text(fd, "relation"),
   });
   if (typeof result === "string") return { error: result };
+  const fns = await chosenFunctions(guest.weddingId, fd);
+  if (fns.error) return { error: fns.error };
+  const same = await sameNameGuest(guest.weddingId, result.name, fd, guestId);
+  if (same) return duplicateError(same);
 
   try {
-    // Token stays the same, so links already sent keep working.
-    await prisma.guest.update({ where: { id: guestId }, data: result });
+    // Token stays the same, so links already sent keep working. Invitations are replaced with the new choice.
+    await prisma.$transaction([
+      prisma.guest.update({ where: { id: guestId }, data: result }),
+      prisma.invitation.deleteMany({ where: { guestId } }),
+      prisma.invitation.createMany({ data: fns.ids!.map((eventId) => ({ guestId, eventId })) }),
+    ]);
   } catch (e) {
     if (isDuplicate(e)) return { error: `Another guest on this wedding already has ${result.phone}.` };
     throw e;
@@ -362,7 +444,7 @@ export async function markSent(guestId: string, kind: "invite" | "reminder") {
     where: { id: guestId },
     data: kind === "invite" ? { invitedAt: now } : { remindedAt: now, reminderCount: { increment: 1 } },
   });
-  revalidatePath(`/weddings/${guest.weddingId}`);
+  revalidatePath(`/weddings/${guest.weddingId}`, "layout"); // wedding page and the send queue
 }
 
 export async function recordActual(eventId: string, _: FormState, fd: FormData): Promise<FormState> {

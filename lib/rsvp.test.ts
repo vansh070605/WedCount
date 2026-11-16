@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isRsvpOpen, istDate, parseRsvpForm } from "./rsvp";
+import { closesAt, deadlineProblem, invitedEvents, isEventOpen, isRsvpOpen, istDate, parseNames, parseRsvpForm } from "./rsvp";
 
 const events = [
   { id: "e1", name: "Sangeet", startsAt: new Date("2026-12-10T19:00:00+05:30") },
@@ -24,7 +24,7 @@ test("parseRsvpForm saves attending, declined and arrival time", () => {
   const { rsvps, errors } = parseRsvpForm(
     events,
     form({
-      status_e1: "attending", veg_e1: "2", nonveg_e1: "1", arrival_e1: "19:30",
+      status_e1: "attending", veg_e1: "2", nonveg_e1: "1", arrival_e1: "19:30", names_e1: "Ramesh Sharma\n\n  Sunita   Sharma \nAarav",
       status_e2: "declined", veg_e2: "5", arrival_e2: "20:00",
     }),
   );
@@ -32,9 +32,10 @@ test("parseRsvpForm saves attending, declined and arrival time", () => {
   assert.deepEqual(rsvps[0], {
     eventId: "e1", status: "attending", vegCount: 2, nonVegCount: 1,
     arrivalTime: new Date("2026-12-10T19:30:00+05:30"),
+    names: ["Ramesh Sharma", "Sunita Sharma", "Aarav"],
   });
   // Declined ignores counts and arrival even if the browser sent them.
-  assert.deepEqual(rsvps[1], { eventId: "e2", status: "declined", vegCount: 0, nonVegCount: 0, arrivalTime: null });
+  assert.deepEqual(rsvps[1], { eventId: "e2", status: "declined", vegCount: 0, nonVegCount: 0, arrivalTime: null, names: [] });
 });
 
 test("parseRsvpForm rejects missing answers, zero, too many, bad numbers and bad times", () => {
@@ -54,4 +55,39 @@ test("parseRsvpForm rejects missing answers, zero, too many, bad numbers and bad
 test("parseRsvpForm ignores fields for events not passed in", () => {
   const { rsvps } = parseRsvpForm([events[0]], form({ status_e1: "maybe", veg_e1: "1", status_other: "attending" }));
   assert.deepEqual(rsvps.map((r) => r.eventId), ["e1"]);
+});
+
+test("Coming needs one name per person; Maybe may leave names out but not add extra", () => {
+  const coming = parseRsvpForm([events[0]], form({ status_e1: "attending", veg_e1: "2", names_e1: "Only One" }));
+  assert.match(coming.errors[0], /names of all 2 people/);
+  const maybe = parseRsvpForm([events[0]], form({ status_e1: "maybe", veg_e1: "2", names_e1: "Only One" }));
+  assert.deepEqual(maybe.errors, []);
+  assert.deepEqual(maybe.rsvps[0].names, ["Only One"]);
+  const extra = parseRsvpForm([events[0]], form({ status_e1: "maybe", veg_e1: "1", names_e1: "A\nB" }));
+  assert.match(extra.errors[0], /2 names for 1 person/);
+});
+
+test("parseNames splits lines, trims and drops blanks", () => {
+  assert.deepEqual(parseNames(" A  B \r\n\n C "), ["A B", "C"]);
+});
+
+test("replies for a function close when its day begins in India", () => {
+  const sangeet = events[0]; // 10 Dec, 7 pm IST
+  assert.deepEqual(closesAt(sangeet), new Date("2026-12-10T00:00:00+05:30"));
+  assert.equal(isEventOpen(sangeet, null, new Date("2026-12-09T23:59:00+05:30")), true);
+  assert.equal(isEventOpen(sangeet, null, new Date("2026-12-10T00:00:00+05:30")), false);
+  // The wedding deadline still closes everything earlier.
+  assert.equal(isEventOpen(sangeet, new Date("2026-12-01T23:59:59+05:30"), new Date("2026-12-05T10:00:00+05:30")), false);
+});
+
+test("the RSVP deadline must fall before the first function's day", () => {
+  assert.equal(deadlineProblem(new Date("2026-12-09T23:59:59+05:30"), events), null);
+  assert.match(deadlineProblem(new Date("2026-12-10T23:59:59+05:30"), events)!, /before Sangeet/);
+  assert.equal(deadlineProblem(null, events), null);
+  assert.equal(deadlineProblem(new Date("2030-01-01"), []), null);
+});
+
+test("no invitation rows means every function; rows limit it", () => {
+  assert.deepEqual(invitedEvents({}, events).map((e) => e.id), ["e1", "e2"]);
+  assert.deepEqual(invitedEvents({ invitations: [{ eventId: "e2" }] }, events).map((e) => e.id), ["e2"]);
 });

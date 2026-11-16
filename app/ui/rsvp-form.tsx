@@ -14,6 +14,8 @@ export type EventAnswer = {
   veg: number;
   nonVeg: number;
   arrival: string;
+  names: string[];
+  open: boolean; // replies still accepted for this function
 };
 
 const LABELS: Record<string, string> = { attending: "Coming", maybe: "Maybe", declined: "Can't come" };
@@ -21,12 +23,13 @@ const LABELS: Record<string, string> = { attending: "Coming", maybe: "Maybe", de
 export function RsvpForm({
   action,
   events,
-  open,
+  guestName,
 }: {
   action: (state: FormState, fd: FormData) => Promise<FormState>;
   events: EventAnswer[];
-  open: boolean;
+  guestName: string;
 }) {
+  const open = events.some((e) => e.open);
   const [state, formAction, pending] = useActionState(action, {});
   const [status, setStatus] = useState(() => Object.fromEntries(events.map((e) => [e.id, e.status])));
 
@@ -45,11 +48,12 @@ export function RsvpForm({
       {events.map((e) => {
         const going = status[e.id] === "attending" || status[e.id] === "maybe";
         return (
-          <fieldset key={e.id} disabled={!open} className="reveal rounded-card border border-line bg-surface p-5 shadow-card transition-colors has-checked:border-gold/60 sm:p-6">
+          <fieldset key={e.id} disabled={!e.open} className="reveal rounded-card border border-line bg-surface p-5 shadow-card transition-colors has-checked:border-brand/40 sm:p-6">
             <legend className="px-2 font-display text-xl font-semibold">{e.name}</legend>
             <p className="mb-4 text-sm text-muted">
               {e.when}
               {e.venue && ` · ${e.venue}`}
+              {!e.open && " · Replies closed"}
             </p>
 
             <div role="radiogroup" aria-label={`Are you coming to ${e.name}?`} className="flex flex-wrap gap-2">
@@ -85,6 +89,15 @@ export function RsvpForm({
                 <label className="col-span-2 flex flex-col gap-1.5 text-sm font-medium sm:col-span-1">
                   Arriving around
                   <input name={`arrival_${e.id}`} type="time" defaultValue={e.arrival} className={input} />
+                </label>
+                <label className="col-span-2 flex flex-col gap-1.5 text-sm font-medium sm:col-span-3">
+                  Names of everyone coming, one per line
+                  <textarea
+                    name={`names_${e.id}`}
+                    rows={3}
+                    defaultValue={(e.names.length ? e.names : [guestName]).join("\n")}
+                    className={input}
+                  />
                 </label>
               </div>
             )}

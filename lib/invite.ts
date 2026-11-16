@@ -8,15 +8,40 @@ export function appUrl(): string {
 
 export const inviteLink = (token: string, base = appUrl()) => `${base}/r/${token}`;
 
-export function inviteMessage(opts: { guestName: string; weddingName: string; link: string; deadline: Date | null }) {
-  const by = opts.deadline
-    ? ` by ${opts.deadline.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "long" })}`
-    : "";
-  return (
-    `Namaste ${opts.guestName}! You're invited to ${opts.weddingName}.\n\n` +
-    `Please tell us which functions you'll attend and how many of you are coming${by}:\n${opts.link}\n\n` +
-    `You can change your reply anytime before then.`
-  );
+// The planner can rewrite the WhatsApp invite. Placeholders are filled per guest; {link} is required.
+export const PLACEHOLDERS = ["name", "wedding", "functions", "replyBy", "link"] as const;
+export const MAX_TEMPLATE = 1000;
+export const DEFAULT_INVITE_TEMPLATE =
+  "Namaste {name}! You're invited to {wedding}.\n\n" +
+  "Please tell us if you'll join us for {functions} and how many of you are coming, {replyBy}:\n{link}\n\n" +
+  "You can change your reply anytime before then.";
+
+const day = (d: Date) => d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "long" });
+
+// Empty when fine, otherwise what to fix.
+export function templateProblem(template: string): string | null {
+  if (template.length > MAX_TEMPLATE) return `Keep the message under ${MAX_TEMPLATE} characters.`;
+  if (!template.includes("{link}")) return "The message must include {link}, or guests can't reply.";
+  const unknown = [...template.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).filter((k) => !(PLACEHOLDERS as readonly string[]).includes(k));
+  return unknown.length ? `Unknown placeholder: {${unknown[0]}}. Use ${PLACEHOLDERS.map((p) => `{${p}}`).join(", ")}.` : null;
+}
+
+export function inviteMessage(opts: {
+  guestName: string;
+  weddingName: string;
+  link: string;
+  deadline: Date | null;
+  functions?: string[]; // names of the functions this guest is invited to
+  template?: string | null;
+}) {
+  const values: Record<string, string> = {
+    name: opts.guestName,
+    wedding: opts.weddingName,
+    functions: opts.functions?.length ? `the ${listJoin(opts.functions)}` : "the wedding",
+    replyBy: opts.deadline ? `by ${day(opts.deadline)}` : "as soon as you can",
+    link: opts.link,
+  };
+  return (opts.template || DEFAULT_INVITE_TEMPLATE).replace(/\{(\w+)\}/g, (m, k: string) => values[k] ?? m);
 }
 
 export function reminderMessage(opts: {
@@ -26,9 +51,7 @@ export function reminderMessage(opts: {
   deadline: Date | null;
   missing: string[]; // function names the guest hasn't answered
 }) {
-  const by = opts.deadline
-    ? ` by ${opts.deadline.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "long" })}`
-    : "";
+  const by = opts.deadline ? ` by ${day(opts.deadline)}` : "";
   const what = opts.missing.length ? ` for ${listJoin(opts.missing)}` : "";
   return (
     `Namaste ${opts.guestName}, a gentle reminder for ${opts.weddingName}. ` +
@@ -38,7 +61,7 @@ export function reminderMessage(opts: {
 }
 
 // "A", "A and B", "A, B and C"
-const listJoin = (xs: string[]) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`);
+export const listJoin = (xs: string[]) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`);
 
 // Opens WhatsApp (app or web) with the message ready to send to this number. Phone is stored as +91XXXXXXXXXX.
 export const whatsappUrl = (phone: string, text: string) =>

@@ -60,10 +60,11 @@ Planner 1──* Wedding 1──* Event
 | Session | `id` = sha256(cookie token), `expiresAt` | raw token never stored |
 | PasswordReset | `id` = sha256(link token), `plannerId`, `expiresAt`, `usedAt` | raw token never stored; used once |
 | RateLimit | `key` = sha256(action + client address), `count`, `windowStart` | raw address never stored |
-| Wedding | `plannerId`, `name`, `city`, `rsvpDeadline` | always read through the owner |
+| Wedding | `plannerId`, `name`, `city`, `rsvpDeadline`, `inviteTemplate` | always read through the owner; deadline before the first function's day |
 | Event | `weddingId`, `name`, `startsAt`, `venue`, `actualCount` | `actualCount` feeds calibration |
 | Guest | `weddingId`, `phone`, `side`, `relation`, `token` unique, `invitedAt`, `remindedAt`, `reminderCount` | `(weddingId, phone)` unique; token is 128 random bits |
-| Rsvp | `guestId`, `eventId`, `status`, `vegCount`, `nonVegCount`, `arrivalTime` | `(guestId, eventId)` unique; people = veg + non-veg; no row means no reply |
+| Invitation | `guestId`, `eventId` | no rows for a guest = invited to every function |
+| Rsvp | `guestId`, `eventId`, `status`, `vegCount`, `nonVegCount`, `arrivalTime`, `names[]` | `(guestId, eventId)` unique; people = veg + non-veg; Coming has one name per person; no row means no reply |
 
 All foreign keys cascade on delete, so removing a wedding removes its functions, guests and replies.
 

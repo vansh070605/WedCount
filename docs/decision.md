@@ -104,3 +104,11 @@ Accepted · 2026-11-16
 **Context.** Planners who forget their password were locked out for good. Sending email needs a provider; the developer chose Resend.
 **Decision.** One-time links (256-bit token, hashed in the database, 30 minutes, single use) emailed through Resend's REST API with `fetch`, not the Resend SDK: one call does not justify a dependency. Using a link signs out every other device.
 **Consequences.** Works with only `RESEND_API_KEY` set. Until a domain is verified in Resend, its shared sender `onboarding@resend.dev` only delivers to the Resend account owner's own address, so other planners will not receive reset email. Revisit by buying a domain, verifying it in Resend and setting `MAIL_FROM`.
+
+## D12. Replies close before the function's day; invitations default to every function
+
+Accepted · 2026-11-17
+
+**Context.** Testers could RSVP after a function had happened, could add the same person twice, and the planner could not invite colleagues to the Reception alone or see who exactly was coming.
+**Decision.** A function stops taking replies at midnight IST at the start of its day, in addition to the wedding deadline, and the deadline must fall before the first function's day. Per-function invitations are rows in `Invitation`; no rows means every function, so the common case stores nothing and new functions include existing guests. Coming requires one name per person. Same-name guests need an explicit override.
+**Consequences.** Same-day replies are no longer possible, which matches how caterers work. Counting code must always respect invitations (`isInvited`), which is covered by unit tests in headcount, predict and reminders.

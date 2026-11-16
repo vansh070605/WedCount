@@ -16,6 +16,7 @@ import { SectionTabs } from "@/app/ui/section-tabs";
 import { appUrl, inviteLink, inviteMessage, reminderMessage, whatsappUrl } from "@/lib/invite";
 import { REMIND_EVERY_DAYS, ago, missingEvents, reminderStatus } from "@/lib/reminders";
 import { countHeadcount } from "@/lib/headcount";
+import { invitedEvents, isInvited } from "@/lib/rsvp";
 import { errorPct, predictEvent } from "@/lib/predict";
 import { plannerCalibration } from "@/lib/calibrate";
 
@@ -36,7 +37,8 @@ const th = "px-4 py-3 text-xs font-medium tracking-wide text-muted uppercase";
 const td = "px-4 py-3";
 
 // Short per-function reply for the guest list.
-function Reply({ r }: { r: { status: string; vegCount: number; nonVegCount: number } | undefined }) {
+function Reply({ r, invited = true }: { r: { status: string; vegCount: number; nonVegCount: number } | undefined; invited?: boolean }) {
+  if (!invited) return <span className="text-xs text-muted/70">not invited</span>;
   if (!r) return <span className="text-muted">—</span>;
   const people = r.vegCount + r.nonVegCount;
   if (r.status === "attending") return <Badge tone="ok">{people} coming</Badge>;
@@ -50,7 +52,11 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
   const wedding = await requireOwnedWedding(planner.id, id);
   const [events, guests, calibration] = await Promise.all([
     prisma.event.findMany({ where: { weddingId: wedding.id }, orderBy: { startsAt: "asc" } }),
-    prisma.guest.findMany({ where: { weddingId: wedding.id }, orderBy: { name: "asc" }, include: { rsvps: true } }),
+    prisma.guest.findMany({
+      where: { weddingId: wedding.id },
+      orderBy: { name: "asc" },
+      include: { rsvps: true, invitations: { select: { eventId: true } } },
+    }),
     plannerCalibration(planner.id),
   ]);
   const counts = countHeadcount(events, guests);
@@ -63,8 +69,29 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
   const due = statuses.filter((x) => x.status === "due").map((x) => x.guest);
   const replied = tally("complete");
   const next = events.map((e, i) => ({ e, i })).find(({ e }) => e.startsAt > now);
+  const notInvited = guests.filter((g) => !g.invitedAt).length;
+  // The WhatsApp text for one guest: the planner's template (or the default), naming only their functions.
+  const invite = (g: (typeof guests)[number]) =>
+    inviteMessage({
+      guestName: g.name,
+      weddingName: wedding.name,
+      link: inviteLink(g.token, base),
+      deadline: wedding.rsvpDeadline,
+      functions: invitedEvents(g, events).map((e) => e.name),
+      template: wedding.inviteTemplate,
+    });
+  // Everyone who said Coming, per function, by name. Older replies without names fall back to the guest's name.
+  const coming = events.map((e) =>
+    guests.flatMap((g) => {
+      const r = g.rsvps.find((r) => r.eventId === e.id && r.status === "attending");
+      if (!r) return [];
+      const people = r.vegCount + r.nonVegCount;
+      return [{ guest: g, names: r.names.length ? r.names : [people > 1 ? `${g.name} +${people - 1}` : g.name] }];
+    }),
+  );
   const sections: [string, string][] = [
     ["headcount", "Headcount"],
+    ...(events.length > 0 && guests.length > 0 ? [["coming", "Who's coming"] as [string, string]] : []),
     ...(started.length ? [["turnout", "Turnout"] as [string, string]] : []),
     ...(events.length > 0 && guests.length > 0 ? [["reminders", "Reminders"] as [string, string]] : []),
     ["functions", "Functions"],
@@ -85,7 +112,12 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
           </>
         }
         action={
-          <div className="flex w-full gap-2 sm:w-auto">
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+            {events.length > 0 && guests.length > 0 && (
+              <Link href={`/weddings/${wedding.id}/invite`} className={buttonClass("primary", "md", "flex-1 sm:flex-none")}>
+                {notInvited ? `Send invites (${notInvited})` : "Send invites"}
+              </Link>
+            )}
             <Link href={`/weddings/${wedding.id}/settings`} className={buttonClass("secondary", "md", "flex-1 sm:flex-none")}>
               Settings
             </Link>
@@ -207,6 +239,47 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
         )}
       </Card>
 
+      {events.length > 0 && guests.length > 0 && (
+        <Card id="coming" className="scroll-mt-32">
+          <SectionTitle
+            title="Who's coming"
+            hint="Names guests gave when they said Coming, per function."
+            action={
+              <a href={`/weddings/${wedding.id}/export?list=names`} className={buttonClass("secondary", "sm")}>
+                ↓ Names CSV
+              </a>
+            }
+          />
+          <div className="flex flex-col gap-3">
+            {events.map((e, i) => {
+              const people = coming[i].reduce((n, x) => n + x.names.length, 0);
+              return (
+                <details key={e.id} className="group rounded-xl border border-line bg-paper" open={i === 0}>
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+                    <span className="font-semibold">{e.name}</span>
+                    <span className="text-sm text-muted tabular-nums">
+                      {people} {people === 1 ? "person" : "people"} from {coming[i].length} invite{coming[i].length === 1 ? "" : "s"}
+                    </span>
+                  </summary>
+                  {coming[i].length === 0 ? (
+                    <p className="border-t border-line px-4 py-3 text-sm text-muted">Nobody has said Coming yet.</p>
+                  ) : (
+                    <ul className="grid gap-x-6 border-t border-line px-4 py-3 text-sm sm:grid-cols-2">
+                      {coming[i].map(({ guest: g, names }) => (
+                        <li key={g.id} className="py-1.5">
+                          <span className="font-medium">{names.join(", ")}</span>
+                          {names[0] !== g.name && <span className="text-muted"> · invite: {g.name}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </details>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
       {started.length > 0 && (
         <Card id="turnout" className="scroll-mt-32">
           <SectionTitle
@@ -312,7 +385,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
           <ul className="flex flex-col divide-y divide-line sm:hidden">
             {guests.map((g) => {
               const link = inviteLink(g.token, base);
-              const text = inviteMessage({ guestName: g.name, weddingName: wedding.name, link, deadline: wedding.rsvpDeadline });
+              const text = invite(g);
               return (
                 <li key={g.id} className="reveal-row py-4 first:pt-0">
                   <div className="flex items-start justify-between gap-3">
@@ -331,7 +404,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                       {events.map((e) => (
                         <span key={e.id} className="flex items-center gap-1.5">
                           <span className="text-muted">{e.name}</span>
-                          <Reply r={g.rsvps.find((r) => r.eventId === e.id)} />
+                          <Reply r={g.rsvps.find((r) => r.eventId === e.id)} invited={isInvited(g, e.id)} />
                         </span>
                       ))}
                     </div>
@@ -369,7 +442,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
               <tbody>
                 {guests.map((g) => {
                   const link = inviteLink(g.token, base);
-                  const text = inviteMessage({ guestName: g.name, weddingName: wedding.name, link, deadline: wedding.rsvpDeadline });
+                  const text = invite(g);
                   return (
                     <tr key={g.id} className="border-t border-line transition-colors hover:bg-sunken/60">
                       <td className={td}>
@@ -387,7 +460,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                       </td>
                       {events.map((e) => (
                         <td key={e.id} className={`${td} whitespace-nowrap`}>
-                          <Reply r={g.rsvps.find((r) => r.eventId === e.id)} />
+                          <Reply r={g.rsvps.find((r) => r.eventId === e.id)} invited={isInvited(g, e.id)} />
                         </td>
                       ))}
                       <td className={td}>
@@ -414,7 +487,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
       <div id="add" className="grid scroll-mt-32 gap-8 lg:grid-cols-2">
         <Card>
           <SectionTitle title="Add a guest" />
-          <AddGuestForm action={addGuest.bind(null, wedding.id)} />
+          <AddGuestForm action={addGuest.bind(null, wedding.id)} events={events} />
         </Card>
         <Card>
           <SectionTitle
