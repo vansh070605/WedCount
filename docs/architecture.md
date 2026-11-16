@@ -94,7 +94,7 @@ Cache Components is on (`next.config.ts`). Pages that read cookies or the databa
 |---|---|---|
 | Local | Postgres from `npx prisma dev` (runs locally, no Docker) | [Playbook: run locally](playbook.md) |
 | Tests | A throwaway `wedcount_test` schema in the local database | `npm run test:db` creates and drops it |
-| Preview and production | Neon Postgres, one branch per environment | Vercel + Neon integration, see [Playbook: deploy](playbook.md) |
+| Preview and production | Neon Postgres in Singapore; Vercel functions pinned to `sin1` next to it (`vercel.json`) | Vercel + Neon integration, see [Playbook: deploy](playbook.md) |
 
 ### Environment variables
 
