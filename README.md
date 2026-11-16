@@ -285,7 +285,7 @@ Each step is a pull request with what changed, why, and how it was tested, and a
 | + | Signup limit, analytics, error logging | [#16](https://github.com/vansh070605/WedCount/pull/16) |
 | + | Password reset by email (Resend) | [#17](https://github.com/vansh070605/WedCount/pull/17) |
 | + | Tester feedback: send queue, per-function invites, names, duplicates, RSVP closing | [#18](https://github.com/vansh070605/WedCount/pull/18) |
-| + | Planner home page, no past dates | this PR |
+| + | Planner home page, no past dates | [#19](https://github.com/vansh070605/WedCount/pull/19) |
 
 ## 🗺 Roadmap
 
