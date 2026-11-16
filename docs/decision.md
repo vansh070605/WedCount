@@ -88,3 +88,11 @@ Accepted · 2026-11-16
 **Context.** AI agents do much of the work on this repo and need the same context a new engineer would.
 **Decision.** All project knowledge lives in `docs/*.md`. The app renders them at `/docs` and serves them raw at `/llms.txt`, `/llms-full.txt` and `/llms/<slug>.md`. `AGENTS.md` at the root points agents to `docs/agents.md`.
 **Consequences.** One source of truth that is versioned with the code. Docs must be updated in the same PR as the behaviour they describe.
+
+## D10. Database and functions in Singapore
+
+Accepted · 2026-11-16
+
+**Context.** Guests and planners are in India. Neon offers no Mumbai region on the Vercel integration's free plan, and Vercel runs functions in Washington (`iad1`) by default, an ocean away from the data.
+**Decision.** Neon project in Singapore (`aws-ap-southeast-1`); functions pinned to `sin1` in `vercel.json`, so every query stays inside one region.
+**Consequences.** Low latency from India. Revisit if Neon adds Mumbai or the user base moves.
