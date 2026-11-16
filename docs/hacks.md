@@ -45,7 +45,18 @@ The table in `lib/predict.ts` is a starting guess.
 `lib/docs.ts` reads `docs/*.md` once when the module loads, and the pages are prerendered at build.
 **Consequence:** changing a doc needs a rebuild (or a dev server reload) to show up.
 
+## Account deletion is immediate
+
+`deleteAccount` removes the planner and every wedding at once, with no grace period or export.
+**Replace when:** real planners use it; add a CSV export of all weddings first and a 7-day undo window.
+
 ## No password reset
 
 A planner who forgets their password cannot recover the account without a database change.
 **Replace when:** the first real planner signs up. Add an email provider (Resend or similar), a reset-token table with expiry, and a decision entry.
+
+## No-JavaScript form errors crash in `next dev` only
+
+In development, when a planner form is submitted before JavaScript loads and the action returns an error, Next.js 16.4 throws `Invariant: Received an underlying cookies object that does not match either cookies or mutableCookies` while re-rendering the page. The production build (`npm run build && npm start`) renders the error message correctly.
+**Fix now:** test the no-JavaScript path against a production build.
+**Replace when:** a Next.js release fixes the dev invariant; then this entry can go.

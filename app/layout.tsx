@@ -13,8 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // Absolute base for the share image and other metadata URLs.
+  metadataBase: new URL(process.env.APP_URL || "http://localhost:3000"),
   title: "WedCount",
-  description: "WhatsApp RSVPs and an honest headcount for Indian weddings.",
+  description: "WhatsApp RSVPs and an expected headcount for every function of an Indian wedding.",
+  openGraph: { siteName: "WedCount", type: "website" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

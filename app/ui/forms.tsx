@@ -73,25 +73,54 @@ export function AuthForm({ action, mode }: { action: Action; mode: "login" | "si
   );
 }
 
-export function CreateWeddingForm({ action }: { action: Action }) {
+type WeddingDefaults = { name: string; city: string | null; rsvpDeadline: string };
+
+// Creates a wedding, or edits one when `wedding` is given.
+export function CreateWeddingForm({ action, wedding }: { action: Action; wedding?: WeddingDefaults }) {
   const [state, formAction, pending] = useActionState(action, {});
   return (
-    <form action={formAction} className="grid gap-4 sm:grid-cols-3 sm:items-end">
+    <form
+      action={formAction}
+      onSubmit={wedding ? keepValues(formAction) : undefined}
+      className="grid gap-4 sm:grid-cols-3 sm:items-end"
+    >
       <Field label="Wedding name">
-        <input name="name" required placeholder="Priya & Rohit" className={input} />
+        <input name="name" required maxLength={120} placeholder="Priya & Rohit" defaultValue={wedding?.name} className={input} />
       </Field>
       <Field label="City">
-        <input name="city" placeholder="Jaipur" className={input} />
+        <input name="city" maxLength={80} placeholder="Jaipur" defaultValue={wedding?.city ?? ""} className={input} />
       </Field>
       <Field label="RSVP deadline">
-        <input name="rsvpDeadline" type="date" className={input} />
+        <input name="rsvpDeadline" type="date" defaultValue={wedding?.rsvpDeadline} className={input} />
       </Field>
       <div className="sm:col-span-3">
         <Status state={state} />
         <button disabled={pending} className={`${button} mt-3 w-full sm:w-auto`}>
-          {pending ? "Creating…" : "Create wedding"}
+          {wedding ? (pending ? "Saving…" : "Save changes") : pending ? "Creating…" : "Create wedding"}
         </button>
       </div>
+    </form>
+  );
+}
+
+// Last step before deleting an account: the planner types their password.
+export function DeleteAccountForm({ action }: { action: Action }) {
+  const [state, formAction, pending] = useActionState(action, {});
+  return (
+    <form
+      action={formAction}
+      onSubmit={(ev) => {
+        if (!window.confirm("Delete your account and every wedding in it? This can't be undone.")) ev.preventDefault();
+      }}
+      className="flex flex-col gap-3 sm:max-w-sm"
+    >
+      <Field label="Your password">
+        <input name="password" type="password" required autoComplete="current-password" className={input} />
+      </Field>
+      <Status state={state} />
+      <button disabled={pending} className={buttonClass("danger", "md", "self-start")}>
+        {pending ? "Deleting…" : "Delete my account"}
+      </button>
     </form>
   );
 }

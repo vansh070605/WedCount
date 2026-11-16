@@ -9,11 +9,12 @@
 
 - **Sign up and log in** with email and password (minimum 8 characters). Emails are stored lower-case. Code: `signup`, `login`, `logout` in `app/actions.ts`.
 - **Sessions** last 30 days in an httpOnly cookie. The database stores only the SHA-256 of the token, and expired sessions are cleaned up at each login. Code: `lib/auth.ts`.
+- **Account page** (`/account`) shows the planner's name and email and deletes the account with everything in it. Deletion asks for the password, so an open laptop is not enough. Code: `deleteAccount` in `app/actions.ts`.
 - **Login lockout**: after 5 wrong passwords the account pauses for 15 minutes. The state lives in the database so it holds across serverless instances, and every failure shows the same message so nobody can tell which emails exist. Code: `lib/lockout.ts`.
 
 ## Weddings, functions and guests
 
-- **Weddings** have a name, city and optional RSVP deadline. The dashboard (`/dashboard`) lists them with reply progress and the next function.
+- **Weddings** have a name, city and optional RSVP deadline. The dashboard (`/dashboard`) lists them with reply progress and the next function. Edit or delete a wedding at `/weddings/[id]/settings`; deleting removes its functions, guests and replies, and invite links stop working. Code: `updateWedding`, `deleteWedding` in `app/actions.ts`.
 - **Functions** (Haldi, Sangeet, ...) have a name, start time and venue. Add on the wedding page, edit or delete at `/weddings/[id]/events/[eventId]`.
 - **Guests** have a name, phone, side (bride or groom) and relation (family, friend, colleague, other). Add one at a time, or import a CSV. Edit or delete at `/weddings/[id]/guests/[guestId]`.
 - **Phone numbers** are normalised to `+91XXXXXXXXXX`, so `98765 43210` and `+91-98765-43210` are the same guest. A wedding cannot hold the same phone twice. Code: `normalizePhone` in `lib/guests.ts`.
@@ -69,6 +70,10 @@ The `+100` keeps one odd function from swinging everything. The page shows each 
 ## Documentation for people and agents
 
 - `/docs` renders every file in `docs/`. `/llms.txt` indexes them for AI agents, `/llms-full.txt` returns them all in one file, and `/llms/<slug>.md` returns one as raw Markdown. Code: `lib/docs.ts`, `app/docs/`, `app/llms*/`.
+
+## Sharing and icons
+
+- Favicon (`app/icon.svg`), home-screen icon (`app/apple-icon.tsx`) and a 1200×630 share card (`app/opengraph-image.tsx`) shown when a WedCount link is pasted into WhatsApp, LinkedIn or X. Absolute URLs come from `APP_URL` via `metadataBase` in `app/layout.tsx`.
 
 ## Legal pages
 

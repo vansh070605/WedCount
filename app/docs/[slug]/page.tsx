@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { marked } from "marked";
@@ -12,7 +13,16 @@ export async function generateMetadata({ params }: PageProps<"/docs/[slug]">): P
   return { title: doc ? `${doc.title} · WedCount docs` : "WedCount docs", description: doc?.summary };
 }
 
-export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {
+export default function DocPage({ params }: PageProps<"/docs/[slug]">) {
+  // params is URL data; reading it inside Suspense keeps navigation between docs instant.
+  return (
+    <Suspense>
+      <Doc params={params} />
+    </Suspense>
+  );
+}
+
+async function Doc({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const doc = findDoc(slug);
   if (!doc) notFound();

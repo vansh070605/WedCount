@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { SiteFooter, Wordmark } from "@/app/ui/brand";
 import { ButtonLink } from "@/app/ui/kit";
+import { MobileMenu } from "@/app/ui/mobile-menu";
 
 // One example wedding, used consistently across every mock on the page.
 const EXAMPLE = {
@@ -14,6 +15,13 @@ const EXAMPLE = {
     { fn: "Wedding", coming: 312, veg: 198, nonVeg: 114, maybe: 36, noReply: 52, expected: 289, low: 270, high: 308 },
   ],
 };
+
+const NAV: [href: string, label: string][] = [
+  ["#features", "Features"],
+  ["#how", "How it works"],
+  ["#prediction", "Expected turnout"],
+  ["/docs", "Docs"],
+];
 
 const steps = [
   { title: "Add guests and functions", body: "Type them in or import the family's spreadsheet. Add Haldi, Sangeet, Wedding and Reception with times and venues." },
@@ -148,18 +156,11 @@ export function Landing() {
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-6 px-4 sm:px-6">
           <Wordmark />
           <nav aria-label="Main" className="hidden items-center gap-7 text-sm text-muted md:flex">
-            <Link href="#features" className="hover:text-ink">
-              Features
-            </Link>
-            <Link href="#how" className="hover:text-ink">
-              How it works
-            </Link>
-            <Link href="#prediction" className="hover:text-ink">
-              Expected turnout
-            </Link>
-            <Link href="/docs" className="hover:text-ink">
-              Docs
-            </Link>
+            {NAV.map(([href, label]) => (
+              <Link key={href} href={href} className="hover:text-ink">
+                {label}
+              </Link>
+            ))}
           </nav>
           <div className="flex items-center gap-2">
             <ButtonLink href="/login" variant="ghost" size="sm">
@@ -168,6 +169,7 @@ export function Landing() {
             <ButtonLink href="/signup" size="sm">
               Get started
             </ButtonLink>
+            <MobileMenu links={NAV} />
           </div>
         </div>
       </header>

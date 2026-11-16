@@ -22,7 +22,8 @@ Indian weddings run over several functions (Haldi, Mehendi, Sangeet, Wedding, Re
 ### Planner
 
 - **R1** Create an account with email and password, log in and out.
-- **R2** Create weddings with a name, city and RSVP deadline. See only their own weddings.
+- **R2** Create, edit and delete weddings with a name, city and RSVP deadline. See only their own weddings.
+- **R2a** Delete their account and everything in it, after confirming their password.
 - **R3** Add, edit and delete functions (name, date and time, venue).
 - **R4** Add, edit and delete guests (name, phone, side, relation), one at a time or by CSV import.
 - **R5** Send each guest a personal invite through WhatsApp from the planner's own number, with one tap.

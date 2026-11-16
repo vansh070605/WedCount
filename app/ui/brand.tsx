@@ -30,11 +30,14 @@ export function AppHeader() {
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
         <Wordmark href="/dashboard" />
         <nav className="flex items-center gap-2 text-sm">
-          <Link href="/dashboard" className={buttonClass("ghost", "sm")}>
+          <Link href="/dashboard" className={buttonClass("ghost", "sm", "max-sm:hidden")}>
             Weddings
           </Link>
-          <Link href="/docs" className={buttonClass("ghost", "sm", "hidden sm:inline-flex")}>
+          <Link href="/docs" className={buttonClass("ghost", "sm", "max-sm:hidden")}>
             Docs
+          </Link>
+          <Link href="/account" className={buttonClass("ghost", "sm")}>
+            Account
           </Link>
           <form action={logout}>
             <button className={buttonClass("secondary", "sm")}>Log out</button>
