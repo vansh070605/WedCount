@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { SiteFooter, Wordmark } from "@/app/ui/brand";
 import { ButtonLink } from "@/app/ui/kit";
 import { MobileMenu } from "@/app/ui/mobile-menu";
+import { HeaderAuth } from "@/app/ui/header-auth";
 
 // One example wedding, used consistently across every mock on the page.
 const EXAMPLE = {
@@ -162,12 +163,7 @@ export function Landing() {
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <ButtonLink href="/login" variant="ghost" size="sm">
-              Log in
-            </ButtonLink>
-            <ButtonLink href="/signup" size="sm">
-              Get started
-            </ButtonLink>
+            <HeaderAuth />
             <MobileMenu links={NAV} />
           </div>
         </div>

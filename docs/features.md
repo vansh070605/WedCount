@@ -14,9 +14,15 @@
 - **Password reset**: "Forgot your password?" on the login page emails a one-time link (`/reset-password/<token>`, 256 random bits, 30 minutes). Only its SHA-256 is stored. Using it sets the new password, clears any login lockout, signs out every other device and logs in. The request form replies the same way whether or not the email has an account, and is limited to 5 requests per network per hour. Email goes through Resend. Code: `requestPasswordReset`, `resetPassword` in `app/actions.ts`, `lib/reset.ts`, `lib/mail.ts`.
 - **Login lockout**: after 5 wrong passwords the account pauses for 15 minutes. The state lives in the database so it holds across serverless instances, and every failure shows the same message so nobody can tell which emails exist. Code: `lib/lockout.ts`.
 
+## Home
+
+- **`/home`** is where a planner lands after logging in, and where the WedCount logo leads: a greeting with the next function, totals across every wedding (weddings, guests, replied, reminders due), **Coming up** (next functions with expected turnout), **Needs your attention** (invites to send, reminders due, weddings missing functions or guests, each with a button), and **Latest replies**. A new planner sees a four-step setup checklist instead. Code: `app/home/page.tsx`.
+- Public pages (landing, docs, legal) show **Open WedCount** instead of Log in when the visitor is logged in (`app/ui/header-auth.tsx`).
+
 ## Weddings, functions and guests
 
 - **Weddings** have a name, city and optional RSVP deadline. The dashboard (`/dashboard`) lists them with reply progress and the next function. Edit or delete a wedding at `/weddings/[id]/settings`; deleting removes its functions, guests and replies, and invite links stop working. Code: `updateWedding`, `deleteWedding` in `app/actions.ts`.
+- **No past dates**: date pickers start at today (India time), and the server refuses a new or changed function time that has passed, or an RSVP deadline before today. Editing a function that already happened keeps its date. Code: `minPickDate`, `pastProblem` in `lib/rsvp.ts`.
 - **Functions** (Haldi, Sangeet, ...) have a name, start time and venue. Add on the wedding page, edit or delete at `/weddings/[id]/events/[eventId]`.
 - **Guests** have a name, phone, side (bride or groom) and relation (family, friend, colleague, other). Add one at a time, or import a CSV. Edit or delete at `/weddings/[id]/guests/[guestId]`.
 - **Invited to**: each guest can be invited to only some functions (tick them when adding or editing). No ticks stored means every function, so functions added later include the guest. Guests not invited to a function never count, get asked, or get reminded for it. Code: `Invitation` model, `isInvited`/`invitedEvents` in `lib/rsvp.ts`.

@@ -158,7 +158,7 @@ export function InviteTemplateForm({
 type WeddingDefaults = { name: string; city: string | null; rsvpDeadline: string };
 
 // Creates a wedding, or edits one when `wedding` is given.
-export function CreateWeddingForm({ action, wedding }: { action: Action; wedding?: WeddingDefaults }) {
+export function CreateWeddingForm({ action, wedding, minDate }: { action: Action; wedding?: WeddingDefaults; minDate?: string }) {
   const [state, formAction, pending] = useActionState(action, {});
   return (
     <form
@@ -173,7 +173,7 @@ export function CreateWeddingForm({ action, wedding }: { action: Action; wedding
         <input name="city" maxLength={80} placeholder="Jaipur" defaultValue={wedding?.city ?? ""} className={input} />
       </Field>
       <Field label="RSVP deadline">
-        <input name="rsvpDeadline" type="date" defaultValue={wedding?.rsvpDeadline} className={input} />
+        <input name="rsvpDeadline" type="date" min={minDate} defaultValue={wedding?.rsvpDeadline} className={input} />
       </Field>
       <div className="sm:col-span-3">
         <Status state={state} />
@@ -329,7 +329,7 @@ export function CopyLinkButton({ link, guestName }: { link: string; guestName: s
 type EventDefaults = { name: string; date: string; time: string; venue: string | null };
 
 // Adds a function, or edits one when `event` is given (date as YYYY-MM-DD and time as HH:MM, both IST).
-export function AddEventForm({ action, event }: { action: Action; event?: EventDefaults }) {
+export function AddEventForm({ action, event, minDate }: { action: Action; event?: EventDefaults; minDate?: string }) {
   const [state, formAction, pending] = useActionState(action, {});
   return (
     <form
@@ -346,7 +346,7 @@ export function AddEventForm({ action, event }: { action: Action; event?: EventD
         </datalist>
       </Field>
       <Field label="Date">
-        <input name="date" type="date" required defaultValue={event?.date} className={input} />
+        <input name="date" type="date" required min={minDate} defaultValue={event?.date} className={input} />
       </Field>
       <Field label="Time (IST)">
         <input name="time" type="time" required defaultValue={event?.time} className={input} />

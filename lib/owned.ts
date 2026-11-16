@@ -7,7 +7,7 @@ export const findOwnedWedding = (plannerId: string, weddingId: string) =>
   prisma.wedding.findFirst({ where: { id: weddingId, plannerId } });
 
 export const findOwnedEvent = (plannerId: string, eventId: string) =>
-  prisma.event.findFirst({ where: { id: eventId, wedding: { plannerId } }, select: { weddingId: true } });
+  prisma.event.findFirst({ where: { id: eventId, wedding: { plannerId } }, select: { weddingId: true, startsAt: true } });
 
 export const findOwnedGuest = (plannerId: string, guestId: string) =>
   prisma.guest.findFirst({ where: { id: guestId, wedding: { plannerId } }, select: { weddingId: true } });

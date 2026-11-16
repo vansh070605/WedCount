@@ -18,7 +18,7 @@
 ![Postgres on Neon](https://img.shields.io/badge/Postgres-Neon-00e599?logo=postgresql&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000?logo=vercel&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-06b6d4?logo=tailwindcss&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-59_passing-2f7a4f)
+![Tests](https://img.shields.io/badge/tests-61_passing-2f7a4f)
 
 ### [Live: wedcount.vercel.app](https://wedcount.vercel.app)
 
@@ -53,6 +53,7 @@ Families spend lakhs on catering, and the one number it depends on is a guess.
 
 **For the planner: one screen per wedding**
 
+- A **home page** with what's coming up across all weddings, what needs doing, and the latest replies
 - Live **headcount per function**: Coming, veg / non-veg split, Maybe, Can't come, No reply
 - An **expected turnout with a likely range**, not just a sum of "yes"
 - **WhatsApp invites and reminders** from your own number: a send queue goes guest by guest, with a message you can edit
@@ -220,7 +221,7 @@ npm run dev
 Open **http://localhost:3000** and log in with the local demo account: `demo@wedcount.test` / `demo-planner-123`.
 
 ```bash
-npm test          # 56 unit tests
+npm test          # 58 unit tests
 npm run test:db   # 3 database tests in a throwaway Postgres schema
 npm run lint
 npm run build
@@ -284,6 +285,7 @@ Each step is a pull request with what changed, why, and how it was tested, and a
 | + | Signup limit, analytics, error logging | [#16](https://github.com/vansh070605/WedCount/pull/16) |
 | + | Password reset by email (Resend) | [#17](https://github.com/vansh070605/WedCount/pull/17) |
 | + | Tester feedback: send queue, per-function invites, names, duplicates, RSVP closing | [#18](https://github.com/vansh070605/WedCount/pull/18) |
+| + | Planner home page, no past dates | this PR |
 
 ## 🗺 Roadmap
 

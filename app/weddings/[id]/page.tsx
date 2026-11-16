@@ -16,7 +16,7 @@ import { SectionTabs } from "@/app/ui/section-tabs";
 import { appUrl, inviteLink, inviteMessage, reminderMessage, whatsappUrl } from "@/lib/invite";
 import { REMIND_EVERY_DAYS, ago, missingEvents, reminderStatus } from "@/lib/reminders";
 import { countHeadcount } from "@/lib/headcount";
-import { invitedEvents, isInvited } from "@/lib/rsvp";
+import { invitedEvents, isInvited, minPickDate } from "@/lib/rsvp";
 import { errorPct, predictEvent } from "@/lib/predict";
 import { plannerCalibration } from "@/lib/calibrate";
 
@@ -374,7 +374,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
             ))}
           </ul>
         )}
-        <AddEventForm action={addEvent.bind(null, wedding.id)} />
+        <AddEventForm action={addEvent.bind(null, wedding.id)} minDate={minPickDate(now)} />
       </Card>
 
       <Card id="guests" className="scroll-mt-32">

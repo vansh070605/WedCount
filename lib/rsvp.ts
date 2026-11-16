@@ -16,6 +16,22 @@ export type RsvpInput = {
 // Calendar date of an instant in India, as YYYY-MM-DD.
 export const istDate = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 
+// Earliest date a planner may pick (date inputs' min). An edit keeps an existing earlier date allowed.
+export const minPickDate = (now = new Date(), current?: Date | null) => {
+  const today = istDate(now);
+  const existing = current ? istDate(current) : null;
+  return existing && existing < today ? existing : today;
+};
+
+// Refuses a new or changed date that has already passed. `previous` is the stored value when editing.
+export function pastProblem(when: Date | null, what: "deadline" | "function", now = new Date(), previous?: Date | null) {
+  if (!when || (previous && when.getTime() === previous.getTime())) return null;
+  if (when > now) return null;
+  return what === "deadline"
+    ? "The RSVP deadline can't be in the past. Pick today or a later date."
+    : "That date and time have already passed. Pick a future date for this function.";
+}
+
 // Open until the end of the deadline instant; no deadline means always open.
 export const isRsvpOpen = (deadline: Date | null, now = new Date()) => !deadline || now <= deadline;
 

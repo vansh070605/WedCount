@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { logout } from "@/app/actions";
 import { buttonClass } from "@/app/ui/kit";
+import { HeaderAuth } from "@/app/ui/header-auth";
 
 // Logo mark: three rising bars, a headcount that firms up. Plain shapes so it stays crisp at any size.
 export function Mark({ className = "size-7" }: { className?: string }) {
@@ -28,8 +29,11 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-paper">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Wordmark href="/dashboard" />
+        <Wordmark href="/home" />
         <nav className="flex items-center gap-2 text-sm">
+          <Link href="/home" className={buttonClass("ghost", "sm", "max-sm:hidden")}>
+            Home
+          </Link>
           <Link href="/dashboard" className={buttonClass("ghost", "sm", "max-sm:hidden")}>
             Weddings
           </Link>
@@ -119,12 +123,7 @@ export function SiteHeader({ section }: { section?: string }) {
           {section && <span className="hidden text-sm text-muted sm:inline">/ {section}</span>}
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/login" className={buttonClass("ghost", "sm")}>
-            Log in
-          </Link>
-          <Link href="/signup" className={buttonClass("primary", "sm")}>
-            Get started
-          </Link>
+          <HeaderAuth />
         </div>
       </div>
     </header>
