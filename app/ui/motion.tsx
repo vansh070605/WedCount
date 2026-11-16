@@ -9,14 +9,28 @@ export function CountUp({ value, suffix = "" }: { value: number; suffix?: string
   useEffect(() => {
     const node = el.current;
     if (!node || value <= 0 || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const start = performance.now();
-    const ms = Math.min(1200, 500 + value * 20);
-    let raf = requestAnimationFrame(function step(t) {
-      const p = Math.min(1, (t - start) / ms);
-      node.textContent = `${Math.round(value * (1 - (1 - p) ** 3))}${suffix}`;
-      if (p < 1) raf = requestAnimationFrame(step);
+    let raf = 0;
+    const run = () => {
+      const start = performance.now();
+      const ms = Math.min(1200, 500 + value * 20);
+      raf = requestAnimationFrame(function step(t) {
+        const p = Math.min(1, (t - start) / ms);
+        node.textContent = `${Math.round(value * (1 - (1 - p) ** 3))}${suffix}`;
+        if (p < 1) raf = requestAnimationFrame(step);
+      });
+    };
+    // Start when the number scrolls into view; below the fold it waits at 0, out of sight.
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      run();
     });
-    return () => cancelAnimationFrame(raf);
+    if (node.getBoundingClientRect().top > innerHeight) node.textContent = `0${suffix}`;
+    io.observe(node);
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(raf);
+    };
   }, [value, suffix]);
   return (
     <span ref={el}>
