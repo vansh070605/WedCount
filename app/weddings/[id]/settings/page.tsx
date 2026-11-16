@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import { requireOwnedWedding, requirePlanner } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { istDate, minPickDate } from "@/lib/rsvp";
-import { deleteWedding, saveInviteTemplate, updateWedding } from "@/app/actions";
-import { CreateWeddingForm, DeleteButton, InviteTemplateForm } from "@/app/ui/forms";
+import { deleteWedding, saveInvitation, saveInviteTemplate, updateWedding } from "@/app/actions";
+import { CreateWeddingForm, DeleteButton, InvitationForm, InviteTemplateForm } from "@/app/ui/forms";
 import { BackLink } from "@/app/ui/kit";
 
 export default function WeddingSettingsPage(props: PageProps<"/weddings/[id]/settings">) {
@@ -25,7 +25,7 @@ async function Settings({ params }: { params: Promise<{ id: string }> }) {
     select: {
       _count: { select: { events: true, guests: true } },
       events: { orderBy: { startsAt: "asc" }, select: { name: true } },
-      guests: { orderBy: { name: "asc" }, take: 1, select: { name: true } },
+      guests: { orderBy: { name: "asc" }, take: 1, select: { name: true, token: true } },
     },
   });
   const { events, guests } = counts._count;
@@ -34,7 +34,7 @@ async function Settings({ params }: { params: Promise<{ id: string }> }) {
     <>
       <header>
         <BackLink href={`/weddings/${id}`} label={wedding.name} />
-        <h1 className="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">Wedding settings</h1>
+        <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Wedding settings</h1>
         <p className="mt-1 text-sm text-muted">Guests see the new name, city and deadline the next time they open their invite.</p>
       </header>
 
@@ -51,7 +51,32 @@ async function Settings({ params }: { params: Promise<{ id: string }> }) {
       </section>
 
       <section className="rounded-card border border-line bg-surface p-5 shadow-card sm:p-6">
-        <h2 className="mb-1 text-xl font-semibold">WhatsApp invite message</h2>
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="font-display text-2xl font-semibold">Guest invitation</h2>
+            <p className="mt-1 text-sm text-muted">The page guests open from WhatsApp: theme, the couple and their families.</p>
+          </div>
+          {counts.guests[0] && (
+            <a href={`/r/${counts.guests[0].token}`} target="_blank" rel="noopener noreferrer" className="draw text-sm font-medium text-brand">
+              Preview as {counts.guests[0].name}
+            </a>
+          )}
+        </div>
+        <InvitationForm
+          action={saveInvitation.bind(null, id)}
+          current={{
+            theme: wedding.theme,
+            brideName: wedding.brideName,
+            groomName: wedding.groomName,
+            brideParents: wedding.brideParents,
+            groomParents: wedding.groomParents,
+            blessing: wedding.blessing,
+          }}
+        />
+      </section>
+
+      <section className="rounded-card border border-line bg-surface p-5 shadow-card sm:p-6">
+        <h2 className="mb-1 font-display text-2xl font-semibold">WhatsApp invite message</h2>
         <p className="mb-5 text-sm text-muted">
           What guests receive when you tap Send. Each guest&apos;s message lists only the functions they&apos;re invited to.
         </p>
@@ -68,7 +93,7 @@ async function Settings({ params }: { params: Promise<{ id: string }> }) {
       </section>
 
       <section className="rounded-card border border-danger/30 bg-surface p-5 sm:p-6">
-        <h2 className="mb-1 text-xl font-semibold">Delete this wedding</h2>
+        <h2 className="mb-1 font-display text-2xl font-semibold">Delete this wedding</h2>
         <p className="mb-4 text-sm text-muted">
           Deletes {wedding.name} with its {events} function{events === 1 ? "" : "s"}, {guests} guest{guests === 1 ? "" : "s"}{" "}
           and every reply. Invite links already sent stop working. This can&apos;t be undone.

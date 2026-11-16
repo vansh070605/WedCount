@@ -6,6 +6,7 @@ import { requirePlanner } from "@/lib/auth";
 import { plannerCalibration } from "@/lib/calibrate";
 import { predictEvent } from "@/lib/predict";
 import { reminderStatus } from "@/lib/reminders";
+import { functionTone } from "@/lib/invitation";
 import { Badge, Card, SectionTitle, Stat, buttonClass } from "@/app/ui/kit";
 
 export const metadata: Metadata = { title: "Home · WedCount" };
@@ -79,7 +80,7 @@ async function Home() {
       <div className="flex flex-col gap-8">
         <header className="rise">
           <p className="text-sm font-medium text-brand">{greeting(now)}, {first}</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Let&apos;s set up your first wedding</h1>
+          <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Let&apos;s set up your first wedding</h1>
         </header>
         <Card>
           <ol className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -139,7 +140,7 @@ async function Home() {
           <p className="text-sm font-medium text-brand">
             {greeting(now)}, {first}
           </p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
             {upcoming.length ? `${upcoming[0].e.name} for ${upcoming[0].w.name} is ${inDays(upcoming[0].e.startsAt, now).toLowerCase()}` : "Your weddings at a glance"}
           </h1>
           <p className="mt-2 text-sm text-muted">{ist(now, { weekday: "long", day: "numeric", month: "long" })}</p>
@@ -171,8 +172,11 @@ async function Home() {
               {upcoming.map(({ e, w, p }) => (
                 <li key={e.id}>
                   <Link href={`/weddings/${w.id}`} className="group flex items-center gap-4 py-3.5">
-                    <div className="flex w-14 shrink-0 flex-col items-center rounded-lg border border-line bg-paper py-1.5">
-                      <span className="text-[11px] font-medium text-muted uppercase">{ist(e.startsAt, { month: "short" })}</span>
+                    <div
+                      className="flex w-14 shrink-0 flex-col items-center rounded-lg py-1.5 text-white"
+                      style={{ background: functionTone(e.name) ?? "var(--brand)" }}
+                    >
+                      <span className="text-[11px] font-medium uppercase opacity-90">{ist(e.startsAt, { month: "short" })}</span>
                       <span className="text-lg leading-none font-semibold tabular-nums">{ist(e.startsAt, { day: "numeric" })}</span>
                     </div>
                     <div className="min-w-0 flex-1">

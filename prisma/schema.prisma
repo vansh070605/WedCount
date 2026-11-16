@@ -43,6 +43,13 @@ model Wedding {
   rsvpDeadline DateTime?
   // Planner's own WhatsApp invite text with {name} {wedding} {functions} {deadline} {link}; null = default.
   inviteTemplate String?
+  // How the guest invitation looks (lib/invitation.ts THEMES) and who it's from. All optional except theme.
+  theme        String  @default("royal")
+  brideName    String?
+  groomName    String?
+  brideParents String? // e.g. "Mr. Ramesh & Mrs. Sunita Sharma"
+  groomParents String?
+  blessing     String? // a line above the names, e.g. "With the blessings of our families"
   createdAt   DateTime @default(now())
   events      Event[]
   guests      Guest[]

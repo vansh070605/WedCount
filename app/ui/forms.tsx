@@ -4,6 +4,7 @@ import { startTransition, useActionState, useState } from "react";
 import type { FormState } from "@/app/actions";
 import { buttonClass, inputClass } from "@/app/ui/kit";
 import { DEFAULT_INVITE_TEMPLATE, PLACEHOLDERS, inviteMessage } from "@/lib/invite";
+import { THEMES } from "@/lib/invitation";
 
 type Action = (state: FormState, fd: FormData) => Promise<FormState>;
 
@@ -104,6 +105,63 @@ export function NewPasswordForm({ action }: { action: Action }) {
       <button disabled={pending} className={buttonClass("primary", "lg", "w-full")}>
         {pending ? "Saving…" : "Set new password"}
       </button>
+    </form>
+  );
+}
+
+type InvitationDefaults = {
+  theme: string;
+  brideName: string | null;
+  groomName: string | null;
+  brideParents: string | null;
+  groomParents: string | null;
+  blessing: string | null;
+};
+
+// Theme swatches plus the family lines shown on the guest invitation.
+export function InvitationForm({ action, current }: { action: Action; current: InvitationDefaults }) {
+  const [state, formAction, pending] = useActionState(action, {});
+  const field = (name: keyof InvitationDefaults, label: string, placeholder: string, span = false) => (
+    <div className={span ? "sm:col-span-2" : undefined}>
+      <Field label={label}>
+        <input name={name} maxLength={120} placeholder={placeholder} defaultValue={current[name] ?? ""} className={input} />
+      </Field>
+    </div>
+  );
+  return (
+    <form action={formAction} onSubmit={keepValues(formAction)} className="grid gap-5 sm:grid-cols-2">
+      <fieldset className="sm:col-span-2">
+        <legend className="text-sm font-medium text-ink">Theme</legend>
+        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {THEMES.map((t) => (
+            <label
+              key={t.id}
+              className="press cursor-pointer rounded-xl border border-line bg-surface p-2 text-sm has-checked:border-brand has-checked:ring-2 has-checked:ring-brand/25"
+            >
+              <input type="radio" name="theme" value={t.id} defaultChecked={current.theme === t.id} className="sr-only" />
+              <span
+                aria-hidden
+                className="flex h-14 items-end justify-center rounded-lg pb-1.5"
+                style={{ background: t.deep, boxShadow: `inset 0 -6px 0 ${t.gold}` }}
+              >
+                <span className="size-5 rounded-full border-2" style={{ borderColor: t.gold, background: "#9c1d24" }} />
+              </span>
+              <span className="mt-1.5 block text-center font-medium">{t.name}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      {field("brideName", "Bride's name", "Priya")}
+      {field("groomName", "Groom's name", "Rohit")}
+      {field("brideParents", "Bride's parents", "Mr. Rajesh & Mrs. Kavita Mehta")}
+      {field("groomParents", "Groom's parents", "Mr. Anil & Mrs. Seema Kapoor")}
+      {field("blessing", "Blessing line (optional)", "Shri Ganeshaya Namah · With the blessings of our families", true)}
+      <div className="sm:col-span-2">
+        <Status state={state} />
+        <button disabled={pending} className={`${button} mt-3 w-full sm:w-auto`}>
+          {pending ? "Saving…" : "Save invitation"}
+        </button>
+      </div>
     </form>
   );
 }

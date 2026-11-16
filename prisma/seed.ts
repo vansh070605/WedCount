@@ -32,6 +32,12 @@ async function main() {
       name: "Demo: Priya & Rohit",
       city: "Jaipur",
       rsvpDeadline: new Date("2026-12-01T00:00:00+05:30"),
+      theme: "royal",
+      brideName: "Priya",
+      groomName: "Rohit",
+      brideParents: "Mr. Rajesh & Mrs. Kavita Mehta",
+      groomParents: "Mr. Anil & Mrs. Seema Kapoor",
+      blessing: "Shri Ganeshaya Namah · With the blessings of our families",
       events: {
         create: [
           { name: "Haldi", startsAt: new Date("2026-12-10T10:00:00+05:30"), venue: "Family home" },

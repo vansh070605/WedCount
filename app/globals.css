@@ -4,24 +4,24 @@
    One palette for the whole app. Use the Tailwind names (bg-paper, text-ink, border-line, text-brand ...)
    instead of raw zinc / rose classes, so a re-theme is a change here only. */
 :root {
-  /* Light only: one calm, neutral palette. Blue is the single accent; ink is the primary action. */
+  /* Light, warm and festive: ivory card stock, deep maroon for actions, marigold gold for accents. */
   color-scheme: light;
-  --paper: #f7f8fa; /* page ground */
-  --surface: #ffffff; /* cards */
-  --sunken: #f1f3f6; /* table heads, insets */
-  --ink: #0b1220;
-  --muted: #5a6475;
-  --line: #e3e7ed;
-  --brand: #1f4fd8; /* accent: links, selected states, key numbers */
-  --brand-strong: #173ba6;
-  --brand-soft: #eaf0ff;
-  --gold: #b45309; /* attention: reminders due, ranges */
-  --gold-soft: #fdf3e2;
-  --ok: #067647;
+  --paper: #faf6ef; /* page ground: ivory */
+  --surface: #fffdf9; /* cards */
+  --sunken: #f4ece0; /* table heads, insets */
+  --ink: #2b1a17;
+  --muted: #6e5d54;
+  --line: #eadfcf;
+  --brand: #8c1c33; /* maroon: primary actions, key numbers */
+  --brand-strong: #6e1527;
+  --brand-soft: #f7e7e4;
+  --gold: #b0791a; /* marigold gold: accents, reminders due */
+  --gold-soft: #fbf0d9;
+  --ok: #2f7a4f;
   --danger: #b42318;
   --wa: #128c4a; /* WhatsApp actions */
-  --shadow: 0 1px 2px rgb(11 18 32 / 0.05);
-  --shadow-lift: 0 1px 2px rgb(11 18 32 / 0.06), 0 12px 28px -12px rgb(11 18 32 / 0.16);
+  --shadow: 0 1px 2px rgb(43 26 23 / 0.05);
+  --shadow-lift: 0 1px 2px rgb(43 26 23 / 0.06), 0 14px 30px -14px rgb(43 26 23 / 0.2);
 }
 
 @theme inline {
@@ -41,7 +41,8 @@
   --color-wa: var(--wa);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-geist-sans);
+  --font-display: var(--font-cormorant);
+  --font-script: var(--font-great-vibes);
   --shadow-card: var(--shadow);
   --shadow-lift: var(--shadow-lift);
   --radius-card: 0.75rem;
@@ -305,4 +306,79 @@ body {
     border-color: var(--line);
     margin: 2em 0;
   }
+}
+
+/* ---------- Guest invitation ----------
+   [data-invite] sets the theme's colours; components use var(--inv-*). Kit tokens are overridden so the RSVP form
+   picks up the theme too. */
+[data-invite] {
+  --inv-deep: #14245e;
+  --inv-on-deep: #f6efe2;
+  --inv-gold: #d4a94e;
+  --inv-paper: #f8f1e4;
+  --inv-ink: #1c1f3a;
+  --brand: var(--inv-deep);
+  --brand-strong: var(--inv-deep);
+  --gold: var(--inv-gold);
+  --paper: var(--inv-paper);
+  --surface: #fffdf8;
+  --ink: var(--inv-ink);
+  --line: color-mix(in oklab, var(--inv-gold) 35%, #ffffff);
+  background: var(--inv-paper);
+  color: var(--inv-ink);
+}
+[data-invite="sindoor"] {
+  --inv-deep: #7a1020;
+  --inv-gold: #d9a640;
+  --inv-paper: #fbf1e3;
+  --inv-ink: #3a1015;
+}
+[data-invite="mehendi"] {
+  --inv-deep: #1f4a33;
+  --inv-gold: #d6ae55;
+  --inv-paper: #f6f1e2;
+  --inv-ink: #172c20;
+}
+[data-invite="ivory"] {
+  --inv-deep: #f1e4d8;
+  --inv-on-deep: #4a2c24;
+  --inv-gold: #b5765a;
+  --inv-paper: #fbf6f0;
+  --inv-ink: #3b2620;
+  --brand: #8e4f3c;
+  --brand-strong: #8e4f3c;
+}
+
+/* "Tap to open" cover: a checkbox, so it opens even before JavaScript loads. Hidden for no-JS and reduced motion. */
+.invite-cover {
+  transition:
+    opacity 700ms ease,
+    transform 900ms cubic-bezier(0.7, 0, 0.3, 1),
+    visibility 0s linear 900ms;
+}
+#open-invite:checked ~ .invite-cover {
+  opacity: 0;
+  transform: translateY(-100%);
+  visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .invite-cover {
+    display: none;
+  }
+}
+
+/* The seal breathes gently until it's tapped. */
+@keyframes seal-pulse {
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 10px color-mix(in oklab, var(--inv-gold) 20%, transparent);
+  }
+}
+.seal {
+  animation: seal-pulse 2.4s ease-in-out infinite;
+}
+
+/* Gold foil for the scratch card's cover before the canvas takes over. */
+.foil {
+  background: linear-gradient(120deg, #b8892e, #f3d98b 35%, #c99a3d 55%, #f6e3a1 75%, #a77a26);
 }
