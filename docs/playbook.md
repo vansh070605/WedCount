@@ -49,6 +49,14 @@ npm run build
 npm run db:migrate -- --name <short_description>
 ```
 
+   If that fails with `P3006 ... no schema has been selected` (the local `prisma dev` server cannot host Prisma's shadow database), write the migration from the difference between the local database and the schema instead, then apply it:
+
+```bash
+mkdir prisma/migrations/<timestamp>_<short_description>
+npx prisma migrate diff --from-url "$DATABASE_URL_UNPOOLED" --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/<timestamp>_<short_description>/migration.sql
+npx prisma migrate deploy
+```
+
 3. Restart `npm run dev`; the running server keeps the old Prisma client.
 4. Commit the schema and the new folder under `prisma/migrations/`.
 5. Production applies it on the next deploy (the `vercel-build` script runs `prisma migrate deploy`, see section 4).

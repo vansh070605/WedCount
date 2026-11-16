@@ -10,6 +10,8 @@ import { isRsvpOpen, parseRsvpForm } from "@/lib/rsvp";
 import { LOGIN_FAILED, afterFailure, isLocked } from "@/lib/lockout";
 import { findOwnedEvent, findOwnedGuest } from "@/lib/owned";
 import { Prisma } from "@prisma/client";
+import { headers } from "next/headers";
+import { HOUR, SIGNUPS_PER_HOUR, clientIp, limitKey, nextWindow } from "@/lib/ratelimit";
 
 // Two requests inserting the same unique value at once: the database rejects the second with P2002.
 const isDuplicate = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
@@ -25,6 +27,8 @@ export async function signup(_: FormState, fd: FormData): Promise<FormState> {
   if (!name || !email) return { error: "Name and email are required." };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Enter a valid email." };
   if (password.length < 8) return { error: "Password must be at least 8 characters." };
+  if (!(await allowSignup()))
+    return { error: "Too many new accounts from this network. Please try again in an hour." };
 
   if (await prisma.planner.findUnique({ where: { email } }))
     return { error: "An account with this email already exists." };
@@ -38,6 +42,18 @@ export async function signup(_: FormState, fd: FormData): Promise<FormState> {
   }
   await createSession(planner.id);
   redirect("/dashboard");
+}
+
+// At most SIGNUPS_PER_HOUR signup attempts per client IP, so one script can't mass-create accounts.
+// shortcut: read-then-write, so two requests in the same instant can both pass; use an atomic SQL update if abuse shows up.
+async function allowSignup() {
+  const key = limitKey("signup", clientIp(await headers()));
+  const now = new Date();
+  const next = nextWindow(await prisma.rateLimit.findUnique({ where: { key } }), now, SIGNUPS_PER_HOUR, HOUR);
+  if (!next.allowed) return false;
+  const data = { count: next.count, windowStart: next.windowStart };
+  await prisma.rateLimit.upsert({ where: { key }, create: { key, ...data }, update: data });
+  return true;
 }
 
 export async function login(_: FormState, fd: FormData): Promise<FormState> {

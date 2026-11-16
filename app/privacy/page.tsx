@@ -81,6 +81,13 @@ export default function PrivacyPage() {
         required for the service to work. Guests get no cookies.
       </p>
 
+      <h2>Analytics</h2>
+      <p>
+        We count page views and measure page speed with Vercel Web Analytics and Speed Insights. They use no cookies, store no
+        IP addresses, and report only totals such as how many people opened a page. Signup attempts are counted per network
+        for one hour to stop abuse; only a one-way hash of the address is kept, never the address itself.
+      </p>
+
       <h2>Who can see what</h2>
       <ul>
         <li>A planner sees only the weddings they created and the guests and answers inside them.</li>

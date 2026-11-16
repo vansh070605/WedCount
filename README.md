@@ -18,7 +18,9 @@
 ![Postgres on Neon](https://img.shields.io/badge/Postgres-Neon-00e599?logo=postgresql&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000?logo=vercel&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-06b6d4?logo=tailwindcss&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-41_passing-2f7a4f)
+![Tests](https://img.shields.io/badge/tests-46_passing-2f7a4f)
+
+### [Live: wedcount.vercel.app](https://wedcount.vercel.app)
 
 [The problem](#-the-problem) · [Features](#-what-it-does) · [How it works](#-how-it-works) · [Prediction model](#-the-prediction-model) · [Engineering](#-engineering-highlights) · [Docs](#-documentation) · [Run it](#-run-it-locally)
 
@@ -55,7 +57,7 @@ Families spend lakhs on catering, and the one number it depends on is a guess.
 - An **expected turnout with a likely range**, not just a sum of "yes"
 - **One-tap WhatsApp invites and reminders** from your own number
 - **Caterer CSV**, ready for Excel
-- Edit or remove guests and functions; import the family's spreadsheet
+- Edit or remove guests, functions and whole weddings; import the family's spreadsheet
 
 </td>
 <td width="38%" valign="top">
@@ -90,6 +92,13 @@ Planners get card layouts instead of cramped tables, sticky section tabs that fo
 </table>
 
 <img src="docs/screenshots/dashboard.png" alt="Planner dashboard with wedding cards and reply progress" width="100%" />
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/settings.png" alt="Wedding settings: edit name, city and RSVP deadline, or delete the wedding" /></td>
+<td width="50%"><img src="docs/screenshots/account.png" alt="Account page with password-confirmed account deletion" /></td>
+</tr>
+</table>
 
 ## 🧭 How it works
 
@@ -140,6 +149,7 @@ across all of that planner's past functions. The `+100` stops one odd function f
 - Passwords hashed with **scrypt** (Node built-in). Sessions live in the database; only a **SHA-256 of the cookie token** is stored, so a leaked DB can't log anyone in.
 - Guest invite tokens are **128 random bits**: the link is the guest's only credential.
 - Every query is **scoped to the logged-in planner**; another planner's wedding returns 404, so ids can't be probed. A database test proves it.
+- **Signup limit** of 5 attempts per network per hour; only a hash of the address is stored.
 - **Login lockout** after 5 wrong passwords, stored in the DB so it holds across serverless instances. Every failure shows the same message, so nobody can tell which emails have accounts.
 - CSV export is **formula-injection safe**; unique-constraint races give a clear message instead of a crash.
 
@@ -172,7 +182,8 @@ across all of that planner's past functions. The `+100` stops one odd function f
 | Framework | Next.js 16 (App Router, Server Actions, Cache Components), React 19 |
 | Language | TypeScript |
 | Data | Prisma 6 · Postgres on Neon (local: `npx prisma dev`, no Docker) |
-| Hosting | Vercel |
+| Hosting | Vercel (functions in Singapore, `sin1`), Neon in Singapore |
+| Monitoring | Vercel Web Analytics, Speed Insights, structured error logs (`instrumentation.ts`) |
 | UI | Tailwind CSS v4, design tokens, Geist |
 | Messaging | WhatsApp `wa.me` deep links (no paid API needed) |
 | Tests | Node's built-in test runner via `tsx` |
@@ -205,7 +216,7 @@ npm run dev
 Open **http://localhost:3000** and log in with the local demo account: `demo@wedcount.test` / `demo-planner-123`.
 
 ```bash
-npm test          # 38 unit tests
+npm test          # 43 unit tests
 npm run test:db   # 3 database tests in a throwaway Postgres schema
 npm run lint
 npm run build
@@ -264,11 +275,13 @@ Each step is a pull request with what changed, why, and how it was tested, and a
 | + | Mobile polish | [#11](https://github.com/vansh070605/WedCount/pull/11) |
 | + | Scroll motion, README | [#12](https://github.com/vansh070605/WedCount/pull/12) |
 | + | Light redesign, docs for agents, Postgres on Neon | [#13](https://github.com/vansh070605/WedCount/pull/13) |
+| + | Wedding settings, account deletion, icons and share card | [#14](https://github.com/vansh070605/WedCount/pull/14) |
+| + | Go live on Vercel + Neon, functions in Singapore | [#15](https://github.com/vansh070605/WedCount/pull/15) |
+| + | Signup limit, analytics, error logging | [#16](https://github.com/vansh070605/WedCount/pull/16) |
 
 ## 🗺 Roadmap
 
-- [x] Postgres (Neon-ready) with a Vercel build script
-- [ ] Go live on Vercel + Neon
+- [x] Postgres on Neon, live on Vercel: [wedcount.vercel.app](https://wedcount.vercel.app)
 - [ ] Real-wedding test: record turnout and publish predicted vs actual
 - [ ] Password reset by email
 - [ ] Automatic WhatsApp sending through the Cloud API

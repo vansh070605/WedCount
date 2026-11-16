@@ -10,6 +10,7 @@
 - **Sign up and log in** with email and password (minimum 8 characters). Emails are stored lower-case. Code: `signup`, `login`, `logout` in `app/actions.ts`.
 - **Sessions** last 30 days in an httpOnly cookie. The database stores only the SHA-256 of the token, and expired sessions are cleaned up at each login. Code: `lib/auth.ts`.
 - **Account page** (`/account`) shows the planner's name and email and deletes the account with everything in it. Deletion asks for the password, so an open laptop is not enough. Code: `deleteAccount` in `app/actions.ts`.
+- **Signup limit**: at most 5 signup attempts per network per hour. Only a SHA-256 of the client address is stored, in the `RateLimit` table. Code: `lib/ratelimit.ts`, `allowSignup` in `app/actions.ts`.
 - **Login lockout**: after 5 wrong passwords the account pauses for 15 minutes. The state lives in the database so it holds across serverless instances, and every failure shows the same message so nobody can tell which emails exist. Code: `lib/lockout.ts`.
 
 ## Weddings, functions and guests
@@ -74,6 +75,11 @@ The `+100` keeps one odd function from swinging everything. The page shows each 
 ## Sharing and icons
 
 - Favicon (`app/icon.svg`), home-screen icon (`app/apple-icon.tsx`) and a 1200×630 share card (`app/opengraph-image.tsx`) shown when a WedCount link is pasted into WhatsApp, LinkedIn or X. Absolute URLs come from `APP_URL` via `metadataBase` in `app/layout.tsx`.
+
+## Monitoring
+
+- **Vercel Web Analytics and Speed Insights** (`app/layout.tsx`): cookieless page views and Core Web Vitals. Turn them on once in the Vercel project (Analytics and Speed Insights tabs); they do nothing elsewhere.
+- **Server errors** are logged as one JSON line each by `instrumentation.ts` (`onRequestError`), with the route pattern only, never the real path, so guest tokens stay out of logs. Read them in Vercel under Logs.
 
 ## Legal pages
 
