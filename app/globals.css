@@ -176,7 +176,7 @@ body {
       animation: reveal-up linear both;
       animation-timeline: view();
       /* Fixed distance, not a % of the element: a 1600px guest list must not stay half-faded while you read it. */
-      animation-range: cover calc(var(--i, 0) * 40px) cover calc(240px + var(--i, 0) * 40px);
+      animation-range: entry calc(var(--i, 0) * 6%) entry min(100%, 220px);
     }
     .reveal-row {
       animation: reveal-up linear both;
