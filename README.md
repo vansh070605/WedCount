@@ -18,7 +18,7 @@
 ![Postgres on Neon](https://img.shields.io/badge/Postgres-Neon-00e599?logo=postgresql&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000?logo=vercel&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-06b6d4?logo=tailwindcss&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-46_passing-2f7a4f)
+![Tests](https://img.shields.io/badge/tests-49_passing-2f7a4f)
 
 ### [Live: wedcount.vercel.app](https://wedcount.vercel.app)
 
@@ -149,6 +149,7 @@ across all of that planner's past functions. The `+100` stops one odd function f
 - Passwords hashed with **scrypt** (Node built-in). Sessions live in the database; only a **SHA-256 of the cookie token** is stored, so a leaked DB can't log anyone in.
 - Guest invite tokens are **128 random bits**: the link is the guest's only credential.
 - Every query is **scoped to the logged-in planner**; another planner's wedding returns 404, so ids can't be probed. A database test proves it.
+- **Password reset** by one-time email link (Resend): 256-bit token stored hashed, 30 minutes, single use, signs out other devices.
 - **Signup limit** of 5 attempts per network per hour; only a hash of the address is stored.
 - **Login lockout** after 5 wrong passwords, stored in the DB so it holds across serverless instances. Every failure shows the same message, so nobody can tell which emails have accounts.
 - CSV export is **formula-injection safe**; unique-constraint races give a clear message instead of a crash.
@@ -186,6 +187,7 @@ across all of that planner's past functions. The `+100` stops one odd function f
 | Monitoring | Vercel Web Analytics, Speed Insights, structured error logs (`instrumentation.ts`) |
 | UI | Tailwind CSS v4, design tokens, Geist |
 | Messaging | WhatsApp `wa.me` deep links (no paid API needed) |
+| Email | Resend REST API, for password reset only |
 | Tests | Node's built-in test runner via `tsx` |
 
 ```text
@@ -216,7 +218,7 @@ npm run dev
 Open **http://localhost:3000** and log in with the local demo account: `demo@wedcount.test` / `demo-planner-123`.
 
 ```bash
-npm test          # 43 unit tests
+npm test          # 46 unit tests
 npm run test:db   # 3 database tests in a throwaway Postgres schema
 npm run lint
 npm run build
@@ -278,12 +280,12 @@ Each step is a pull request with what changed, why, and how it was tested, and a
 | + | Wedding settings, account deletion, icons and share card | [#14](https://github.com/vansh070605/WedCount/pull/14) |
 | + | Go live on Vercel + Neon, functions in Singapore | [#15](https://github.com/vansh070605/WedCount/pull/15) |
 | + | Signup limit, analytics, error logging | [#16](https://github.com/vansh070605/WedCount/pull/16) |
+| + | Password reset by email (Resend) | [#17](https://github.com/vansh070605/WedCount/pull/17) |
 
 ## 🗺 Roadmap
 
 - [x] Postgres on Neon, live on Vercel: [wedcount.vercel.app](https://wedcount.vercel.app)
 - [ ] Real-wedding test: record turnout and publish predicted vs actual
-- [ ] Password reset by email
 - [ ] Automatic WhatsApp sending through the Cloud API
 - [ ] Hindi guest page
 - [ ] Shared planner teams

@@ -17,7 +17,7 @@ A shortcut is fine while its limit is far away. Each entry says what would make 
 ## `prisma migrate dev` fails against the local server
 
 `npx prisma dev` cannot host Prisma's shadow database, so `migrate dev` stops with `P3006`. A failed attempt can also leave the single session stuck (`migration persistence is not initialized`).
-**Fix now:** restart the local server, then generate the migration with `prisma migrate diff --from-url` ([Playbook, section 3](playbook.md)).
+**Fix now:** generate the migration with `prisma migrate diff --from-url` ([Playbook, section 3](playbook.md)). If `migrate deploy` then fails with `migration persistence is not initialized`, restart the local server (`npx prisma dev stop wedcount`, then `npx prisma dev --name wedcount --detach`) and run it again.
 **Replace when:** using a Neon dev branch locally, where `migrate dev` works normally.
 
 ## Dev server does not hot-reload `globals.css`
@@ -56,10 +56,10 @@ The table in `lib/predict.ts` is a starting guess.
 `deleteAccount` removes the planner and every wedding at once, with no grace period or export.
 **Replace when:** real planners use it; add a CSV export of all weddings first and a 7-day undo window.
 
-## No password reset
+## Reset email only reaches the Resend account owner (no domain yet)
 
-A planner who forgets their password cannot recover the account without a database change.
-**Replace when:** the first real planner signs up. Add an email provider (Resend or similar), a reset-token table with expiry, and a decision entry.
+Without a verified domain, Resend only delivers mail from `onboarding@resend.dev` to the email address that owns the Resend account. Other planners get no reset email.
+**Replace when:** before inviting real planners. Buy a domain, verify it in Resend (DNS records), set `MAIL_FROM` in Vercel.
 
 ## No-JavaScript form errors crash in `next dev` only
 

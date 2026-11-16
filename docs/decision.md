@@ -96,3 +96,11 @@ Accepted · 2026-11-16
 **Context.** Guests and planners are in India. Neon offers no Mumbai region on the Vercel integration's free plan, and Vercel runs functions in Washington (`iad1`) by default, an ocean away from the data.
 **Decision.** Neon project in Singapore (`aws-ap-southeast-1`); functions pinned to `sin1` in `vercel.json`, so every query stays inside one region.
 **Consequences.** Low latency from India. Revisit if Neon adds Mumbai or the user base moves.
+
+## D11. Password reset through Resend, called over plain HTTP
+
+Accepted · 2026-11-16
+
+**Context.** Planners who forget their password were locked out for good. Sending email needs a provider; the developer chose Resend.
+**Decision.** One-time links (256-bit token, hashed in the database, 30 minutes, single use) emailed through Resend's REST API with `fetch`, not the Resend SDK: one call does not justify a dependency. Using a link signs out every other device.
+**Consequences.** Works with only `RESEND_API_KEY` set. Until a domain is verified in Resend, its shared sender `onboarding@resend.dev` only delivers to the Resend account owner's own address, so other planners will not receive reset email. Revisit by buying a domain, verifying it in Resend and setting `MAIL_FROM`.

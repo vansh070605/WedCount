@@ -10,6 +10,10 @@ export default function LoginPage() {
       sub="Log in to see your weddings and today's replies."
       footer={
         <>
+          <Link href="/forgot-password" className="draw font-medium text-brand">
+            Forgot your password?
+          </Link>
+          <span className="mx-2 text-line">|</span>
           New planner?{" "}
           <Link href="/signup" className="draw font-medium text-brand">
             Create an account

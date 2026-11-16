@@ -11,6 +11,7 @@
 - **Sessions** last 30 days in an httpOnly cookie. The database stores only the SHA-256 of the token, and expired sessions are cleaned up at each login. Code: `lib/auth.ts`.
 - **Account page** (`/account`) shows the planner's name and email and deletes the account with everything in it. Deletion asks for the password, so an open laptop is not enough. Code: `deleteAccount` in `app/actions.ts`.
 - **Signup limit**: at most 5 signup attempts per network per hour. Only a SHA-256 of the client address is stored, in the `RateLimit` table. Code: `lib/ratelimit.ts`, `allowSignup` in `app/actions.ts`.
+- **Password reset**: "Forgot your password?" on the login page emails a one-time link (`/reset-password/<token>`, 256 random bits, 30 minutes). Only its SHA-256 is stored. Using it sets the new password, clears any login lockout, signs out every other device and logs in. The request form replies the same way whether or not the email has an account, and is limited to 5 requests per network per hour. Email goes through Resend. Code: `requestPasswordReset`, `resetPassword` in `app/actions.ts`, `lib/reset.ts`, `lib/mail.ts`.
 - **Login lockout**: after 5 wrong passwords the account pauses for 15 minutes. The state lives in the database so it holds across serverless instances, and every failure shows the same message so nobody can tell which emails exist. Code: `lib/lockout.ts`.
 
 ## Weddings, functions and guests

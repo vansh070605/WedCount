@@ -12,6 +12,9 @@ import { findOwnedEvent, findOwnedGuest } from "@/lib/owned";
 import { Prisma } from "@prisma/client";
 import { headers } from "next/headers";
 import { HOUR, SIGNUPS_PER_HOUR, clientIp, limitKey, nextWindow } from "@/lib/ratelimit";
+import { RESET_SENT, hashToken, isUsable, newResetToken, resetEmail, resetExpiry } from "@/lib/reset";
+import { sendEmail } from "@/lib/mail";
+import { appUrl } from "@/lib/invite";
 
 // Two requests inserting the same unique value at once: the database rejects the second with P2002.
 const isDuplicate = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
@@ -27,7 +30,7 @@ export async function signup(_: FormState, fd: FormData): Promise<FormState> {
   if (!name || !email) return { error: "Name and email are required." };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Enter a valid email." };
   if (password.length < 8) return { error: "Password must be at least 8 characters." };
-  if (!(await allowSignup()))
+  if (!(await allow("signup", SIGNUPS_PER_HOUR)))
     return { error: "Too many new accounts from this network. Please try again in an hour." };
 
   if (await prisma.planner.findUnique({ where: { email } }))
@@ -44,12 +47,12 @@ export async function signup(_: FormState, fd: FormData): Promise<FormState> {
   redirect("/dashboard");
 }
 
-// At most SIGNUPS_PER_HOUR signup attempts per client IP, so one script can't mass-create accounts.
+// At most `limit` attempts of an action per client IP per hour (signups, reset emails), so one script can't flood them.
 // shortcut: read-then-write, so two requests in the same instant can both pass; use an atomic SQL update if abuse shows up.
-async function allowSignup() {
-  const key = limitKey("signup", clientIp(await headers()));
+async function allow(action: string, limit: number) {
+  const key = limitKey(action, clientIp(await headers()));
   const now = new Date();
-  const next = nextWindow(await prisma.rateLimit.findUnique({ where: { key } }), now, SIGNUPS_PER_HOUR, HOUR);
+  const next = nextWindow(await prisma.rateLimit.findUnique({ where: { key } }), now, limit, HOUR);
   if (!next.allowed) return false;
   const data = { count: next.count, windowStart: next.windowStart };
   await prisma.rateLimit.upsert({ where: { key }, create: { key, ...data }, update: data });
@@ -76,6 +79,50 @@ export async function login(_: FormState, fd: FormData): Promise<FormState> {
 
   if (planner.failedLogins > 0) await prisma.planner.update({ where: { id: planner.id }, data: { failedLogins: 0 } });
   await createSession(planner.id);
+  redirect("/dashboard");
+}
+
+// Emails a one-time reset link. Replies the same way whether or not the email has an account.
+export async function requestPasswordReset(_: FormState, fd: FormData): Promise<FormState> {
+  const email = text(fd, "email").toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Enter a valid email." };
+  if (!(await allow("reset", 5))) return { error: "Too many reset requests from this network. Please try again in an hour." };
+
+  const planner = await prisma.planner.findUnique({ where: { email }, select: { id: true, name: true } });
+  if (planner) {
+    const token = newResetToken();
+    // A new link replaces any older unused one.
+    await prisma.$transaction([
+      prisma.passwordReset.deleteMany({ where: { plannerId: planner.id, usedAt: null } }),
+      prisma.passwordReset.create({ data: { id: hashToken(token), plannerId: planner.id, expiresAt: resetExpiry() } }),
+    ]);
+    const sent = await sendEmail({ to: email, ...resetEmail({ name: planner.name, link: `${appUrl()}/reset-password/${token}` }) });
+    if (!sent) return { error: "We couldn't send the email just now. Please try again in a few minutes." };
+  }
+  return { message: RESET_SENT };
+}
+
+// Sets a new password from a reset link, signs out every other device, and logs this one in.
+export async function resetPassword(token: string, _: FormState, fd: FormData): Promise<FormState> {
+  const password = String(fd.get("password") ?? "");
+  if (password.length < 8) return { error: "Password must be at least 8 characters." };
+  if (password !== String(fd.get("confirm") ?? "")) return { error: "The two passwords don't match." };
+
+  const id = hashToken(token);
+  const reset = await prisma.passwordReset.findUnique({ where: { id } });
+  if (!isUsable(reset)) return { error: "This link has expired or was already used. Ask for a new one." };
+
+  const passwordHash = await hashPassword(password);
+  // Claim the link first, guarded on usedAt, so two parallel submits can't both change the password.
+  const changed = await prisma.$transaction(async (tx) => {
+    const claim = await tx.passwordReset.updateMany({ where: { id, usedAt: null }, data: { usedAt: new Date() } });
+    if (claim.count === 0) return false;
+    await tx.planner.update({ where: { id: reset!.plannerId }, data: { passwordHash, failedLogins: 0, lockedUntil: null } });
+    await tx.session.deleteMany({ where: { plannerId: reset!.plannerId } });
+    return true;
+  });
+  if (!changed) return { error: "This link has expired or was already used. Ask for a new one." };
+  await createSession(reset!.plannerId);
   redirect("/dashboard");
 }
 
