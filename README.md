@@ -280,7 +280,7 @@ Each step is a pull request with what changed, why, and how it was tested, and a
 | + | Wedding settings, account deletion, icons and share card | [#14](https://github.com/vansh070605/WedCount/pull/14) |
 | + | Go live on Vercel + Neon, functions in Singapore | [#15](https://github.com/vansh070605/WedCount/pull/15) |
 | + | Signup limit, analytics, error logging | [#16](https://github.com/vansh070605/WedCount/pull/16) |
-| + | Password reset by email (Resend) | this PR |
+| + | Password reset by email (Resend) | [#17](https://github.com/vansh070605/WedCount/pull/17) |
 
 ## 🗺 Roadmap
 
