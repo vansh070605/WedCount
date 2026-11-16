@@ -58,6 +58,7 @@ Planner 1──* Wedding 1──* Event
 |---|---|---|
 | Planner | `email` unique, `passwordHash`, `failedLogins`, `lockedUntil` | email stored lower-case |
 | Session | `id` = sha256(cookie token), `expiresAt` | raw token never stored |
+| RateLimit | `key` = sha256(action + client address), `count`, `windowStart` | raw address never stored |
 | Wedding | `plannerId`, `name`, `city`, `rsvpDeadline` | always read through the owner |
 | Event | `weddingId`, `name`, `startsAt`, `venue`, `actualCount` | `actualCount` feeds calibration |
 | Guest | `weddingId`, `phone`, `side`, `relation`, `token` unique, `invitedAt`, `remindedAt`, `reminderCount` | `(weddingId, phone)` unique; token is 128 random bits |
@@ -109,7 +110,7 @@ Cache Components is on (`next.config.ts`). Pages that read cookies or the databa
 
 - **Authorization is ownership.** Every planner-side read and write is filtered by `plannerId`, centrally in `lib/owned.ts` and `requireOwnedWedding`. A database test proves another planner gets nothing.
 - **Guests are authorised by token only**, and the token is never derived from the guest id.
-- **Abuse limits**: login lockout; party size capped at 20 per function; CSV import validated before any write.
+- **Abuse limits**: signup limit per network (hashed address, `lib/ratelimit.ts`); login lockout; party size capped at 20 per function; CSV import validated before any write.
 - **Output safety**: React escapes all text; the caterer CSV neutralises formula prefixes (`=`, `+`, `-`, `@`); docs HTML comes only from files in this repo.
 
 ## Testing

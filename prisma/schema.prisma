@@ -101,3 +101,11 @@ model Rsvp {
   @@unique([guestId, eventId])
   @@index([eventId])
 }
+
+// Fixed-window counters for abuse limits (see lib/ratelimit.ts). key = sha256 of "<action>:<client ip>",
+// so raw IP addresses are never stored.
+model RateLimit {
+  key         String   @id
+  count       Int
+  windowStart DateTime
+}

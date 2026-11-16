@@ -14,6 +14,12 @@ A shortcut is fine while its limit is far away. Each entry says what would make 
 **Fix now:** restart it: `npx prisma dev stop wedcount`, then `npx prisma dev --name wedcount --detach`.
 **Replace when:** local work needs parallel connections. Use a Neon dev branch as `DATABASE_URL` instead.
 
+## `prisma migrate dev` fails against the local server
+
+`npx prisma dev` cannot host Prisma's shadow database, so `migrate dev` stops with `P3006`. A failed attempt can also leave the single session stuck (`migration persistence is not initialized`).
+**Fix now:** restart the local server, then generate the migration with `prisma migrate diff --from-url` ([Playbook, section 3](playbook.md)).
+**Replace when:** using a Neon dev branch locally, where `migrate dev` works normally.
+
 ## Dev server does not hot-reload `globals.css`
 
 The Tailwind loader in `next.config.ts` caches the stylesheet.
