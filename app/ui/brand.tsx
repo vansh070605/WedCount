@@ -153,7 +153,11 @@ export function LegalPage({ title, updated, children }: { title: string; updated
                 Questions about this page: <a href={`mailto:${contact}`}>{contact}</a>.
               </>
             ) : (
-              <>Guests can contact the family or planner who sent their invite. Planners can contact WedCount through the address they were given when their account was set up.</>
+              <>
+                Guests can ask the family or planner who sent their invite to change or delete their details. Planners can edit
+                or delete their guests, functions, weddings and account themselves in the app, and reset a forgotten password
+                from the login page.
+              </>
             )}
           </p>
         </article>

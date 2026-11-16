@@ -73,6 +73,40 @@ export function AuthForm({ action, mode }: { action: Action; mode: "login" | "si
   );
 }
 
+// Asks for the account email; the reply is the same whether or not it has an account.
+export function ForgotPasswordForm({ action }: { action: Action }) {
+  const [state, formAction, pending] = useActionState(action, {});
+  return (
+    <form action={formAction} className="flex flex-col gap-4">
+      <Field label="Email">
+        <input name="email" type="email" required autoComplete="email" className={input} />
+      </Field>
+      <Status state={state} />
+      <button disabled={pending} className={buttonClass("primary", "lg", "w-full")}>
+        {pending ? "Sending…" : "Email me a reset link"}
+      </button>
+    </form>
+  );
+}
+
+export function NewPasswordForm({ action }: { action: Action }) {
+  const [state, formAction, pending] = useActionState(action, {});
+  return (
+    <form action={formAction} className="flex flex-col gap-4">
+      <Field label="New password">
+        <input name="password" type="password" required minLength={8} autoComplete="new-password" className={input} />
+      </Field>
+      <Field label="Type it again">
+        <input name="confirm" type="password" required minLength={8} autoComplete="new-password" className={input} />
+      </Field>
+      <Status state={state} />
+      <button disabled={pending} className={buttonClass("primary", "lg", "w-full")}>
+        {pending ? "Saving…" : "Set new password"}
+      </button>
+    </form>
+  );
+}
+
 type WeddingDefaults = { name: string; city: string | null; rsvpDeadline: string };
 
 // Creates a wedding, or edits one when `wedding` is given.

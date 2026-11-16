@@ -58,6 +58,7 @@ Planner 1──* Wedding 1──* Event
 |---|---|---|
 | Planner | `email` unique, `passwordHash`, `failedLogins`, `lockedUntil` | email stored lower-case |
 | Session | `id` = sha256(cookie token), `expiresAt` | raw token never stored |
+| PasswordReset | `id` = sha256(link token), `plannerId`, `expiresAt`, `usedAt` | raw token never stored; used once |
 | RateLimit | `key` = sha256(action + client address), `count`, `windowStart` | raw address never stored |
 | Wedding | `plannerId`, `name`, `city`, `rsvpDeadline` | always read through the owner |
 | Event | `weddingId`, `name`, `startsAt`, `venue`, `actualCount` | `actualCount` feeds calibration |
@@ -104,6 +105,8 @@ Cache Components is on (`next.config.ts`). Pages that read cookies or the databa
 | `DATABASE_URL` | Prisma at runtime. On Neon: the **pooled** connection string (host contains `-pooler`) |
 | `DATABASE_URL_UNPOOLED` | Prisma migrations. On Neon: the **direct** connection string |
 | `APP_URL` | Base URL in guest invite links. Required in production; the app refuses to start sending localhost links |
+| `RESEND_API_KEY` | Sends password reset email through Resend. Without it, production can't send reset links |
+| `MAIL_FROM` | Sender, e.g. `WedCount <no-reply@yourdomain.com>`; the domain must be verified in Resend |
 | `SUPPORT_EMAIL` | Optional contact address shown on `/privacy` and `/terms` |
 
 ## Security model

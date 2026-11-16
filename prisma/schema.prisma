@@ -21,6 +21,7 @@ model Planner {
   createdAt    DateTime  @default(now())
   sessions     Session[]
   weddings     Wedding[]
+  resets       PasswordReset[]
 }
 
 // Login session. Only the SHA-256 of the cookie token is stored, so a leaked DB can't log anyone in.
@@ -108,4 +109,15 @@ model RateLimit {
   key         String   @id
   count       Int
   windowStart DateTime
+}
+
+// One-time password reset link. Only sha256(token) is stored, like sessions. See lib/reset.ts.
+model PasswordReset {
+  id        String    @id // sha256(token)
+  plannerId String
+  planner   Planner   @relation(fields: [plannerId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  @@index([plannerId])
 }

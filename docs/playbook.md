@@ -71,6 +71,8 @@ First time only:
 2. In the project, open **Storage → Create Database → Neon** and connect it to the project. This creates the Neon database and adds its connection strings as environment variables.
 3. In **Settings → Environment Variables**, check that the integration added `DATABASE_URL` (pooled, host contains `-pooler`) and `DATABASE_URL_UNPOOLED` (direct), then add:
    - `APP_URL`: the public URL, for example `https://wedcount.vercel.app`.
+   - `RESEND_API_KEY` (mark it Sensitive): from resend.com, **API Keys → Create API Key**, permission "Sending access".
+   - `MAIL_FROM` (optional until you own a domain): `WedCount <no-reply@your-domain>`.
 4. Deploy. Vercel runs the `vercel-build` script from `package.json` (`prisma migrate deploy && next build`), so migrations apply before each build.
 5. After the first deploy, open `/signup` and create the first real account.
 

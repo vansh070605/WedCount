@@ -22,6 +22,7 @@ Indian weddings run over several functions (Haldi, Mehendi, Sangeet, Wedding, Re
 ### Planner
 
 - **R1** Create an account with email and password, log in and out.
+- **R1a** Reset a forgotten password through a one-time link sent by email.
 - **R2** Create, edit and delete weddings with a name, city and RSVP deadline. See only their own weddings.
 - **R2a** Delete their account and everything in it, after confirming their password.
 - **R3** Add, edit and delete functions (name, date and time, venue).
@@ -55,7 +56,6 @@ Indian weddings run over several functions (Haldi, Mehendi, Sangeet, Wedding, Re
 ## Out of scope (for now)
 
 - Sending WhatsApp messages automatically (needs the paid Cloud API and Meta approval).
-- Password reset by email (needs an email provider).
 - Teams with several planners per wedding.
 - Seating, budgets, vendors, payments.
 - Languages other than English on the guest page.

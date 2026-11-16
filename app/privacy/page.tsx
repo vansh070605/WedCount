@@ -75,6 +75,12 @@ export default function PrivacyPage() {
         <li>We do not use guest data for anything other than the wedding it was collected for.</li>
       </ul>
 
+      <h2>Email</h2>
+      <p>
+        We send email only when a planner asks to reset their password. It goes through Resend, our email provider, and
+        contains a one-time link that expires in 30 minutes.
+      </p>
+
       <h2>Cookies</h2>
       <p>
         We set one cookie, <code>wc_session</code>, when a planner logs in. It keeps them logged in for up to 30 days and is
@@ -93,7 +99,7 @@ export default function PrivacyPage() {
         <li>A planner sees only the weddings they created and the guests and answers inside them.</li>
         <li>A guest sees only their own invite, through a private link with a random 128-bit code.</li>
         <li>
-          Our hosting and database providers (Vercel and Neon) store the data on our behalf and cannot use it for their own
+          Our hosting, database and email providers (Vercel, Neon and Resend) handle the data on our behalf and cannot use it for their own
           purposes.
         </li>
       </ul>
