@@ -15,7 +15,7 @@ export default function Error({ error, retry }: { error: unknown; retry: () => v
       </p>
       <button
         onClick={() => retry()}
-        className="press self-start rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-strong"
+        className="press self-start rounded-lg bg-ink px-5 py-2.5 text-sm font-medium text-white hover:bg-ink/85"
       >
         Try again
       </button>

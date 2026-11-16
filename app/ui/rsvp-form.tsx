@@ -56,7 +56,7 @@ export function RsvpForm({
               {Object.entries(LABELS).map(([value, label]) => (
                 <label
                   key={value}
-                  className="press flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-line px-3 py-2.5 text-sm font-medium whitespace-nowrap select-none sm:px-4 hover:border-brand has-checked:border-brand has-checked:bg-brand has-checked:text-white has-focus-visible:outline-2 has-focus-visible:outline-brand sm:flex-none"
+                  className="press flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-line px-3 py-2.5 text-sm font-medium whitespace-nowrap select-none sm:px-4 hover:border-brand has-checked:border-brand has-checked:bg-brand has-checked:text-white has-focus-visible:outline-2 has-focus-visible:outline-brand sm:flex-none"
                 >
                   <input
                     type="radio"
