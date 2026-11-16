@@ -85,11 +85,16 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
           </>
         }
         action={
-          events.length > 0 && (
-            <a href={`/weddings/${wedding.id}/export`} className={buttonClass("secondary", "md", "w-full sm:w-auto")}>
-              ↓ Caterer CSV
-            </a>
-          )
+          <div className="flex w-full gap-2 sm:w-auto">
+            <Link href={`/weddings/${wedding.id}/settings`} className={buttonClass("secondary", "md", "flex-1 sm:flex-none")}>
+              Settings
+            </Link>
+            {events.length > 0 && (
+              <a href={`/weddings/${wedding.id}/export`} className={buttonClass("secondary", "md", "flex-1 sm:flex-none")}>
+                ↓ Caterer CSV
+              </a>
+            )}
+          </div>
         }
       />
 

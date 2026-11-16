@@ -61,7 +61,7 @@ export default function TermsPage() {
 
       <h2>Ending use</h2>
       <p>
-        You can stop using WedCount at any time. Guests and functions can be deleted in the app; to delete a whole wedding or your account, use the contact below. We may end the service with reasonable
+        You can stop using WedCount at any time. Guests, functions, weddings and your whole account can be deleted in the app. We may end the service with reasonable
         notice.
       </p>
 

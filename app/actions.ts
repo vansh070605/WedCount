@@ -68,27 +68,57 @@ export async function logout() {
   redirect("/login");
 }
 
-export async function createWedding(_: FormState, fd: FormData): Promise<FormState> {
-  const planner = await requirePlanner();
+// Shared by create and edit. Deadline is a date in IST; store end of that day. Checked because a raw POST can send anything.
+function parseWeddingForm(fd: FormData) {
   const name = text(fd, "name");
   const city = text(fd, "city") || null;
   const deadline = text(fd, "rsvpDeadline");
-  if (!name) return { error: "Wedding name is required." };
-  if (name.length > 120) return { error: "Wedding name is too long." };
-  // Deadline is a date in IST; store end of that day. Checked because a raw POST can send anything.
+  if (!name) return "Wedding name is required.";
+  if (name.length > 120) return "Wedding name is too long.";
+  if (city && city.length > 80) return "City is too long.";
   const rsvpDeadline = deadline ? new Date(`${deadline}T23:59:59+05:30`) : null;
   if (deadline && (!/^\d{4}-\d{2}-\d{2}$/.test(deadline) || isNaN(rsvpDeadline!.getTime())))
-    return { error: "Enter a valid RSVP deadline." };
+    return "Enter a valid RSVP deadline.";
+  return { name, city, rsvpDeadline };
+}
 
-  const wedding = await prisma.wedding.create({
-    data: {
-      plannerId: planner.id,
-      name,
-      city,
-      rsvpDeadline,
-    },
-  });
+export async function createWedding(_: FormState, fd: FormData): Promise<FormState> {
+  const planner = await requirePlanner();
+  const data = parseWeddingForm(fd);
+  if (typeof data === "string") return { error: data };
+  const wedding = await prisma.wedding.create({ data: { plannerId: planner.id, ...data } });
   redirect(`/weddings/${wedding.id}`);
+}
+
+export async function updateWedding(weddingId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const planner = await requirePlanner();
+  await requireOwnedWedding(planner.id, weddingId);
+  const data = parseWeddingForm(fd);
+  if (typeof data === "string") return { error: data };
+  await prisma.wedding.update({ where: { id: weddingId }, data });
+  revalidatePath(`/weddings/${weddingId}`, "layout");
+  revalidatePath("/dashboard");
+  return { message: "Saved." };
+}
+
+// Deletes the wedding with every function, guest and reply in it (cascade); invite links stop working. The button asks first.
+export async function deleteWedding(weddingId: string) {
+  const planner = await requirePlanner();
+  await requireOwnedWedding(planner.id, weddingId);
+  await prisma.wedding.delete({ where: { id: weddingId } });
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
+}
+
+// Deletes the planner and everything they own (cascade). Needs the password, so a borrowed open laptop can't do it.
+export async function deleteAccount(_: FormState, fd: FormData): Promise<FormState> {
+  const planner = await requirePlanner();
+  const row = await prisma.planner.findUnique({ where: { id: planner.id }, select: { passwordHash: true } });
+  if (!row || !(await verifyPassword(String(fd.get("password") ?? ""), row.passwordHash)))
+    return { error: "That password is not right." };
+  await destroySession();
+  await prisma.planner.delete({ where: { id: planner.id } });
+  redirect("/");
 }
 
 async function saveGuests(weddingId: string, guests: GuestInput[]) {

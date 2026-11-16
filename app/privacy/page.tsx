@@ -106,7 +106,7 @@ export default function PrivacyPage() {
       <h2>Your rights</h2>
       <p>
         You can ask to see, correct or delete your data. Guests should first ask the planner who invited them, who can edit or
-        delete their entry at any time. Planners can edit or delete functions and guests in the app; to delete a whole wedding or the account, use the contact below.
+        delete their entry at any time. Planners can edit or delete guests, functions and whole weddings in the app, and delete their account (with everything in it) from the Account page.
       </p>
 
       <h2>Changes</h2>
