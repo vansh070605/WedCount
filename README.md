@@ -18,7 +18,7 @@
 ![Postgres on Neon](https://img.shields.io/badge/Postgres-Neon-00e599?logo=postgresql&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000?logo=vercel&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-06b6d4?logo=tailwindcss&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-49_passing-2f7a4f)
+![Tests](https://img.shields.io/badge/tests-59_passing-2f7a4f)
 
 ### [Live: wedcount.vercel.app](https://wedcount.vercel.app)
 
@@ -55,7 +55,9 @@ Families spend lakhs on catering, and the one number it depends on is a guess.
 
 - Live **headcount per function**: Coming, veg / non-veg split, Maybe, Can't come, No reply
 - An **expected turnout with a likely range**, not just a sum of "yes"
-- **One-tap WhatsApp invites and reminders** from your own number
+- **WhatsApp invites and reminders** from your own number: a send queue goes guest by guest, with a message you can edit
+- **Invite guests to only some functions**, and see **who's coming by name**
+- Duplicate guests are caught; replies close before each function's day
 - **Caterer CSV**, ready for Excel
 - Edit or remove guests, functions and whole weddings; import the family's spreadsheet
 
@@ -65,9 +67,9 @@ Families spend lakhs on catering, and the one number it depends on is a guess.
 **For the guest: an invitation, not a form**
 
 - A private link, no app, no login
-- **Coming / Maybe / Can't come for each function**
-- How many people, veg or non-veg, arrival time
-- Can change their mind until the deadline
+- An invitation card with their own schedule, then **Coming / Maybe / Can't come for each function**
+- How many people, their names, veg or non-veg, arrival time
+- Can change their mind until the deadline (never on the function's day)
 
 </td>
 </tr>
@@ -218,7 +220,7 @@ npm run dev
 Open **http://localhost:3000** and log in with the local demo account: `demo@wedcount.test` / `demo-planner-123`.
 
 ```bash
-npm test          # 46 unit tests
+npm test          # 56 unit tests
 npm run test:db   # 3 database tests in a throwaway Postgres schema
 npm run lint
 npm run build
@@ -281,6 +283,7 @@ Each step is a pull request with what changed, why, and how it was tested, and a
 | + | Go live on Vercel + Neon, functions in Singapore | [#15](https://github.com/vansh070605/WedCount/pull/15) |
 | + | Signup limit, analytics, error logging | [#16](https://github.com/vansh070605/WedCount/pull/16) |
 | + | Password reset by email (Resend) | [#17](https://github.com/vansh070605/WedCount/pull/17) |
+| + | Tester feedback: send queue, per-function invites, names, duplicates, RSVP closing | this PR |
 
 ## 🗺 Roadmap
 

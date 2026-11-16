@@ -17,6 +17,7 @@ const names = [
 ];
 const relations = ["family", "friend", "colleague", "other"];
 const statuses = ["attending", "declined", "maybe"];
+const FAMILY = ["Sunita", "Aarav", "Meera", "Kabir"];
 
 async function main() {
   // Re-runnable: wipe the demo planner first. Cascades remove weddings, events, guests, RSVPs.
@@ -56,13 +57,21 @@ async function main() {
       },
     });
 
+    // Colleagues are invited to the Wedding only, to show per-function invites.
+    const onlyWedding = guest.relation === "colleague";
+    const wed = wedding.events.find((e) => e.name === "Wedding")!;
+    if (onlyWedding) await prisma.invitation.create({ data: { guestId: guest.id, eventId: wed.id } });
+
     // Every 4th guest has not replied yet: no RSVP rows.
     if (i % 4 === 3) continue;
 
-    for (const event of wedding.events) {
+    for (const event of onlyWedding ? [wed] : wedding.events) {
       const status = statuses[(i + event.name.length) % statuses.length];
       const people = status === "declined" ? 0 : 1 + (i % 4);
       const veg = Math.ceil(people / 2);
+      // The guest plus family members sharing their surname, one name per person coming.
+      const surname = guest.name.split(" ").at(-1);
+      const names = status === "attending" ? [guest.name, ...FAMILY.slice(0, people - 1).map((f) => `${f} ${surname}`)] : [];
       await prisma.rsvp.create({
         data: {
           guestId: guest.id,
@@ -71,6 +80,7 @@ async function main() {
           vegCount: veg,
           nonVegCount: people - veg,
           arrivalTime: status === "declined" ? null : event.startsAt,
+          names,
         },
       });
     }

@@ -20,7 +20,6 @@ const NAV: [href: string, label: string][] = [
   ["#features", "Features"],
   ["#how", "How it works"],
   ["#prediction", "Expected turnout"],
-  ["/docs", "Docs"],
 ];
 
 const steps = [

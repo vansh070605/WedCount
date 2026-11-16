@@ -1,6 +1,7 @@
 export const STATUSES = ["attending", "maybe", "declined"] as const;
 export type Status = (typeof STATUSES)[number];
 export const MAX_PARTY = 20;
+export const MAX_NAME = 60;
 
 export type EventInfo = { id: string; name: string; startsAt: Date };
 export type RsvpInput = {
@@ -9,6 +10,7 @@ export type RsvpInput = {
   vegCount: number;
   nonVegCount: number;
   arrivalTime: Date | null;
+  names: string[];
 };
 
 // Calendar date of an instant in India, as YYYY-MM-DD.
@@ -17,9 +19,35 @@ export const istDate = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "A
 // Open until the end of the deadline instant; no deadline means always open.
 export const isRsvpOpen = (deadline: Date | null, now = new Date()) => !deadline || now <= deadline;
 
+// Replies for a function close when its day begins in India (midnight IST), so nobody answers on or after the day.
+export const closesAt = (e: { startsAt: Date }) => new Date(`${istDate(e.startsAt)}T00:00:00+05:30`);
+
+// A guest can still answer for this function: before the wedding's deadline and before the function's day.
+export const isEventOpen = (e: { startsAt: Date }, deadline: Date | null, now = new Date()) =>
+  isRsvpOpen(deadline, now) && now < closesAt(e);
+
+// The deadline must fall before the day of the first function, or guests could reply after it has happened.
+export function deadlineProblem(deadline: Date | null, events: { name: string; startsAt: Date }[]): string | null {
+  if (!deadline || events.length === 0) return null;
+  const first = events.reduce((a, b) => (a.startsAt <= b.startsAt ? a : b));
+  if (deadline < closesAt(first)) return null;
+  const day = first.startsAt.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short" });
+  return `The RSVP deadline must be before ${first.name} on ${day}, the first function.`;
+}
+
+// Functions a guest is invited to. No invitation rows means every function.
+type Invited = { invitations?: { eventId: string }[] };
+export const isInvited = (g: Invited, eventId: string) =>
+  !g.invitations?.length || g.invitations.some((i) => i.eventId === eventId);
+export const invitedEvents = <E extends { id: string }>(g: Invited, events: E[]) => events.filter((e) => isInvited(g, e.id));
+
+// One name per line; blank lines ignored, inner spaces collapsed.
+export const parseNames = (raw: string) =>
+  raw.split(/\r?\n/).map((n) => n.trim().replace(/\s+/g, " ")).filter(Boolean);
+
 const count = (raw: string) => (/^\d{1,3}$/.test(raw.trim()) ? Number(raw.trim()) : NaN);
 
-// Form fields per event: status_<id>, veg_<id>, nonveg_<id>, arrival_<id> (HH:MM, optional).
+// Form fields per event: status_<id>, veg_<id>, nonveg_<id>, arrival_<id> (HH:MM, optional), names_<id> (one per line).
 // Only events passed in are read, so a guest can't write answers for another wedding's events.
 export function parseRsvpForm(events: EventInfo[], get: (key: string) => string) {
   const rsvps: RsvpInput[] = [];
@@ -32,7 +60,7 @@ export function parseRsvpForm(events: EventInfo[], get: (key: string) => string)
       continue;
     }
     if (status === "declined") {
-      rsvps.push({ eventId: e.id, status, vegCount: 0, nonVegCount: 0, arrivalTime: null });
+      rsvps.push({ eventId: e.id, status, vegCount: 0, nonVegCount: 0, arrivalTime: null, names: [] });
       continue;
     }
 
@@ -51,6 +79,24 @@ export function parseRsvpForm(events: EventInfo[], get: (key: string) => string)
       continue;
     }
 
+    const people = veg + nonVeg;
+    const names = parseNames(get(`names_${e.id}`));
+    if (names.some((n) => n.length > MAX_NAME)) {
+      errors.push(`${e.name}: a name is longer than ${MAX_NAME} characters.`);
+      continue;
+    }
+    // Coming needs a name for every person, so the family knows exactly who to expect. Maybe can leave gaps.
+    if (status === "attending" && names.length !== people) {
+      errors.push(
+        `${e.name}: add the names of all ${people} ${people === 1 ? "person" : "people"} coming, one per line (you have ${names.length}).`,
+      );
+      continue;
+    }
+    if (names.length > people) {
+      errors.push(`${e.name}: ${names.length} names for ${people} ${people === 1 ? "person" : "people"}. Fix the count or the names.`);
+      continue;
+    }
+
     const hhmm = get(`arrival_${e.id}`).trim();
     if (hhmm && !/^([01]\d|2[0-3]):[0-5]\d$/.test(hhmm)) {
       errors.push(`${e.name}: arrival time looks wrong.`);
@@ -60,7 +106,7 @@ export function parseRsvpForm(events: EventInfo[], get: (key: string) => string)
     // on the wrong day; fine while it's only a hint for the caterer, revisit if used for scheduling.
     const arrivalTime = hhmm ? new Date(`${istDate(e.startsAt)}T${hhmm}:00+05:30`) : null;
 
-    rsvps.push({ eventId: e.id, status, vegCount: veg, nonVegCount: nonVeg, arrivalTime });
+    rsvps.push({ eventId: e.id, status, vegCount: veg, nonVegCount: nonVeg, arrivalTime, names });
   }
   return { rsvps, errors };
 }

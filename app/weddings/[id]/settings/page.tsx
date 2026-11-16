@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import { requireOwnedWedding, requirePlanner } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { istDate } from "@/lib/rsvp";
-import { deleteWedding, updateWedding } from "@/app/actions";
-import { CreateWeddingForm, DeleteButton } from "@/app/ui/forms";
+import { deleteWedding, saveInviteTemplate, updateWedding } from "@/app/actions";
+import { CreateWeddingForm, DeleteButton, InviteTemplateForm } from "@/app/ui/forms";
 import { BackLink } from "@/app/ui/kit";
 
 export default function WeddingSettingsPage(props: PageProps<"/weddings/[id]/settings">) {
@@ -22,7 +22,11 @@ async function Settings({ params }: { params: Promise<{ id: string }> }) {
   const wedding = await requireOwnedWedding(planner.id, id);
   const counts = await prisma.wedding.findUniqueOrThrow({
     where: { id },
-    select: { _count: { select: { events: true, guests: true } } },
+    select: {
+      _count: { select: { events: true, guests: true } },
+      events: { orderBy: { startsAt: "asc" }, select: { name: true } },
+      guests: { orderBy: { name: "asc" }, take: 1, select: { name: true } },
+    },
   });
   const { events, guests } = counts._count;
 
@@ -41,6 +45,23 @@ async function Settings({ params }: { params: Promise<{ id: string }> }) {
             name: wedding.name,
             city: wedding.city,
             rsvpDeadline: wedding.rsvpDeadline ? istDate(wedding.rsvpDeadline) : "",
+          }}
+        />
+      </section>
+
+      <section className="rounded-card border border-line bg-surface p-5 shadow-card sm:p-6">
+        <h2 className="mb-1 text-xl font-semibold">WhatsApp invite message</h2>
+        <p className="mb-5 text-sm text-muted">
+          What guests receive when you tap Send. Each guest&apos;s message lists only the functions they&apos;re invited to.
+        </p>
+        <InviteTemplateForm
+          action={saveInviteTemplate.bind(null, id)}
+          current={wedding.inviteTemplate}
+          sample={{
+            guestName: counts.guests[0]?.name ?? "Sharma Uncle",
+            weddingName: wedding.name,
+            functions: counts.events.map((e) => e.name),
+            deadline: wedding.rsvpDeadline,
           }}
         />
       </section>

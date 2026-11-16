@@ -41,6 +41,8 @@ model Wedding {
   name        String
   city        String?
   rsvpDeadline DateTime?
+  // Planner's own WhatsApp invite text with {name} {wedding} {functions} {deadline} {link}; null = default.
+  inviteTemplate String?
   createdAt   DateTime @default(now())
   events      Event[]
   guests      Guest[]
@@ -59,6 +61,7 @@ model Event {
   // People who actually came, entered by the planner afterwards. Calibrates future predictions.
   actualCount Int?
   rsvps     Rsvp[]
+  invitations Invitation[]
 
   @@index([weddingId])
 }
@@ -80,6 +83,8 @@ model Guest {
   remindedAt    DateTime?
   reminderCount Int       @default(0)
   rsvps     Rsvp[]
+  // Functions this guest is invited to. No rows = every function of the wedding (the common case).
+  invitations Invitation[]
 
   @@unique([weddingId, phone])
   @@index([weddingId])
@@ -97,6 +102,8 @@ model Rsvp {
   vegCount    Int      @default(0)
   nonVegCount Int      @default(0)
   arrivalTime DateTime?
+  // Names of everyone in the party, one per person (vegCount + nonVegCount of them when Coming).
+  names       String[] @default([])
   updatedAt   DateTime @updatedAt
 
   @@unique([guestId, eventId])
@@ -120,4 +127,15 @@ model PasswordReset {
   usedAt    DateTime?
 
   @@index([plannerId])
+}
+
+// A guest invited to only some functions (e.g. colleagues to the Reception). See Guest.invitations.
+model Invitation {
+  guestId String
+  guest   Guest  @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([guestId, eventId])
+  @@index([eventId])
 }

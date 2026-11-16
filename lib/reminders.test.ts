@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import { ago, missingEvents, reminderStatus } from "./reminders";
 import { reminderMessage } from "./invite";
 
-const events = [{ id: "e1" }, { id: "e2" }];
+const events = [
+  { id: "e1", startsAt: new Date("2026-12-10T19:00:00+05:30") },
+  { id: "e2", startsAt: new Date("2026-12-11T20:00:00+05:30") },
+];
 const now = new Date("2026-11-20T12:00:00+05:30");
 const daysBefore = (n: number) => new Date(now.getTime() - n * 24 * 60 * 60 * 1000);
 const guest = (o: Partial<{ invitedAt: Date | null; remindedAt: Date | null; rsvps: { eventId: string }[] }>) => ({
@@ -36,7 +39,9 @@ test("reminderStatus: waits 2 days after the last invite or reminder", () => {
 });
 
 test("missingEvents keeps order and only unanswered events", () => {
-  assert.deepEqual(missingEvents({ rsvps: [{ eventId: "e1" }] }, events), [{ id: "e2" }]);
+  assert.deepEqual(missingEvents({ rsvps: [{ eventId: "e1" }] }, events), [events[1]]);
+  // Functions the guest isn't invited to are never "missing".
+  assert.deepEqual(missingEvents({ rsvps: [], invitations: [{ eventId: "e2" }] }, events), [events[1]]);
 });
 
 test("ago reads naturally", () => {
@@ -56,4 +61,14 @@ test("reminderMessage names the missing functions and the deadline", () => {
   assert.match(text, /reply for Haldi, Sangeet and Wedding yet/);
   assert.match(text, /by 1 December so we can plan the food:\nhttps:\/\/x\.app\/r\/abc$/);
   assert.match(reminderMessage({ guestName: "A", weddingName: "B", link: "L", deadline: null, missing: ["Haldi"] }), /reply for Haldi yet/);
+});
+
+test("reminderStatus: closed once every missing function's day has come", () => {
+  const late = new Date("2026-12-11T09:00:00+05:30"); // Sangeet's day passed, Wedding is today
+  assert.equal(reminderStatus(guest({ invitedAt: daysBefore(10) }), events, null, late), "closed");
+  // Only invited to Wedding and already answered it: complete, not missing Sangeet.
+  assert.equal(
+    reminderStatus({ ...guest({ rsvps: [{ eventId: "e2" }] }), invitations: [{ eventId: "e2" }] }, events, null, now),
+    "complete",
+  );
 });

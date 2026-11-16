@@ -22,7 +22,11 @@ async function EditGuest({ params }: { params: Promise<{ id: string; guestId: st
   // Scoped to this planner and this wedding, so other planners' guests 404.
   const guest = await prisma.guest.findFirst({
     where: { id: guestId, weddingId: id, wedding: { plannerId: planner.id } },
-    include: { wedding: { select: { name: true } }, _count: { select: { rsvps: true } } },
+    include: {
+      wedding: { select: { name: true, events: { orderBy: { startsAt: "asc" }, select: { id: true, name: true } } } },
+      invitations: { select: { eventId: true } },
+      _count: { select: { rsvps: true } },
+    },
   });
   if (!guest) notFound();
 
@@ -37,7 +41,12 @@ async function EditGuest({ params }: { params: Promise<{ id: string; guestId: st
       </header>
 
       <section className="rounded-card border border-line bg-surface p-5 shadow-card sm:p-6">
-        <AddGuestForm action={updateGuest.bind(null, guest.id)} guest={guest} />
+        <AddGuestForm
+          action={updateGuest.bind(null, guest.id)}
+          guest={guest}
+          events={guest.wedding.events}
+          invited={guest.invitations.length ? guest.invitations.map((i) => i.eventId) : null}
+        />
       </section>
 
       <section className="rounded-card border border-danger/30 bg-surface p-5 sm:p-6">
