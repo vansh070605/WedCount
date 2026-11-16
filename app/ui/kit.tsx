@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { CountUp } from "@/app/ui/motion";
+import { Words } from "@/app/ui/reveal";
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
@@ -63,7 +64,9 @@ export function SectionTitle({ title, hint, action }: { title: string; hint?: Re
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h2 className="font-display text-2xl font-semibold">{title}</h2>
+        <h2 className="font-display text-2xl font-semibold">
+          <Words text={title} />
+        </h2>
         {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
       </div>
       {action}
@@ -89,7 +92,9 @@ export function PageHeader({
       <div>
         {back && <BackLink href={back.href} label={back.label} />}
         {eyebrow && <p className="mt-5 text-xs font-semibold tracking-[0.2em] text-gold uppercase">{eyebrow}</p>}
-        <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight sm:text-5xl">{title}</h1>
+        <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
+          <Words mode="load" delay={80} text={title} />
+        </h1>
         {sub && <p className="mt-2 text-sm text-muted">{sub}</p>}
       </div>
       {action}

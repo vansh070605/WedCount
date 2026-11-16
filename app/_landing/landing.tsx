@@ -7,6 +7,8 @@ import { ButtonLink } from "@/app/ui/kit";
 import { MobileMenu } from "@/app/ui/mobile-menu";
 import { HeaderAuth } from "@/app/ui/header-auth";
 import { CoupleArt, Divider, Garland } from "@/app/ui/ornaments";
+import { Words } from "@/app/ui/reveal";
+import { CountUp } from "@/app/ui/motion";
 
 // One example wedding, used consistently across every mock on the page.
 const EXAMPLE = {
@@ -75,8 +77,12 @@ function Eyebrow({ children }: { children: ReactNode }) {
   return <p className="text-sm font-medium text-brand">{children}</p>;
 }
 
-function H2({ children }: { children: ReactNode }) {
-  return <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">{children}</h2>;
+function H2({ children }: { children: string }) {
+  return (
+    <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">
+      <Words text={children} />
+    </h2>
+  );
 }
 
 // The product's real wedding screen, as live HTML (not a screenshot).
@@ -179,8 +185,8 @@ export function Landing() {
               <span className="size-1.5 rounded-full bg-ok" />
               For Indian wedding planners
             </p>
-            <h1 className="rise mt-6 max-w-4xl font-display text-[2.9rem] leading-[1.02] font-semibold tracking-[-0.01em] text-balance [--d:60ms] sm:text-7xl lg:text-[5.2rem]">
-              WhatsApp RSVPs and an expected headcount for every function.
+            <h1 className="mt-6 max-w-4xl font-display text-[2.9rem] leading-[1.02] font-semibold tracking-[-0.01em] text-balance [--d:60ms] sm:text-7xl lg:text-[5.2rem]">
+              <Words mode="load" delay={120} text="WhatsApp RSVPs and an expected headcount for every function." />
             </h1>
             <p className="rise mt-6 max-w-2xl text-lg leading-relaxed text-muted [--d:120ms]">
               Send each guest a personal link on WhatsApp. They reply for Haldi, Sangeet and Wedding separately, and you give
@@ -196,7 +202,9 @@ export function Landing() {
             </div>
             <p className="rise mt-5 text-[13px] text-muted [--d:220ms]">No app for guests · Sent from your own number · Free while in beta</p>
             <div className="rise mt-14 w-full max-w-5xl [--d:260ms]">
-              <ProductFrame />
+              <div className="scroll-zoom">
+                <ProductFrame />
+              </div>
             </div>
           </div>
         </section>
@@ -221,7 +229,9 @@ export function Landing() {
               ].map(([n, label, tone], i) => (
                 <div key={label} className={`bg-paper p-5 ${i % 2 ? "border-l" : ""} ${i > 1 ? "border-t sm:border-t-0" : ""} ${i === 2 ? "sm:border-l" : ""} border-line`}>
                   <dt className="text-[13px] text-muted">{label}</dt>
-                  <dd className={`mt-1 text-4xl font-semibold tracking-tight tabular-nums ${tone}`}>{n}</dd>
+                  <dd className={`mt-1 text-4xl font-semibold tracking-tight tabular-nums ${tone}`}>
+                    <CountUp value={Number(n)} />
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -236,8 +246,8 @@ export function Landing() {
               <H2>Built around how Indian weddings run</H2>
             </div>
             <ul className="mt-12 grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((f) => (
-                <li key={f.title} className="reveal bg-surface p-7">
+              {features.map((f, i) => (
+                <li key={f.title} className="reveal bg-surface p-7" style={{ "--i": i } as React.CSSProperties}>
                   <span className="flex size-10 items-center justify-center rounded-lg border border-line bg-paper text-ink">{f.icon}</span>
                   <p className="mt-5 font-semibold">{f.title}</p>
                   <p className="mt-2 text-sm leading-relaxed text-muted">{f.body}</p>
@@ -256,7 +266,7 @@ export function Landing() {
             </div>
             <ol className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
               {steps.map((s, i) => (
-                <li key={s.title} className="reveal border-t-2 border-line pt-5 first:border-ink">
+                <li key={s.title} className="reveal line-draw relative pt-5" style={{ "--i": i } as React.CSSProperties}>
                   <p className="text-sm font-medium text-muted tabular-nums">0{i + 1}</p>
                   <p className="mt-2 font-semibold">{s.title}</p>
                   <p className="mt-2 text-sm leading-relaxed text-muted">{s.body}</p>
@@ -298,7 +308,7 @@ export function Landing() {
                       <span className="font-semibold tabular-nums">{b.value}</span>
                     </div>
                     <div className="mt-2 h-2 overflow-hidden rounded-full bg-sunken">
-                      <div className={`h-full rounded-full ${b.bar}`} style={{ width: `${(b.value / max) * 100}%` }} />
+                      <div className={`bar-grow h-full rounded-full ${b.bar}`} style={{ width: `${(b.value / max) * 100}%` }} />
                     </div>
                   </div>
                 ))}
@@ -358,7 +368,7 @@ export function Landing() {
           <div className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-8 px-4 py-20 sm:px-6 lg:flex-row lg:items-center">
             <div>
               <h2 className="max-w-2xl font-display text-4xl font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">
-                Plan the food for the guests who will actually come.
+                <Words text="Plan the food for the guests who will actually come." />
               </h2>
               <p className="mt-4 text-white/70">Set up a wedding in minutes. Guests need nothing but WhatsApp.</p>
             </div>

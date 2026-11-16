@@ -176,7 +176,7 @@ body {
       animation: reveal-up linear both;
       animation-timeline: view();
       /* Fixed distance, not a % of the element: a 1600px guest list must not stay half-faded while you read it. */
-      animation-range: cover 0px cover 240px;
+      animation-range: cover calc(var(--i, 0) * 40px) cover calc(240px + var(--i, 0) * 40px);
     }
     .reveal-row {
       animation: reveal-up linear both;
@@ -548,6 +548,84 @@ body {
   ::view-transition-new(*),
   ::view-transition-group(*) {
     animation: none !important;
+  }
+}
+
+/* ---------- Text and scroll reveals ---------- */
+.word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  /* room for descenders (g, y) inside the mask */
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+.word > span {
+  display: inline-block;
+}
+/* Step markers: a line that draws across as the step scrolls in. */
+.line-draw::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  background: var(--line);
+}
+.line-draw::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--brand);
+  transform-origin: left;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .words-load .word > span {
+    animation: word-up 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: calc(var(--d, 0ms) + var(--i, 0) * 60ms);
+  }
+  @supports (animation-timeline: view()) {
+    .words-scroll .word > span {
+      animation: word-up linear both;
+      animation-timeline: view();
+      animation-range: entry calc(var(--i, 0) * 4%) entry calc(60% + var(--i, 0) * 4%);
+    }
+    .scroll-zoom {
+      animation: zoom-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+    .bar-grow {
+      transform-origin: left;
+      animation: grow-x linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 45%;
+    }
+    .line-draw::after {
+      animation: grow-x linear both;
+      animation-timeline: view();
+      animation-range: entry calc(20% + var(--i, 0) * 8%) cover calc(40% + var(--i, 0) * 8%);
+    }
+  }
+}
+@keyframes word-up {
+  from {
+    transform: translateY(105%);
+    opacity: 0;
+  }
+}
+@keyframes zoom-in {
+  from {
+    transform: translateY(48px) scale(0.92);
+    opacity: 0.35;
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
   }
 }
 

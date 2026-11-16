@@ -7,6 +7,7 @@ import { plannerCalibration } from "@/lib/calibrate";
 import { predictEvent } from "@/lib/predict";
 import { reminderStatus } from "@/lib/reminders";
 import { functionTone } from "@/lib/invitation";
+import { Words } from "@/app/ui/reveal";
 import { Badge, Card, SectionTitle, Stat, buttonClass } from "@/app/ui/kit";
 
 export const metadata: Metadata = { title: "Home · WedCount" };
@@ -141,7 +142,11 @@ async function Home() {
             {greeting(now)}, {first}
           </p>
           <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
-            {upcoming.length ? `${upcoming[0].e.name} for ${upcoming[0].w.name} is ${inDays(upcoming[0].e.startsAt, now).toLowerCase()}` : "Your weddings at a glance"}
+            <Words
+              mode="load"
+              delay={80}
+              text={upcoming.length ? `${upcoming[0].e.name} for ${upcoming[0].w.name} is ${inDays(upcoming[0].e.startsAt, now).toLowerCase()}` : "Your weddings at a glance"}
+            />
           </h1>
           <p className="mt-2 text-sm text-muted">{ist(now, { weekday: "long", day: "numeric", month: "long" })}</p>
         </div>
