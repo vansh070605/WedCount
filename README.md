@@ -263,7 +263,7 @@ Each step is a pull request with what changed, why, and how it was tested, and a
 | + | Design system and animated redesign | [#10](https://github.com/vansh070605/WedCount/pull/10) |
 | + | Mobile polish | [#11](https://github.com/vansh070605/WedCount/pull/11) |
 | + | Scroll motion, README | [#12](https://github.com/vansh070605/WedCount/pull/12) |
-| + | + | Light redesign, docs for agents, Postgres on Neon | [#13](https://github.com/vansh070605/WedCount/pull/13) |
+| + | Light redesign, docs for agents, Postgres on Neon | [#13](https://github.com/vansh070605/WedCount/pull/13) |
 
 ## 🗺 Roadmap
 
