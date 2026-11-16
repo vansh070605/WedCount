@@ -277,7 +277,7 @@ Each step is a pull request with what changed, why, and how it was tested, and a
 | + | Light redesign, docs for agents, Postgres on Neon | [#13](https://github.com/vansh070605/WedCount/pull/13) |
 | + | Wedding settings, account deletion, icons and share card | [#14](https://github.com/vansh070605/WedCount/pull/14) |
 | + | Go live on Vercel + Neon, functions in Singapore | [#15](https://github.com/vansh070605/WedCount/pull/15) |
-| + | Signup limit, analytics, error logging | this PR |
+| + | Signup limit, analytics, error logging | [#16](https://github.com/vansh070605/WedCount/pull/16) |
 
 ## 🗺 Roadmap
 
