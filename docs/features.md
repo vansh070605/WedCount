@@ -46,7 +46,14 @@ Sharma Uncle,98765 43210,bride,family
 
 ## Guest RSVP page
 
-- Opens with an invitation card: the couple, the city, and a schedule of only the functions this guest is invited to, with dates, times and venues. No login, no app.
+- A full **wedding invitation**, in one of four themes the planner picks in Settings (Royal Blue & Gold, Sindoor Red & Gold, Mehendi Green & Gold, Ivory & Rose Gold):
+  - a **tap-the-seal cover** with the couple's initials (a CSS checkbox, so it opens before JavaScript loads; skipped for reduced motion and no-JS);
+  - the couple's names in script under a marigold garland and diyas, with an optional blessing line;
+  - **families**: "daughter of … / son of …" when the parents' names are filled in;
+  - a drawn couple under a floral arch, and a **live countdown** to the guest's next function;
+  - a **scratch-the-gold card** revealing the main function's date (a Reveal button for keyboard users; plain date for reduced motion);
+  - one card per function in its own colour (Haldi turmeric, Mehendi green, Sangeet purple, Wedding red…) with date, time, venue and **Open in Google Maps**.
+  Opening plays once: the doors swing apart, the names rise in, petals fall; diya flames flicker and sections ease in on scroll. No login, no app. Code: `app/r/[token]/page.tsx`, `app/ui/ornaments.tsx`, `app/ui/invite-bits.tsx`, `lib/invitation.ts`.
 - For each function: Coming, Maybe or Can't come; veg and non-veg counts (party size is their sum, up to 20); arrival time; and the **names of everyone coming**, one per line. Coming needs exactly one name per person; Maybe may leave names out.
 - Saves in one transaction, so a guest never ends up with half their functions saved. Answers can change until the earlier of the wedding's deadline and **midnight IST at the start of the function's day**; after that the function shows "Replies closed". The deadline itself must be before the first function's day, and a function can't be added on or before the deadline day. Code: `closesAt`, `isEventOpen`, `deadlineProblem` in `lib/rsvp.ts`.
 - Works before JavaScript loads (server action fallback). Code: `app/r/[token]/page.tsx`, `app/ui/rsvp-form.tsx`, `lib/rsvp.ts`.

@@ -17,6 +17,7 @@ import { appUrl, inviteLink, inviteMessage, reminderMessage, whatsappUrl } from 
 import { REMIND_EVERY_DAYS, ago, missingEvents, reminderStatus } from "@/lib/reminders";
 import { countHeadcount } from "@/lib/headcount";
 import { invitedEvents, isInvited, minPickDate } from "@/lib/rsvp";
+import { functionTone } from "@/lib/invitation";
 import { errorPct, predictEvent } from "@/lib/predict";
 import { plannerCalibration } from "@/lib/calibrate";
 
@@ -160,7 +161,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                   <div className="flex items-baseline justify-between gap-3">
                     <p className="font-display text-lg font-semibold">{c.name}</p>
                     <p className="text-right">
-                      <span className="font-display text-3xl font-semibold text-brand">
+                      <span className="text-3xl font-semibold text-brand tabular-nums">
                         {predictions[i].expected}
                       </span>
                       <span className="block text-xs text-muted tabular-nums">
@@ -204,7 +205,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                     <tr key={c.eventId} className="border-t border-line transition-colors hover:bg-sunken/60">
                       <td className={`${td} font-medium`}>{c.name}</td>
                       <td className={`${td} whitespace-nowrap`}>
-                        <span className="font-display text-2xl font-semibold text-brand">
+                        <span className="text-2xl font-semibold text-brand tabular-nums">
                           {predictions[i].expected}
                         </span>{" "}
                         <span className="text-xs text-muted tabular-nums">
@@ -363,7 +364,11 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
           <ul className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {events.map((e) => (
               <li key={e.id}>
-                <Link href={`/weddings/${wedding.id}/events/${e.id}`} className="lift block rounded-xl border border-line bg-paper p-4">
+                <Link
+                  href={`/weddings/${wedding.id}/events/${e.id}`}
+                  className="lift block rounded-xl border border-l-4 border-line bg-paper p-4"
+                  style={{ borderLeftColor: functionTone(e.name) ?? "var(--gold)" }}
+                >
                   <p className="font-display text-lg font-semibold">{e.name}</p>
                   <p className="mt-1 text-sm text-muted">
                     {ist(e.startsAt, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}

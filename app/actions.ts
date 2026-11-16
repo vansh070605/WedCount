@@ -15,6 +15,7 @@ import { HOUR, SIGNUPS_PER_HOUR, clientIp, limitKey, nextWindow } from "@/lib/ra
 import { RESET_SENT, hashToken, isUsable, newResetToken, resetEmail, resetExpiry } from "@/lib/reset";
 import { sendEmail } from "@/lib/mail";
 import { appUrl, templateProblem } from "@/lib/invite";
+import { MAX_FAMILY, THEMES } from "@/lib/invitation";
 
 // Two requests inserting the same unique value at once: the database rejects the second with P2002.
 const isDuplicate = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
@@ -170,6 +171,21 @@ export async function updateWedding(weddingId: string, _: FormState, fd: FormDat
   revalidatePath(`/weddings/${weddingId}`, "layout");
   revalidatePath("/dashboard");
   return { message: "Saved." };
+}
+
+// How the guest invitation looks and who it's from: theme, the couple's names, parents, blessing line.
+export async function saveInvitation(weddingId: string, _: FormState, fd: FormData): Promise<FormState> {
+  const planner = await requirePlanner();
+  await requireOwnedWedding(planner.id, weddingId);
+  const theme = text(fd, "theme");
+  if (!THEMES.some((t) => t.id === theme)) return { error: "Pick one of the themes." };
+  const fields = ["brideName", "groomName", "brideParents", "groomParents", "blessing"] as const;
+  const data = Object.fromEntries(fields.map((f) => [f, text(fd, f) || null])) as Record<(typeof fields)[number], string | null>;
+  if (fields.some((f) => (data[f]?.length ?? 0) > MAX_FAMILY)) return { error: `Keep each line under ${MAX_FAMILY} characters.` };
+  if (!data.brideName !== !data.groomName) return { error: "Add both names, or leave both empty to use the wedding name." };
+  await prisma.wedding.update({ where: { id: weddingId }, data: { theme, ...data } });
+  revalidatePath(`/weddings/${weddingId}`, "layout");
+  return { message: "Saved. Guests see the new invitation right away." };
 }
 
 // The planner's own WhatsApp invite text. Empty resets to the default.

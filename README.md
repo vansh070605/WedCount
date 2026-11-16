@@ -18,7 +18,7 @@
 ![Postgres on Neon](https://img.shields.io/badge/Postgres-Neon-00e599?logo=postgresql&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000?logo=vercel&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-06b6d4?logo=tailwindcss&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-61_passing-2f7a4f)
+![Tests](https://img.shields.io/badge/tests-66_passing-2f7a4f)
 
 ### [Live: wedcount.vercel.app](https://wedcount.vercel.app)
 
@@ -68,7 +68,8 @@ Families spend lakhs on catering, and the one number it depends on is a guess.
 **For the guest: an invitation, not a form**
 
 - A private link, no app, no login
-- An invitation card with their own schedule, then **Coming / Maybe / Can't come for each function**
+- A real **wedding invitation** in the couple's chosen theme: tap the seal, families, countdown, scratch-the-gold date, every function with a map
+- Then **Coming / Maybe / Can't come for each function**
 - How many people, their names, veg or non-veg, arrival time
 - Can change their mind until the deadline (never on the function's day)
 
@@ -80,13 +81,14 @@ Families spend lakhs on catering, and the one number it depends on is a guess.
 
 <table>
 <tr>
-<td width="33%"><img src="docs/screenshots/rsvp-phone.png" alt="Guest RSVP page on a phone, styled as an invitation" /></td>
-<td width="33%"><img src="docs/screenshots/wedding-phone.png" alt="Headcount cards on a phone" /></td>
-<td width="34%" valign="middle">
+<td width="25%"><img src="docs/screenshots/invite-cover.png" alt="Invitation cover on a phone: tap the wax seal" /></td>
+<td width="25%"><img src="docs/screenshots/rsvp-phone.png" alt="Opened invitation: the couple's names in Royal Blue and Gold" /></td>
+<td width="25%"><img src="docs/screenshots/wedding-phone.png" alt="Headcount cards on a phone" /></td>
+<td width="25%" valign="middle">
 
 **Built for the phone first**
 
-Guests open their link from WhatsApp, so the RSVP page is designed as an invitation that works on any phone, even before it finishes loading.
+Guests open their link from WhatsApp and get a real invitation: tap the seal, the couple and their families, a countdown and a gold card to scratch for the date, in one of four themes. It works on any phone, even before it finishes loading.
 
 Planners get card layouts instead of cramped tables, sticky section tabs that follow the scroll, and full-width actions.
 
@@ -94,11 +96,11 @@ Planners get card layouts instead of cramped tables, sticky section tabs that fo
 </tr>
 </table>
 
-<img src="docs/screenshots/dashboard.png" alt="Planner dashboard with wedding cards and reply progress" width="100%" />
+<img src="docs/screenshots/dashboard.png" alt="Planner home: what's coming up, what needs attention, latest replies" width="100%" />
 
 <table>
 <tr>
-<td width="50%"><img src="docs/screenshots/settings.png" alt="Wedding settings: edit name, city and RSVP deadline, or delete the wedding" /></td>
+<td width="50%"><img src="docs/screenshots/settings.png" alt="Wedding settings: invitation theme, the couple and their families" /></td>
 <td width="50%"><img src="docs/screenshots/account.png" alt="Account page with password-confirmed account deletion" /></td>
 </tr>
 </table>
@@ -172,8 +174,8 @@ across all of that planner's past functions. The `+100` stops one odd function f
 <details>
 <summary><b>Design system</b></summary>
 
-- Light theme with neutral colour **tokens** in `app/globals.css` (ink for primary actions, one blue accent); components in `app/ui/kit.tsx`. Re-theming is one file.
-- Geist for all text, tabular figures for every number.
+- Warm wedding **tokens** in `app/globals.css` (ivory, maroon, marigold gold); components in `app/ui/kit.tsx`; four invitation themes under `[data-invite]`.
+- Cormorant Garamond headings, Great Vibes for the couple's names, Geist for text and numbers.
 - The landing page is plain server-rendered HTML that shows the product's real UI; no animation library.
 - Motion is limited to hover states and short reveals on the browser's **native scroll timelines**, all off under **reduced motion**.
 
@@ -188,7 +190,7 @@ across all of that planner's past functions. The `+100` stops one odd function f
 | Data | Prisma 6 · Postgres on Neon (local: `npx prisma dev`, no Docker) |
 | Hosting | Vercel (functions in Singapore, `sin1`), Neon in Singapore |
 | Monitoring | Vercel Web Analytics, Speed Insights, structured error logs (`instrumentation.ts`) |
-| UI | Tailwind CSS v4, design tokens, Geist |
+| UI | Tailwind CSS v4, design tokens, Cormorant Garamond + Great Vibes + Geist, hand-drawn SVG ornaments |
 | Messaging | WhatsApp `wa.me` deep links (no paid API needed) |
 | Email | Resend REST API, for password reset only |
 | Tests | Node's built-in test runner via `tsx` |
@@ -221,7 +223,7 @@ npm run dev
 Open **http://localhost:3000** and log in with the local demo account: `demo@wedcount.test` / `demo-planner-123`.
 
 ```bash
-npm test          # 58 unit tests
+npm test          # 63 unit tests
 npm run test:db   # 3 database tests in a throwaway Postgres schema
 npm run lint
 npm run build
@@ -286,6 +288,7 @@ Each step is a pull request with what changed, why, and how it was tested, and a
 | + | Password reset by email (Resend) | [#17](https://github.com/vansh070605/WedCount/pull/17) |
 | + | Tester feedback: send queue, per-function invites, names, duplicates, RSVP closing | [#18](https://github.com/vansh070605/WedCount/pull/18) |
 | + | Planner home page, no past dates | [#19](https://github.com/vansh070605/WedCount/pull/19) |
+| + | Festive invitation (4 themes, seal, countdown, scratch card) and warm wedding look | [#20](https://github.com/vansh070605/WedCount/pull/20) |
 
 ## 🗺 Roadmap
 

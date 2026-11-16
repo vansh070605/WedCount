@@ -6,6 +6,7 @@ import { SiteFooter, Wordmark } from "@/app/ui/brand";
 import { ButtonLink } from "@/app/ui/kit";
 import { MobileMenu } from "@/app/ui/mobile-menu";
 import { HeaderAuth } from "@/app/ui/header-auth";
+import { CoupleArt, Divider, Garland } from "@/app/ui/ornaments";
 
 // One example wedding, used consistently across every mock on the page.
 const EXAMPLE = {
@@ -75,7 +76,7 @@ function Eyebrow({ children }: { children: ReactNode }) {
 }
 
 function H2({ children }: { children: ReactNode }) {
-  return <h2 className="mt-3 text-3xl font-semibold tracking-tight text-balance sm:text-[2.6rem] sm:leading-[1.1]">{children}</h2>;
+  return <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">{children}</h2>;
 }
 
 // The product's real wedding screen, as live HTML (not a screenshot).
@@ -153,6 +154,7 @@ export function Landing() {
   return (
     <div className="flex flex-1 flex-col">
       <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur">
+        <Garland className="garland-drop pointer-events-none absolute inset-x-0 -bottom-px h-3.5 w-full opacity-90" />
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-6 px-4 sm:px-6">
           <Wordmark />
           <nav aria-label="Main" className="hidden items-center gap-7 text-sm text-muted md:flex">
@@ -177,7 +179,7 @@ export function Landing() {
               <span className="size-1.5 rounded-full bg-ok" />
               For Indian wedding planners
             </p>
-            <h1 className="rise mt-6 max-w-4xl text-[2.6rem] leading-[1.05] font-semibold tracking-[-0.03em] text-balance [--d:60ms] sm:text-6xl lg:text-7xl">
+            <h1 className="rise mt-6 max-w-4xl font-display text-[2.9rem] leading-[1.02] font-semibold tracking-[-0.01em] text-balance [--d:60ms] sm:text-7xl lg:text-[5.2rem]">
               WhatsApp RSVPs and an expected headcount for every function.
             </h1>
             <p className="rise mt-6 max-w-2xl text-lg leading-relaxed text-muted [--d:120ms]">
@@ -315,27 +317,37 @@ export function Landing() {
         <section className="border-b border-line bg-surface">
           <div className="mx-auto grid w-full max-w-6xl items-center gap-14 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-2">
             <div className="reveal order-2 lg:order-1">
-              <div className="mx-auto max-w-sm rounded-card border border-line bg-paper p-6 shadow-lift">
-                <p className="text-center text-sm text-muted">Namaste Sharma Uncle,</p>
-                <p className="mt-1 text-center text-sm font-medium text-brand">You&apos;re invited to</p>
-                <p className="mt-1 text-center text-2xl font-semibold tracking-tight">{EXAMPLE.couple}</p>
-                <div className="mt-5 rounded-lg border border-line bg-surface p-4">
+              <div data-invite="royal" className="float mx-auto max-w-sm overflow-hidden rounded-[2rem] border-8 border-ink shadow-lift">
+                <div className="relative bg-[var(--inv-deep)] px-6 pt-9 pb-8 text-center text-[var(--inv-on-deep)]">
+                  <Garland id="toran-mock" className="absolute inset-x-0 top-0 h-5 w-full" />
+                  <p className="text-xs italic opacity-80">With the blessings of our families</p>
+                  <p className="mt-3 font-[family-name:var(--font-script)] text-5xl leading-none">Priya</p>
+                  <p className="my-1 font-[family-name:var(--font-script)] text-2xl text-[var(--inv-gold)]">weds</p>
+                  <p className="font-[family-name:var(--font-script)] text-5xl leading-none">Rohit</p>
+                  <Divider className="mx-auto mt-4 w-40 text-[var(--inv-gold)]" />
+                </div>
+                <div className="flex justify-center bg-[var(--inv-paper)] pt-4">
+                  <CoupleArt className="w-28" />
+                </div>
+                <div className="bg-[var(--inv-paper)] p-4">
+                <div className="rounded-lg border border-line bg-surface p-4">
                   <p className="font-semibold">Wedding</p>
                   <p className="text-xs text-muted">Fri 11 Dec, 8:00 pm · Rambagh Lawns</p>
                   <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                    <span className="rounded-lg bg-ink py-2 text-center font-medium text-white">Coming</span>
+                    <span className="rounded-lg bg-[var(--brand)] py-2 text-center font-medium text-white">Coming</span>
                     <span className="rounded-lg border border-line py-2 text-center">Maybe</span>
                     <span className="rounded-lg border border-line py-2 text-center">Can&apos;t come</span>
                   </div>
+                </div>
                 </div>
               </div>
             </div>
             <div className="reveal order-1 lg:order-2">
               <Eyebrow>For guests</Eyebrow>
-              <H2>No app, no login, one link</H2>
+              <H2>An invitation, not a form</H2>
               <p className="mt-5 text-lg leading-relaxed text-muted">
-                Guests open their link from WhatsApp, answer for each function, and can change their mind until the deadline.
-                It works on any phone, even before the page has fully loaded.
+                Guests tap a wax seal to open a real invitation: the couple, their families, a countdown, a gold card to scratch
+                for the date, and every function with a map. Then they reply for each one. No app, no login, any phone.
               </p>
             </div>
           </div>
@@ -345,7 +357,7 @@ export function Landing() {
         <section className="bg-ink text-white">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-8 px-4 py-20 sm:px-6 lg:flex-row lg:items-center">
             <div>
-              <h2 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-[2.6rem] sm:leading-[1.1]">
+              <h2 className="max-w-2xl font-display text-4xl font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">
                 Plan the food for the guests who will actually come.
               </h2>
               <p className="mt-4 text-white/70">Set up a wedding in minutes. Guests need nothing but WhatsApp.</p>

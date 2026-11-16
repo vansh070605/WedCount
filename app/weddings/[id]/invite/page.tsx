@@ -141,7 +141,7 @@ async function Queue({
     <>
       <header>
         <BackLink href={`/weddings/${id}`} label={wedding.name} />
-        <h1 className="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">Send invites</h1>
+        <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Send invites</h1>
         <p className="mt-1 text-sm text-muted">
           One guest at a time. Edit the message in{" "}
           <Link href={`/weddings/${id}/settings`} className="draw font-medium text-brand">

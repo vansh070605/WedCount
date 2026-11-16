@@ -10,10 +10,10 @@ export default function AppleIcon() {
   );
   return new ImageResponse(
     (
-      <div style={{ width: "100%", height: "100%", background: "#0b1220", display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 12, paddingBottom: 46 }}>
+      <div style={{ width: "100%", height: "100%", background: "#3a1418", display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 12, paddingBottom: 46 }}>
         {bar(40, "rgba(255,255,255,0.55)")}
         {bar(65, "rgba(255,255,255,0.8)")}
-        {bar(90, "#8fb0ff")}
+        {bar(90, "#e7b04a")}
       </div>
     ),
     size,

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { logout } from "@/app/actions";
 import { buttonClass } from "@/app/ui/kit";
 import { HeaderAuth } from "@/app/ui/header-auth";
+import { Garland } from "@/app/ui/ornaments";
 
 // Logo mark: three rising bars, a headcount that firms up. Plain shapes so it stays crisp at any size.
 export function Mark({ className = "size-7" }: { className?: string }) {
@@ -10,14 +11,14 @@ export function Mark({ className = "size-7" }: { className?: string }) {
       <rect width="32" height="32" rx="8" fill="var(--ink)" />
       <rect x="8" y="17" width="4" height="7" rx="1" fill="#fff" opacity="0.55" />
       <rect x="14" y="12.5" width="4" height="11.5" rx="1" fill="#fff" opacity="0.8" />
-      <rect x="20" y="8" width="4" height="16" rx="1" fill="#8fb0ff" />
+      <rect x="20" y="8" width="4" height="16" rx="1" fill="#e7b04a" />
     </svg>
   );
 }
 
 export function Wordmark({ href = "/" }: { href?: string }) {
   return (
-    <Link href={href} className="flex items-center gap-2 text-[17px] font-semibold tracking-tight text-ink">
+    <Link href={href} className="flex items-center gap-2 font-display text-[22px] font-semibold tracking-tight text-ink">
       <Mark className="size-7" />
       WedCount
     </Link>
@@ -28,6 +29,7 @@ export function Wordmark({ href = "/" }: { href?: string }) {
 export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-paper">
+      <Garland className="garland-drop pointer-events-none absolute inset-x-0 -bottom-px h-3.5 w-full opacity-90" />
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
         <Wordmark href="/home" />
         <nav className="flex items-center gap-2 text-sm">
@@ -117,6 +119,7 @@ export function SiteFooter() {
 export function SiteHeader({ section }: { section?: string }) {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-paper/90 backdrop-blur">
+      <Garland className="garland-drop pointer-events-none absolute inset-x-0 -bottom-px h-3.5 w-full opacity-90" />
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex items-center gap-3">
           <Wordmark />

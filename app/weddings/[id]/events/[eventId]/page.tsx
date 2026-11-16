@@ -37,7 +37,7 @@ async function EditEvent({ params }: { params: Promise<{ id: string; eventId: st
     <>
       <header>
         <BackLink href={`/weddings/${id}`} label={event.wedding.name} />
-        <h1 className="mt-5 font-display text-3xl font-semibold tracking-tight sm:text-4xl">Edit {event.name}</h1>
+        <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight sm:text-5xl">Edit {event.name}</h1>
         <p className="text-sm text-muted">
           Guests see the new name, time and venue the next time they open their invite.
         </p>
@@ -52,7 +52,7 @@ async function EditEvent({ params }: { params: Promise<{ id: string; eventId: st
       </section>
 
       <section className="rounded-card border border-danger/30 bg-surface p-5 sm:p-6">
-        <h2 className="mb-1 font-display text-xl font-semibold">Delete this function</h2>
+        <h2 className="mb-1 font-display text-2xl font-semibold">Delete this function</h2>
         <p className="mb-4 text-sm text-muted">
           Deletes {event.name} and the {event._count.rsvps} repl{event._count.rsvps === 1 ? "y" : "ies"} guests gave for
           it{event.actualCount != null && ", including the recorded turnout"}. This can&apos;t be undone.

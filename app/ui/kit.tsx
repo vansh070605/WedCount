@@ -2,6 +2,7 @@
 // so the look stays consistent and changes in one place.
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
+import { CountUp } from "@/app/ui/motion";
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
@@ -9,7 +10,7 @@ type Variant = "primary" | "secondary" | "ghost" | "danger" | "whatsapp";
 type Size = "sm" | "md" | "lg";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-ink text-white shadow-card hover:bg-ink/85",
+  primary: "bg-brand text-white shadow-card hover:bg-brand-strong",
   secondary: "border border-line bg-surface text-ink shadow-card hover:border-ink/30 hover:bg-sunken",
   ghost: "text-ink hover:bg-sunken",
   danger: "border border-danger text-danger hover:bg-danger hover:text-white",
@@ -62,7 +63,7 @@ export function SectionTitle({ title, hint, action }: { title: string; hint?: Re
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h2 className="font-display text-xl font-semibold">{title}</h2>
+        <h2 className="font-display text-2xl font-semibold">{title}</h2>
         {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
       </div>
       {action}
@@ -87,8 +88,8 @@ export function PageHeader({
     <header className="rise flex flex-wrap items-end justify-between gap-4">
       <div>
         {back && <BackLink href={back.href} label={back.label} />}
-        {eyebrow && <p className="mt-5 text-sm font-medium text-brand">{eyebrow}</p>}
-        <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
+        {eyebrow && <p className="mt-5 text-xs font-semibold tracking-[0.2em] text-gold uppercase">{eyebrow}</p>}
+        <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight sm:text-5xl">{title}</h1>
         {sub && <p className="mt-2 text-sm text-muted">{sub}</p>}
       </div>
       {action}
@@ -113,9 +114,17 @@ export function BackLink({ href, label }: { href: string; label: string }) {
 export function Stat({ label, value, sub, tone = "ink" }: { label: string; value: ReactNode; sub?: ReactNode; tone?: "ink" | "brand" | "gold" }) {
   const color = { ink: "text-ink", brand: "text-brand", gold: "text-gold" }[tone];
   return (
-    <div className="rounded-card border border-line bg-surface p-4 shadow-card">
+    <div className="lift rounded-card border border-line bg-surface p-4 shadow-card">
       <p className="text-[13px] font-medium text-muted">{label}</p>
-      <p className={cx("mt-1 text-3xl font-semibold tracking-tight tabular-nums", color)}>{value}</p>
+      <p className={cx("mt-1 text-3xl font-semibold tracking-tight tabular-nums", color)}>
+        {typeof value === "number" ? (
+          <CountUp value={value} />
+        ) : typeof value === "string" && /^\d+%$/.test(value) ? (
+          <CountUp value={parseInt(value)} suffix="%" />
+        ) : (
+          value
+        )}
+      </p>
       {sub && <p className="mt-0.5 text-xs text-muted">{sub}</p>}
     </div>
   );

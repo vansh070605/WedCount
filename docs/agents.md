@@ -29,7 +29,7 @@ These are not up for judgement. If a task seems to need one of them broken, stop
 3. **Never run destructive database commands against a shared or production database.** That includes `prisma migrate reset`, `db push --force-reset` and `DROP`. Local `npx prisma dev` data and the `wedcount_test` schema are the only places you may wipe.
 4. **Schema changes go through migrations** (`npm run db:migrate -- --name <what>`). Never edit an applied migration.
 5. **Keep the server action fallback** on forms (`action={formAction}` alongside `onSubmit`). Guests on slow phones tap before hydration.
-6. **Light theme only.** Use the tokens in `app/globals.css` and the components in `app/ui/kit.tsx`. No raw Tailwind palette colours (`zinc-`, `rose-`, ...), no emoji in the UI, no decorative effects (cursor trails, particles, glows).
+6. **Design system.** Light, warm wedding look (decision D13). Use the tokens in `app/globals.css`, the components in `app/ui/kit.tsx` and the ornaments in `app/ui/ornaments.tsx`; invitation colours come from `[data-invite]` themes. No raw Tailwind palette colours (`zinc-`, `rose-`, ...), no emoji in the UI, no cursor trails or looping particles (the invitation's one-time petal fall is the only exception), and every animation must rest under reduced motion. Motion classes live in `app/globals.css`; `CountUp` and `PageTransition` in `app/ui/motion.tsx`.
 7. **Tests stay green.** `npm test`, `npm run test:db`, `npm run lint` and `npm run build` must pass before you open a PR.
 8. **Git workflow.** One feature branch per piece of work, a PR with what, why and how it was tested. Merge with `gh pr merge <n> --merge`. Never delete branches. Never push to `main` directly.
 

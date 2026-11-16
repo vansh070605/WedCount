@@ -67,7 +67,7 @@ Superseded by D8 · 2026-11-10
 
 ## D7. Light theme, neutral design system, no decorative motion
 
-Accepted · 2026-11-16
+Superseded by D13 · 2026-11-16
 
 **Context.** The earlier design used a pink accent, emoji icons, a cursor trail, drifting petals and a pinned scroll story. It read as a demo, not a product.
 **Decision.** Light theme only. Neutral greys, ink for primary actions, one blue accent, Geist for all text. Motion limited to hover states and short scroll reveals that are off under reduced motion. GSAP removed.
@@ -112,3 +112,11 @@ Accepted · 2026-11-17
 **Context.** Testers could RSVP after a function had happened, could add the same person twice, and the planner could not invite colleagues to the Reception alone or see who exactly was coming.
 **Decision.** A function stops taking replies at midnight IST at the start of its day, in addition to the wedding deadline, and the deadline must fall before the first function's day. Per-function invitations are rows in `Invitation`; no rows means every function, so the common case stores nothing and new functions include existing guests. Coming requires one name per person. Same-name guests need an explicit override.
 **Consequences.** Same-day replies are no longer possible, which matches how caterers work. Counting code must always respect invitations (`isInvited`), which is covered by unit tests in headcount, predict and reminders.
+
+## D13. A wedding look: festive invitation, warm planner pages
+
+Accepted · 2026-11-17
+
+**Context.** Testers wanted the product to feel like a wedding, and the guest link to feel like a real invitation (a reference: a sealed, gold-on-royal-blue invite with a countdown and a scratch-to-reveal date). D7's neutral look read as generic.
+**Decision.** Guest invitations get a full festive treatment in four themes chosen per wedding, with our own SVG ornaments (marigold garland, diyas, mandala corners, lotus divider, a drawn couple) instead of photos or copied art. Planner pages stay light and usable but warm: ivory, maroon actions, marigold accents, Cormorant Garamond headings, a garland under the header, and a colour per function. Motion makes it feel alive but always ends: the invitation's doors swing open, names rise in, marigold petals fall once, diya flames flicker, the countdown ticks and the date pops when scratched; planner pages fade between routes (React `<ViewTransition>`), numbers count up and the header garland drops in. Still no emoji, cursor effects or looping particles, and everything rests under reduced motion.
+**Consequences.** Two more web fonts (Cormorant Garamond, Great Vibes). The invite stays usable without JavaScript. A couple photo would need image storage; revisit if planners ask.
