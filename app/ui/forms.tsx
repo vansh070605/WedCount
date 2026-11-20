@@ -288,6 +288,26 @@ function FunctionChoice({ events, invited }: { events: { id: string; name: strin
   );
 }
 
+// A short list of options as one row of tap targets instead of a dropdown: every choice is visible at once.
+function Choice({ name, label, value, options }: { name: string; label: string; value: string; options: string[] }) {
+  return (
+    <fieldset>
+      <legend className="text-sm font-medium text-ink">{label}</legend>
+      <div className="mt-1.5 flex rounded-lg border border-line bg-surface p-1">
+        {options.map((o) => (
+          <label
+            key={o}
+            className="flex h-9 min-w-0 flex-1 cursor-pointer items-center justify-center rounded-md px-1 text-[13px] text-muted capitalize transition-colors hover:text-ink has-checked:bg-brand has-checked:font-medium has-checked:text-white has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-brand"
+          >
+            <input type="radio" name={name} value={o} defaultChecked={o === value} required className="sr-only" />
+            {o}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 // Adds a guest, or edits one when `guest` is given.
 export function AddGuestForm({
   action,
@@ -313,20 +333,8 @@ export function AddGuestForm({
       <Field label="WhatsApp number">
         <input name="phone" type="tel" required placeholder="98765 43210" defaultValue={guest?.phone} className={input} />
       </Field>
-      <Field label="Side">
-        <select name="side" required defaultValue={guest?.side} className={input}>
-          <option value="bride">Bride</option>
-          <option value="groom">Groom</option>
-        </select>
-      </Field>
-      <Field label="Relation">
-        <select name="relation" defaultValue={guest?.relation} className={input}>
-          <option value="family">Family</option>
-          <option value="friend">Friend</option>
-          <option value="colleague">Colleague</option>
-          <option value="other">Other</option>
-        </select>
-      </Field>
+      <Choice name="side" label="Side" value={guest?.side ?? "bride"} options={["bride", "groom"]} />
+      <Choice name="relation" label="Relation" value={guest?.relation ?? "family"} options={["family", "friend", "colleague", "other"]} />
       <FunctionChoice events={events} invited={invited} />
       <div className="sm:col-span-2">
         <Status state={state} />
