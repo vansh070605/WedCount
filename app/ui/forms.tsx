@@ -498,3 +498,23 @@ export function DeleteButton({ action, confirmText, label }: { action: () => Pro
     </form>
   );
 }
+
+// The shared invite link's form: who you are, then on to your own invitation.
+export function JoinForm({ action }: { action: Action }) {
+  const [state, formAction, pending] = useActionState(action, {});
+  return (
+    <form action={formAction} className="grid gap-4">
+      <Field label="Your name">
+        <input name="name" required autoComplete="name" className={input} />
+      </Field>
+      <Field label="Your WhatsApp number">
+        <input name="phone" type="tel" required autoComplete="tel" placeholder="98765 43210" className={input} />
+      </Field>
+      <Choice name="side" label="You are a guest of the" value="bride" options={["bride", "groom"]} />
+      <Status state={state} />
+      <button disabled={pending} className={`${button} w-full`}>
+        {pending ? "Opening…" : "Open my invitation"}
+      </button>
+    </form>
+  );
+}

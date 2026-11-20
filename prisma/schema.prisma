@@ -50,6 +50,7 @@ model Wedding {
   brideParents String? // e.g. "Mr. Ramesh & Mrs. Sunita Sharma"
   groomParents String?
   blessing     String? // a line above the names, e.g. "With the blessings of our families"
+  joinCode     String? @unique // shared invite link /w/<code>; null = off
   createdAt   DateTime @default(now())
   events      Event[]
   guests      Guest[]
