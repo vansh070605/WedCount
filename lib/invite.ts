@@ -11,13 +11,25 @@ export function appUrl(): string {
 export const inviteLink = (token: string, base = appUrl()) => `${base}/r/${token}`;
 
 // The planner can rewrite the WhatsApp invite. Placeholders are filled per guest; {link} is required.
-export const PLACEHOLDERS = ["name", "wedding", "functions", "replyBy", "link"] as const;
+export const PLACEHOLDERS = ["name", "wedding", "functions", "schedule", "replyBy", "link"] as const;
 export const MAX_TEMPLATE = 1000;
+// WhatsApp formatting: *bold*, _italic_. {schedule} lists each function on its own lines.
 export const DEFAULT_INVITE_TEMPLATE =
-  "Namaste {name}! You're invited to {wedding}.\n\n" +
-  "Please tell us if you'll join us for {functions} and how many of you are coming, {replyBy}:\n{link}\n\n" +
-  "You can change your reply anytime before then.";
+  "Namaste {name}!\n\n" +
+  "With joy, we invite you to celebrate *{wedding}*.\n\n" +
+  "{schedule}\n\n" +
+  "Kindly reply {replyBy} so we can plan for you:\n{link}\n\n" +
+  "_You can change your reply anytime before then._";
 
+export type InviteEvent = { name: string; startsAt: Date; venue?: string | null };
+
+const when = (d: Date) =>
+  d.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+
+// *Haldi*
+// Thu, 10 Dec, 10:00 am · Family home
+export const schedule = (events: InviteEvent[]) =>
+  events.map((e) => `*${e.name}*\n${when(e.startsAt)}${e.venue ? ` · ${e.venue}` : ""}`).join("\n\n");
 
 // Empty when fine, otherwise what to fix.
 export function templateProblem(template: string): string | null {
@@ -32,17 +44,31 @@ export function inviteMessage(opts: {
   weddingName: string;
   link: string;
   deadline: Date | null;
-  functions?: string[]; // names of the functions this guest is invited to
+  functions?: InviteEvent[]; // the functions this guest is invited to
   template?: string | null;
 }) {
+  const fns = opts.functions ?? [];
   const values: Record<string, string> = {
     name: opts.guestName,
     wedding: opts.weddingName,
-    functions: opts.functions?.length ? `the ${listJoin(opts.functions)}` : "the wedding",
+    functions: fns.length ? `the ${listJoin(fns.map((e) => e.name))}` : "the wedding",
+    schedule: fns.length ? schedule(fns) : "",
     replyBy: opts.deadline ? `by ${deadlineText(opts.deadline)}` : "as soon as you can",
     link: opts.link,
   };
-  return (opts.template || DEFAULT_INVITE_TEMPLATE).replace(/\{(\w+)\}/g, (m, k: string) => values[k] ?? m);
+  const text = (opts.template || DEFAULT_INVITE_TEMPLATE).replace(/\{(\w+)\}/g, (m, k: string) => values[k] ?? m);
+  return text.replace(/\n{3,}/g, "\n\n"); // an empty {schedule} leaves no gap
+}
+
+// The message for the wedding's shared link, for chats and groups: the same schedule, one link for everyone.
+export function joinMessage(opts: { weddingName: string; city: string | null; link: string; events: InviteEvent[]; deadline: Date | null }) {
+  return [
+    `You're invited to celebrate *${opts.weddingName}*${opts.city ? ` in ${opts.city}` : ""}!`,
+    opts.events.length ? schedule(opts.events) : "",
+    `Open your invitation and reply${opts.deadline ? ` by ${deadlineText(opts.deadline)}` : ""}:\n${opts.link}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 export function reminderMessage(opts: {

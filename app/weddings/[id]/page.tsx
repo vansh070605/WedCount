@@ -13,7 +13,7 @@ import {
 } from "@/app/ui/forms";
 import { Badge, Card, PageHeader, SectionTitle, Stat, buttonClass } from "@/app/ui/kit";
 import { SectionTabs } from "@/app/ui/section-tabs";
-import { appUrl, inviteLink, inviteMessage, reminderMessage, whatsappUrl } from "@/lib/invite";
+import { appUrl, inviteLink, inviteMessage, joinMessage, reminderMessage, whatsappUrl } from "@/lib/invite";
 import { REMIND_EVERY_DAYS, ago, missingEvents, reminderStatus } from "@/lib/reminders";
 import { countHeadcount } from "@/lib/headcount";
 import { deadlineText, invitedEvents, isInvited, minPickDate } from "@/lib/rsvp";
@@ -78,7 +78,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
       weddingName: wedding.name,
       link: inviteLink(g.token, base),
       deadline: wedding.rsvpDeadline,
-      functions: invitedEvents(g, events).map((e) => e.name),
+      functions: invitedEvents(g, events),
       template: wedding.inviteTemplate,
     });
   // Everyone who said Coming, per function, by name. Older replies without names fall back to the guest's name.
@@ -502,7 +502,9 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
             <p className="rounded-lg bg-sunken px-3.5 py-2.5 font-mono text-sm break-all">{`${base}/w/${wedding.joinCode}`}</p>
             <div className="flex flex-wrap gap-2">
               <a
-                href={`https://wa.me/?text=${encodeURIComponent(`You're invited to ${wedding.name}! Open the invitation and reply here: ${base}/w/${wedding.joinCode}`)}`}
+                href={`https://wa.me/?text=${encodeURIComponent(
+                  joinMessage({ weddingName: wedding.name, city: wedding.city, link: `${base}/w/${wedding.joinCode}`, events, deadline: wedding.rsvpDeadline }),
+                )}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={buttonClass("whatsapp", "sm")}

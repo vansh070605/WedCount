@@ -2,12 +2,19 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { coupleNames, themeOf } from "@/lib/invitation";
+import { coupleNames, inviteMeta, themeOf } from "@/lib/invitation";
 import { joinWedding } from "@/app/actions";
 import { JoinForm } from "@/app/ui/forms";
 import { Diya, Divider, Garland } from "@/app/ui/ornaments";
 
-export const metadata: Metadata = { title: "You're invited", robots: { index: false } };
+export async function generateMetadata({ params }: PageProps<"/w/[code]">): Promise<Metadata> {
+  const { code } = await params;
+  const w = await prisma.wedding.findUnique({
+    where: { joinCode: code },
+    include: { events: { orderBy: { startsAt: "asc" }, select: { name: true, startsAt: true } } },
+  });
+  return { robots: { index: false }, ...(w ? inviteMeta(w, w.events) : { title: "You're invited" }) };
+}
 
 // The wedding's shared invite link: a guest says who they are, then gets their own invitation to reply on.
 export default function JoinPage(props: PageProps<"/w/[code]">) {

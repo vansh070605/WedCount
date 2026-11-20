@@ -1,12 +1,25 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { deadlineText, invitedEvents, isEventOpen } from "@/lib/rsvp";
-import { calendarUrl, coupleNames, functionTone, initials, mapsUrl, themeOf } from "@/lib/invitation";
+import { calendarUrl, coupleNames, functionTone, initials, inviteMeta, mapsUrl, themeOf } from "@/lib/invitation";
 import { saveRsvp } from "@/app/actions";
 import { RsvpForm, type EventAnswer } from "@/app/ui/rsvp-form";
 import { Countdown, ScratchCard } from "@/app/ui/invite-bits";
 import { CoupleArt, Diya, Divider, Garland, MandalaCorner } from "@/app/ui/ornaments";
+
+export async function generateMetadata({ params }: PageProps<"/r/[token]">): Promise<Metadata> {
+  const { token } = await params;
+  const g = await prisma.guest.findUnique({
+    where: { token },
+    select: {
+      invitations: { select: { eventId: true } },
+      wedding: { include: { events: { orderBy: { startsAt: "asc" }, select: { id: true, name: true, startsAt: true } } } },
+    },
+  });
+  return { robots: { index: false }, ...(g ? inviteMeta(g.wedding, invitedEvents(g, g.wedding.events)) : { title: "Invitation" }) };
+}
 
 export default function RsvpPage(props: PageProps<"/r/[token]">) {
   return (
