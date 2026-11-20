@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { minPickDate, pastProblem, closesAt, deadlineProblem, invitedEvents, isEventOpen, isRsvpOpen, istDate, parseNames, parseRsvpForm } from "./rsvp";
+import { arrivalAt, minPickDate, pastProblem, closesAt, deadlineProblem, invitedEvents, isEventOpen, isRsvpOpen, istDate, parseNames, parseRsvpForm } from "./rsvp";
 
 const events = [
   { id: "e1", name: "Sangeet", startsAt: new Date("2026-12-10T19:00:00+05:30") },
@@ -109,4 +109,12 @@ test("date pickers start today in India, or earlier when editing an older value"
   assert.equal(minPickDate(now), "2026-11-17");
   assert.equal(minPickDate(now, new Date("2025-02-14T19:00:00+05:30")), "2025-02-14");
   assert.equal(minPickDate(now, new Date("2026-12-10T19:00:00+05:30")), "2026-11-17");
+});
+
+test("arrival time lands on the day nearest the function", () => {
+  const sangeet = new Date("2026-12-10T21:00:00+05:30");
+  assert.deepEqual(arrivalAt(sangeet, "20:30"), new Date("2026-12-10T20:30:00+05:30"));
+  assert.deepEqual(arrivalAt(sangeet, "01:00"), new Date("2026-12-11T01:00:00+05:30"));
+  const haldi = new Date("2026-12-10T01:00:00+05:30");
+  assert.deepEqual(arrivalAt(haldi, "23:30"), new Date("2026-12-09T23:30:00+05:30"));
 });

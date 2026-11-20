@@ -11,7 +11,7 @@ import { LOGIN_FAILED, afterFailure, isLocked } from "@/lib/lockout";
 import { findOwnedEvent, findOwnedGuest } from "@/lib/owned";
 import { Prisma } from "@prisma/client";
 import { headers } from "next/headers";
-import { HOUR, SIGNUPS_PER_HOUR, clientIp, limitKey, nextWindow } from "@/lib/ratelimit";
+import { HOUR, SIGNUPS_PER_HOUR, clientIp, hit, limitKey } from "@/lib/ratelimit";
 import { RESET_SENT, hashToken, isUsable, newResetToken, resetEmail, resetExpiry } from "@/lib/reset";
 import { sendEmail } from "@/lib/mail";
 import { appUrl, templateProblem } from "@/lib/invite";
@@ -50,15 +50,8 @@ export async function signup(_: FormState, fd: FormData): Promise<FormState> {
 }
 
 // At most `limit` attempts of an action per client IP per hour (signups, reset emails), so one script can't flood them.
-// shortcut: read-then-write, so two requests in the same instant can both pass; use an atomic SQL update if abuse shows up.
 async function allow(action: string, limit: number) {
-  const key = limitKey(action, clientIp(await headers()));
-  const now = new Date();
-  const next = nextWindow(await prisma.rateLimit.findUnique({ where: { key } }), now, limit, HOUR);
-  if (!next.allowed) return false;
-  const data = { count: next.count, windowStart: next.windowStart };
-  await prisma.rateLimit.upsert({ where: { key }, create: { key, ...data }, update: data });
-  return true;
+  return hit(limitKey(action, clientIp(await headers())), limit, HOUR);
 }
 
 export async function login(_: FormState, fd: FormData): Promise<FormState> {
