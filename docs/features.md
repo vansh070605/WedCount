@@ -58,6 +58,7 @@ Sharma Uncle,98765 43210,bride,family
   Opening plays once: the doors swing apart, the names rise in, petals fall; diya flames flicker and sections ease in on scroll. No login, no app. Code: `app/r/[token]/page.tsx`, `app/ui/ornaments.tsx`, `app/ui/invite-bits.tsx`, `lib/invitation.ts`.
 - For each function: Coming, Maybe or Can't come; veg and non-veg counts (party size is their sum, up to 20); arrival time (taken on the day nearest the function, so 01:00 for a 21:00 Sangeet is that night); and the **names of everyone coming**, one per line. Coming needs exactly one name per person; Maybe may leave names out.
 - Saves in one transaction, so a guest never ends up with half their functions saved. Answers can change until the earlier of the wedding's deadline and **midnight IST at the start of the function's day**; after that the function shows "Replies closed". The deadline itself must be before the first function's day, and a function can't be added on or before the deadline day. Code: `closesAt`, `isEventOpen`, `deadlineProblem` in `lib/rsvp.ts`.
+- After **Save my reply**, a thank-you card opens over the page: a gold ring and tick draw in, marigold petals fall once, and it lists each function's answer and party size, with a line that fits the reply (coming, maybe, or can't come). **Done** closes it to change the reply. Rests under reduced motion. Code: `Thanks` in `app/ui/rsvp-form.tsx`.
 - Works before JavaScript loads (server action fallback). Code: `app/r/[token]/page.tsx`, `app/ui/rsvp-form.tsx`, `lib/rsvp.ts`.
 
 ## Headcount and export

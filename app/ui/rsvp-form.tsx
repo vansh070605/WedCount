@@ -32,6 +32,11 @@ export function RsvpForm({
   const open = events.some((e) => e.open);
   const [state, formAction, pending] = useActionState(action, {});
   const [status, setStatus] = useState(() => Object.fromEntries(events.map((e) => [e.id, e.status])));
+  // People per function as sent, for the thank-you card. Before JS loads the saved counts come back as props.
+  const [people, setPeople] = useState<Record<string, number>>({});
+  // The thank-you card shows for each successful save until the guest closes it.
+  const [closed, setClosed] = useState<FormState | null>(null);
+  const showThanks = !!state.message && closed !== state;
 
   return (
     <form
@@ -41,6 +46,7 @@ export function RsvpForm({
       onSubmit={(ev) => {
         ev.preventDefault();
         const fd = new FormData(ev.currentTarget);
+        setPeople(Object.fromEntries(events.map((e) => [e.id, Number(fd.get(`veg_${e.id}`) || 0) + Number(fd.get(`nonveg_${e.id}`) || 0)])));
         startTransition(() => formAction(fd));
       }}
       className="flex flex-col gap-5"
@@ -118,6 +124,16 @@ export function RsvpForm({
         {state.message && <p className="text-ok">{state.message}</p>}
       </div>
 
+      {showThanks && (
+        <Thanks
+          guestName={guestName}
+          answers={events
+            .filter((e) => status[e.id])
+            .map((e) => ({ name: e.name, status: status[e.id], people: people[e.id] ?? e.veg + e.nonVeg }))}
+          onClose={() => setClosed(state)}
+        />
+      )}
+
       {open && (
         <button
           disabled={pending}
@@ -127,5 +143,74 @@ export function RsvpForm({
         </button>
       )}
     </form>
+  );
+}
+
+// After a save: a celebratory card with what was sent. Petals fall once; under reduced motion it simply appears.
+const PETALS = [8, 18, 29, 41, 52, 63, 74, 86, 94, 35, 69, 13];
+function Thanks({
+  guestName,
+  answers,
+  onClose,
+}: {
+  guestName: string;
+  answers: { name: string; status: string; people: number }[];
+  onClose: () => void;
+}) {
+  const coming = answers.some((a) => a.status === "attending");
+  const maybe = answers.some((a) => a.status === "maybe");
+  const line = coming
+    ? "We can't wait to celebrate with you."
+    : maybe
+      ? "We hope you can make it. Update your reply once you know."
+      : "We'll miss you. Thank you for letting us know.";
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="thanks-title"
+      onKeyDown={(e) => e.key === "Escape" && onClose()}
+      className="thanks fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/45 p-5 backdrop-blur-sm"
+    >
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        {PETALS.map((left, i) => (
+          <svg
+            key={i}
+            viewBox="0 0 10 16"
+            className="petal absolute -top-6"
+            style={{ left: `${left}%`, width: 9 + (i % 4) * 2, "--d": `${(i * 170) % 900}ms`, "--dx": `${i % 2 ? -30 : 30}px`, "--spin": `${i % 2 ? -1 : 1}turn` } as React.CSSProperties}
+          >
+            <ellipse cx="5" cy="8" rx="4.2" ry="7.5" fill={i % 3 ? "#f6b52a" : "#ef8f12"} />
+          </svg>
+        ))}
+      </div>
+      <div className="thanks-card relative w-full max-w-sm rounded-3xl border border-[var(--inv-gold)]/60 bg-[var(--color-paper,#fffdf8)] px-6 pt-9 pb-6 text-center shadow-2xl">
+        <svg viewBox="0 0 64 64" aria-hidden className="mx-auto size-20 text-[var(--inv-gold)]">
+          <circle className="thanks-ring" cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="3" pathLength={1} />
+          <path className="thanks-tick" d="M20 33 28.5 41 45 24" fill="none" stroke="var(--inv-deep)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" pathLength={1} />
+        </svg>
+        <h2 id="thanks-title" className="thanks-in mt-4 font-[family-name:var(--font-script)] text-5xl text-[var(--inv-deep)]">
+          Thank you!
+        </h2>
+        <p className="thanks-in mt-2 text-sm text-muted" style={{ "--d": "120ms" } as React.CSSProperties}>
+          {guestName}, your reply is with the family. {line}
+        </p>
+        <ul className="thanks-in mt-5 divide-y divide-line rounded-2xl border border-line text-left text-sm" style={{ "--d": "240ms" } as React.CSSProperties}>
+          {answers.map((a) => (
+            <li key={a.name} className="flex items-center justify-between gap-3 px-4 py-2.5">
+              <span className="font-medium">{a.name}</span>
+              <span className={a.status === "attending" ? "font-semibold text-[var(--inv-deep)]" : "text-muted"}>
+                {LABELS[a.status]}
+                {a.status !== "declined" && a.people > 0 && ` · ${a.people} ${a.people === 1 ? "person" : "people"}`}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 text-xs text-muted">You can change your reply from this page until replies close.</p>
+        <button type="button" autoFocus onClick={onClose} className={buttonClass("primary", "lg", "mt-5 w-full")}>
+          Done
+        </button>
+      </div>
+    </div>
   );
 }
