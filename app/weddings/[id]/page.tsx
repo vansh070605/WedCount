@@ -114,11 +114,9 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
         }
         action={
           <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-            {events.length > 0 && guests.length > 0 && (
-              <Link href={`/weddings/${wedding.id}/invite`} className={buttonClass("primary", "md", "flex-1 sm:flex-none")}>
-                {notInvited ? `Send invites (${notInvited})` : "Send invites"}
-              </Link>
-            )}
+            <Link href={`/weddings/${wedding.id}/invite`} className={buttonClass("primary", "md", "flex-1 sm:flex-none")}>
+              {notInvited ? `Send invites (${notInvited})` : "Send invites"}
+            </Link>
             <Link href={`/weddings/${wedding.id}/settings`} className={buttonClass("secondary", "md", "flex-1 sm:flex-none")}>
               Settings
             </Link>

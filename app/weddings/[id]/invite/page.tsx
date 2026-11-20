@@ -121,6 +121,23 @@ async function Queue({
         </p>
       </section>
     );
+  } else if (events.length === 0 || guests.length === 0) {
+    body = (
+      <section className="rounded-card border border-line bg-surface p-6 text-center shadow-card">
+        <p className="text-lg font-semibold">Nothing to send yet.</p>
+        <p className="mt-1 text-sm text-muted">
+          Invites list each guest&apos;s functions, so add {events.length === 0 ? "a function" : ""}
+          {events.length === 0 && guests.length === 0 ? " and " : ""}
+          {guests.length === 0 ? "your guests" : ""} first.
+        </p>
+        <Link
+          href={`/weddings/${id}#${events.length === 0 ? "functions" : "add"}`}
+          className={buttonClass("primary", "md", "mt-5")}
+        >
+          {events.length === 0 ? "Add a function" : "Add guests"}
+        </Link>
+      </section>
+    );
   } else {
     body = (
       <section className="rounded-card border border-line bg-surface p-6 text-center shadow-card">
