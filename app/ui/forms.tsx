@@ -213,7 +213,7 @@ export function InviteTemplateForm({
   );
 }
 
-type WeddingDefaults = { name: string; city: string | null; rsvpDeadline: string };
+type WeddingDefaults = { name: string; city: string | null; rsvpDeadline: string; rsvpDeadlineTime?: string };
 
 // Creates a wedding, or edits one when `wedding` is given.
 export function CreateWeddingForm({ action, wedding, minDate }: { action: Action; wedding?: WeddingDefaults; minDate?: string }) {
@@ -222,7 +222,7 @@ export function CreateWeddingForm({ action, wedding, minDate }: { action: Action
     <form
       action={formAction}
       onSubmit={wedding ? keepValues(formAction) : undefined}
-      className="grid gap-4 sm:grid-cols-3 sm:items-end"
+      className="grid gap-4 sm:grid-cols-2 sm:items-end"
     >
       <Field label="Wedding name">
         <input name="name" required maxLength={120} placeholder="Priya & Rohit" defaultValue={wedding?.name} className={input} />
@@ -230,10 +230,20 @@ export function CreateWeddingForm({ action, wedding, minDate }: { action: Action
       <Field label="City">
         <input name="city" maxLength={80} placeholder="Jaipur" defaultValue={wedding?.city ?? ""} className={input} />
       </Field>
-      <Field label="RSVP deadline">
-        <input name="rsvpDeadline" type="date" min={minDate} defaultValue={wedding?.rsvpDeadline} className={input} />
-      </Field>
-      <div className="sm:col-span-3">
+      <fieldset className="sm:col-span-2 sm:max-w-md">
+        <legend className="mb-1.5 text-sm font-medium text-ink">RSVP deadline</legend>
+        <div className="grid grid-cols-[minmax(0,1fr)_7.5rem] gap-2">
+          <input name="rsvpDeadline" type="date" min={minDate} defaultValue={wedding?.rsvpDeadline} aria-label="RSVP deadline date" className={input} />
+          <input
+            name="rsvpDeadlineTime"
+            type="time"
+            defaultValue={wedding?.rsvpDeadlineTime ?? "23:59"}
+            aria-label="RSVP deadline time (IST)"
+            className={input}
+          />
+        </div>
+      </fieldset>
+      <div className="sm:col-span-2">
         <Status state={state} />
         <button disabled={pending} className={`${button} mt-3 w-full sm:w-auto`}>
           {wedding ? (pending ? "Saving…" : "Save changes") : pending ? "Creating…" : "Create wedding"}
@@ -392,7 +402,7 @@ export function CopyLinkButton({ link, guestName }: { link: string; guestName: s
   );
 }
 
-type EventDefaults = { name: string; date: string; time: string; venue: string | null };
+type EventDefaults = { name: string; date: string; time: string; venue: string | null; mapUrl?: string | null };
 
 // Adds a function, or edits one when `event` is given (date as YYYY-MM-DD and time as HH:MM, both IST).
 export function AddEventForm({ action, event, minDate }: { action: Action; event?: EventDefaults; minDate?: string }) {
@@ -420,6 +430,18 @@ export function AddEventForm({ action, event, minDate }: { action: Action; event
       <Field label="Venue">
         <input name="venue" placeholder="Rambagh Lawns" defaultValue={event?.venue ?? undefined} className={input} />
       </Field>
+      <div className="sm:col-span-4">
+        <Field label="Google Maps link (optional)">
+          <input
+            name="mapUrl"
+            type="url"
+            inputMode="url"
+            placeholder="https://maps.app.goo.gl/… (Share → Copy link in Google Maps)"
+            defaultValue={event?.mapUrl ?? undefined}
+            className={input}
+          />
+        </Field>
+      </div>
       <div className="sm:col-span-4">
         <Status state={state} />
         <button disabled={pending} className={`${button} mt-3 w-full sm:w-auto`}>

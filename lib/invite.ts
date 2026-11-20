@@ -1,3 +1,5 @@
+import { deadlineText } from "./rsvp";
+
 // Public base URL of the app, used in links sent to guests.
 export function appUrl(): string {
   const url = process.env.APP_URL;
@@ -16,7 +18,6 @@ export const DEFAULT_INVITE_TEMPLATE =
   "Please tell us if you'll join us for {functions} and how many of you are coming, {replyBy}:\n{link}\n\n" +
   "You can change your reply anytime before then.";
 
-const day = (d: Date) => d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "long" });
 
 // Empty when fine, otherwise what to fix.
 export function templateProblem(template: string): string | null {
@@ -38,7 +39,7 @@ export function inviteMessage(opts: {
     name: opts.guestName,
     wedding: opts.weddingName,
     functions: opts.functions?.length ? `the ${listJoin(opts.functions)}` : "the wedding",
-    replyBy: opts.deadline ? `by ${day(opts.deadline)}` : "as soon as you can",
+    replyBy: opts.deadline ? `by ${deadlineText(opts.deadline)}` : "as soon as you can",
     link: opts.link,
   };
   return (opts.template || DEFAULT_INVITE_TEMPLATE).replace(/\{(\w+)\}/g, (m, k: string) => values[k] ?? m);
@@ -51,7 +52,7 @@ export function reminderMessage(opts: {
   deadline: Date | null;
   missing: string[]; // function names the guest hasn't answered
 }) {
-  const by = opts.deadline ? ` by ${day(opts.deadline)}` : "";
+  const by = opts.deadline ? ` by ${deadlineText(opts.deadline)}` : "";
   const what = opts.missing.length ? ` for ${listJoin(opts.missing)}` : "";
   return (
     `Namaste ${opts.guestName}, a gentle reminder for ${opts.weddingName}. ` +

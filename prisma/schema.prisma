@@ -66,6 +66,7 @@ model Event {
   name      String
   startsAt  DateTime
   venue     String?
+  mapUrl    String? // Google Maps link the planner pasted; otherwise the venue is searched
   // People who actually came, entered by the planner afterwards. Calibrates future predictions.
   actualCount Int?
   rsvps     Rsvp[]

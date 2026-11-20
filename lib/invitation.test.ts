@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { coupleNames, functionTone, initials, mapsUrl, themeOf } from "./invitation";
+import { calendarUrl, coupleNames, functionTone, initials, mapsUrl, parseMapLink, themeOf } from "./invitation";
 
 test("themeOf falls back to royal for unknown values", () => {
   assert.equal(themeOf("sindoor"), "sindoor");
@@ -29,4 +29,19 @@ test("initials for the seal", () => {
 
 test("mapsUrl searches venue and city", () => {
   assert.equal(mapsUrl("Rambagh Lawns", "Jaipur"), "https://www.google.com/maps/search/?api=1&query=Rambagh%20Lawns%2C%20Jaipur");
+});
+
+test("parseMapLink takes Google Maps links only", () => {
+  assert.deepEqual(parseMapLink(" https://maps.app.goo.gl/AbC123 "), { url: "https://maps.app.goo.gl/AbC123" });
+  assert.ok("url" in parseMapLink("https://www.google.com/maps/place/Radisson+Blu/@12.9,80.2,17z"));
+  assert.ok("url" in parseMapLink("https://goo.gl/maps/xyz"));
+  for (const bad of ["maps.app.goo.gl/x", "http://maps.app.goo.gl/x", "https://evil.com/maps", "https://www.google.com/search?q=x", "https://maps.app.goo.gl.evil.com/x", "javascript:alert(1)"])
+    assert.ok("error" in parseMapLink(bad), bad);
+});
+
+test("calendarUrl builds a 3-hour Google Calendar event in UTC", () => {
+  const url = new URL(calendarUrl({ name: "Haldi", startsAt: new Date("2026-11-22T18:00:00+05:30"), venue: "Radisson Blu" }, "A & B"));
+  assert.equal(url.searchParams.get("dates"), "20261122T123000Z/20261122T153000Z");
+  assert.equal(url.searchParams.get("location"), "Radisson Blu");
+  assert.equal(url.searchParams.get("text"), "Haldi · A & B");
 });

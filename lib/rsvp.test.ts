@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { arrivalAt, minPickDate, pastProblem, closesAt, deadlineProblem, invitedEvents, isEventOpen, isRsvpOpen, istDate, parseNames, parseRsvpForm } from "./rsvp";
+import { arrivalAt, deadlineText, minPickDate, pastProblem, closesAt, deadlineProblem, invitedEvents, isEventOpen, isRsvpOpen, istDate, parseNames, parseRsvpForm } from "./rsvp";
 
 const events = [
   { id: "e1", name: "Sangeet", startsAt: new Date("2026-12-10T19:00:00+05:30") },
@@ -117,4 +117,9 @@ test("arrival time lands on the day nearest the function", () => {
   assert.deepEqual(arrivalAt(sangeet, "01:00"), new Date("2026-12-11T01:00:00+05:30"));
   const haldi = new Date("2026-12-10T01:00:00+05:30");
   assert.deepEqual(arrivalAt(haldi, "23:30"), new Date("2026-12-09T23:30:00+05:30"));
+});
+
+test("deadlineText shows a time only when the planner set one", () => {
+  assert.equal(deadlineText(new Date("2026-11-18T23:59:59+05:30")), "18 November");
+  assert.match(deadlineText(new Date("2026-11-18T18:00:00+05:30")), /^18 November, 6:00\s?pm$/i);
 });
