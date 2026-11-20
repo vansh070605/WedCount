@@ -2,8 +2,8 @@
 
 import { startTransition, useActionState, useState } from "react";
 import type { FormState } from "@/app/actions";
-import { buttonClass, inputClass } from "@/app/ui/kit";
-import { DEFAULT_INVITE_TEMPLATE, PLACEHOLDERS, inviteMessage } from "@/lib/invite";
+import { WhatsAppBubble, buttonClass, inputClass } from "@/app/ui/kit";
+import { DEFAULT_INVITE_TEMPLATE, PLACEHOLDERS, inviteMessage, type InviteEvent } from "@/lib/invite";
 import { THEMES } from "@/lib/invitation";
 
 type Action = (state: FormState, fd: FormData) => Promise<FormState>;
@@ -174,7 +174,7 @@ export function InviteTemplateForm({
 }: {
   action: Action;
   current: string | null;
-  sample: { guestName: string; weddingName: string; functions: string[]; deadline: Date | null };
+  sample: { guestName: string; weddingName: string; functions: InviteEvent[]; deadline: Date | null };
 }) {
   const [state, formAction, pending] = useActionState(action, {});
   const [text, setText] = useState(current ?? DEFAULT_INVITE_TEMPLATE);
@@ -207,7 +207,7 @@ export function InviteTemplateForm({
       </div>
       <div>
         <p className="text-sm font-medium text-ink">Preview for {sample.guestName}</p>
-        <div className="mt-1.5 rounded-xl bg-[#e7f6dc] p-4 text-sm leading-relaxed whitespace-pre-wrap text-[#1f2a1a]">{preview}</div>
+        <WhatsAppBubble text={preview} className="mt-1.5" />
       </div>
     </form>
   );

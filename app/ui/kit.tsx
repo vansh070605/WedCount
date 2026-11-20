@@ -144,3 +144,20 @@ export function Badge({ tone = "muted", children }: { tone?: "muted" | "ok" | "g
   }[tone];
   return <span className={cx("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", t)}>{children}</span>;
 }
+
+// A message as WhatsApp shows it: *bold* and _italic_ inside a green bubble.
+export function WhatsAppBubble({ text, className }: { text: string; className?: string }) {
+  return (
+    <div className={cx("rounded-xl bg-[#e7f6dc] p-4 text-sm leading-relaxed whitespace-pre-wrap text-[#1f2a1a]", className)}>
+      {text.split(/(\*[^*\n]+\*|_[^_\n]+_)/g).map((part, i) =>
+        /^\*.+\*$/.test(part) ? (
+          <strong key={i}>{part.slice(1, -1)}</strong>
+        ) : /^_.+_$/.test(part) ? (
+          <em key={i}>{part.slice(1, -1)}</em>
+        ) : (
+          part
+        ),
+      )}
+    </div>
+  );
+}

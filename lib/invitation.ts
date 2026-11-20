@@ -67,4 +67,24 @@ export function calendarUrl(e: { name: string; startsAt: Date; venue?: string | 
   return `https://calendar.google.com/calendar/render?${q}`;
 }
 
+// "10–11 December 2026", "28 November – 2 December 2026", or one date. Events are in date order.
+export function dateSpan(events: { startsAt: Date }[]) {
+  if (!events.length) return "";
+  const part = (d: Date, o: Intl.DateTimeFormatOptions) => d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", ...o });
+  const [a, b] = [events[0].startsAt, events.at(-1)!.startsAt];
+  const full = (d: Date) => part(d, { day: "numeric", month: "long", year: "numeric" });
+  if (full(a) === full(b)) return full(a);
+  if (part(a, { month: "long", year: "numeric" }) === part(b, { month: "long", year: "numeric" }))
+    return `${part(a, { day: "numeric" })}–${full(b)}`;
+  return `${part(a, { day: "numeric", month: "long" })} – ${full(b)}`;
+}
+
+// Title and description for a shared invite link's preview (the image comes from opengraph-image.tsx).
+export function inviteMeta(w: { name: string; city: string | null; brideName?: string | null; groomName?: string | null }, events: { name: string; startsAt: Date }[]) {
+  const c = coupleNames(w);
+  const title = `You're invited · ${c ? `${c[0]} & ${c[1]}` : w.name}`;
+  const description = [events.map((e) => e.name).join(", "), dateSpan(events), w.city].filter(Boolean).join(" · ");
+  return { title, description, openGraph: { title, description }, twitter: { card: "summary_large_image" as const, title, description } };
+}
+
 export const MAX_FAMILY = 120;

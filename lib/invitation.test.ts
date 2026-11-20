@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { calendarUrl, coupleNames, functionTone, initials, mapsUrl, parseMapLink, themeOf } from "./invitation";
+import { calendarUrl, coupleNames, dateSpan, functionTone, initials, mapsUrl, parseMapLink, themeOf } from "./invitation";
 
 test("themeOf falls back to royal for unknown values", () => {
   assert.equal(themeOf("sindoor"), "sindoor");
@@ -44,4 +44,12 @@ test("calendarUrl builds a 3-hour Google Calendar event in UTC", () => {
   assert.equal(url.searchParams.get("dates"), "20261122T123000Z/20261122T153000Z");
   assert.equal(url.searchParams.get("location"), "Radisson Blu");
   assert.equal(url.searchParams.get("text"), "Haldi · A & B");
+});
+
+test("dateSpan reads like an invitation", () => {
+  const at = (iso: string) => ({ startsAt: new Date(iso) });
+  assert.equal(dateSpan([]), "");
+  assert.equal(dateSpan([at("2026-12-10T10:00:00+05:30"), at("2026-12-10T19:00:00+05:30")]), "10 December 2026");
+  assert.equal(dateSpan([at("2026-12-10T10:00:00+05:30"), at("2026-12-11T20:00:00+05:30")]), "10–11 December 2026");
+  assert.equal(dateSpan([at("2026-11-28T10:00:00+05:30"), at("2026-12-02T20:00:00+05:30")]), "28 November – 2 December 2026");
 });

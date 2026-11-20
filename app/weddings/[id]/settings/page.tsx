@@ -24,7 +24,7 @@ async function Settings({ params }: { params: Promise<{ id: string }> }) {
     where: { id },
     select: {
       _count: { select: { events: true, guests: true } },
-      events: { orderBy: { startsAt: "asc" }, select: { name: true } },
+      events: { orderBy: { startsAt: "asc" }, select: { name: true, startsAt: true, venue: true } },
       guests: { orderBy: { name: "asc" }, take: 1, select: { name: true, token: true } },
     },
   });
@@ -81,7 +81,7 @@ async function Settings({ params }: { params: Promise<{ id: string }> }) {
       <section className="rounded-card border border-line bg-surface p-5 shadow-card sm:p-6">
         <h2 className="mb-1 font-display text-2xl font-semibold">WhatsApp invite message</h2>
         <p className="mb-5 text-sm text-muted">
-          What guests receive when you tap Send. Each guest&apos;s message lists only the functions they&apos;re invited to.
+          What guests receive when you tap Send. Each guest&apos;s message lists only the functions they&apos;re invited to. Use *stars* for bold and _underscores_ for italics, as in WhatsApp.
         </p>
         <InviteTemplateForm
           action={saveInviteTemplate.bind(null, id)}
@@ -89,7 +89,7 @@ async function Settings({ params }: { params: Promise<{ id: string }> }) {
           sample={{
             guestName: counts.guests[0]?.name ?? "Sharma Uncle",
             weddingName: wedding.name,
-            functions: counts.events.map((e) => e.name),
+            functions: counts.events,
             deadline: wedding.rsvpDeadline,
           }}
         />

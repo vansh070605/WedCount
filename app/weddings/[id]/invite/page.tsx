@@ -8,7 +8,7 @@ import { invitedEvents } from "@/lib/rsvp";
 import { missingEvents, reminderStatus } from "@/lib/reminders";
 import { markSent } from "@/app/actions";
 import { WhatsAppSendButton } from "@/app/ui/forms";
-import { Badge, BackLink, buttonClass } from "@/app/ui/kit";
+import { Badge, BackLink, WhatsAppBubble, buttonClass } from "@/app/ui/kit";
 
 export const metadata: Metadata = { title: "Send invites · WedCount" };
 
@@ -73,7 +73,7 @@ async function Queue({
             weddingName: wedding.name,
             link,
             deadline: wedding.rsvpDeadline,
-            functions: fns.map((e) => e.name),
+            functions: fns,
             template: wedding.inviteTemplate,
           })
         : reminderMessage({
@@ -103,7 +103,7 @@ async function Queue({
             </Badge>
           ))}
         </div>
-        <div className="mt-5 rounded-xl bg-[#e7f6dc] p-4 text-sm leading-relaxed whitespace-pre-wrap text-[#1f2a1a]">{text}</div>
+        <WhatsAppBubble text={text} className="mt-5" />
         <div className="mt-5 grid gap-2 sm:grid-cols-2">
           <WhatsAppSendButton
             href={whatsappUrl(guest.phone, text)}
