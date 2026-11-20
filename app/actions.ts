@@ -14,6 +14,7 @@ import { headers } from "next/headers";
 import { HOUR, SIGNUPS_PER_HOUR, clientIp, hit, limitKey } from "@/lib/ratelimit";
 import { RESET_SENT, hashToken, isUsable, newResetToken, resetEmail, resetExpiry } from "@/lib/reset";
 import { sendEmail } from "@/lib/mail";
+import { checkIn, doorOpen } from "@/lib/checkin";
 import { appUrl, templateProblem } from "@/lib/invite";
 import { MAX_FAMILY, THEMES } from "@/lib/invitation";
 
@@ -479,4 +480,13 @@ export async function recordActual(eventId: string, _: FormState, fd: FormData):
   await prisma.event.update({ where: { id: eventId }, data: { actualCount: Number(raw) } });
   revalidatePath(`/weddings/${event.weddingId}`);
   return { message: "Saved." };
+}
+
+// Door list: one tap per person arriving. Both ids are checked against the planner and must be the same wedding.
+export async function checkInGuest(eventId: string, guestId: string, step: number) {
+  const planner = await requirePlanner();
+  const [event, guest] = await Promise.all([findOwnedEvent(planner.id, eventId), findOwnedGuest(planner.id, guestId)]);
+  if (!event || !guest || event.weddingId !== guest.weddingId || !doorOpen(event)) return;
+  await checkIn(eventId, guestId, step < 0 ? -1 : 1); // bound arguments come from the client, so clamp
+  revalidatePath(`/weddings/${event.weddingId}`, "layout");
 }

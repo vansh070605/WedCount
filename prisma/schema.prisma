@@ -69,6 +69,7 @@ model Event {
   actualCount Int?
   rsvps     Rsvp[]
   invitations Invitation[]
+  arrivals    Arrival[]
 
   @@index([weddingId])
 }
@@ -92,6 +93,7 @@ model Guest {
   rsvps     Rsvp[]
   // Functions this guest is invited to. No rows = every function of the wedding (the common case).
   invitations Invitation[]
+  arrivals    Arrival[]
 
   @@unique([weddingId, phone])
   @@index([weddingId])
@@ -142,6 +144,19 @@ model Invitation {
   guest   Guest  @relation(fields: [guestId], references: [id], onDelete: Cascade)
   eventId String
   event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([guestId, eventId])
+  @@index([eventId])
+}
+
+// People from one guest's party checked in at the door of one function. Their sum is the function's actualCount.
+model Arrival {
+  guestId String
+  guest   Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  eventId String
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  people  Int
+  at      DateTime @updatedAt
 
   @@id([guestId, eventId])
   @@index([eventId])
