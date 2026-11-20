@@ -14,6 +14,13 @@ export type RsvpInput = {
 };
 
 // Calendar date of an instant in India, as YYYY-MM-DD.
+// "18 November" for an end-of-day deadline, "18 November, 6:00 pm" when the planner set a time.
+export function deadlineText(d: Date) {
+  const day = d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "long" });
+  const hm = d.toLocaleTimeString("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  return hm === "23:59" ? day : `${day}, ${d.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit" })}`;
+}
+
 export const istDate = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 
 // Earliest date a planner may pick (date inputs' min). An edit keeps an existing earlier date allowed.

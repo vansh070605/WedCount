@@ -40,4 +40,31 @@ export function initials(w: { name: string; brideName?: string | null; groomName
 export const mapsUrl = (venue: string, city?: string | null) =>
   `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([venue, city].filter(Boolean).join(", "))}`;
 
+// A pasted Google Maps link, or an error. Only Google Maps hosts, so a guest's "Directions" button can't be
+// pointed at an arbitrary site.
+const MAP_HOSTS = ["maps.app.goo.gl", "goo.gl", "maps.google.com", "google.com", "www.google.com", "www.google.co.in", "google.co.in"];
+export function parseMapLink(raw: string): { url: string } | { error: string } {
+  let u: URL;
+  try {
+    u = new URL(raw.trim());
+  } catch {
+    return { error: "Paste the full Google Maps link, starting with https://" };
+  }
+  const ok =
+    u.protocol === "https:" &&
+    MAP_HOSTS.includes(u.hostname) &&
+    (u.hostname.startsWith("maps.") || u.pathname.startsWith("/maps"));
+  if (!ok || raw.length > 500) return { error: "Use a Google Maps link (Share → Copy link in Google Maps)." };
+  return { url: u.toString() };
+}
+
+// "Add to Google Calendar" for one function; assumes it lasts 3 hours.
+export function calendarUrl(e: { name: string; startsAt: Date; venue?: string | null }, wedding: string) {
+  const fmt = (d: Date) => d.toISOString().replace(/[-:]|\.\d{3}/g, "");
+  const end = new Date(e.startsAt.getTime() + 3 * 60 * 60 * 1000);
+  const q = new URLSearchParams({ action: "TEMPLATE", text: `${e.name} · ${wedding}`, dates: `${fmt(e.startsAt)}/${fmt(end)}` });
+  if (e.venue) q.set("location", e.venue);
+  return `https://calendar.google.com/calendar/render?${q}`;
+}
+
 export const MAX_FAMILY = 120;

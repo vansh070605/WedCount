@@ -82,7 +82,7 @@ export function ScratchCard({ children }: { children: React.ReactNode }) {
       ctx.arc(e.clientX - r.left, e.clientY - r.top, 22, 0, Math.PI * 2);
       ctx.fill();
       // Check how much is cleared every few strokes, sampling a grid instead of every pixel.
-      if (++strokes % 8) return;
+      if (++strokes % 4) return;
       const data = ctx.getImageData(0, 0, c.width, c.height).data;
       let clear = 0;
       let total = 0;
@@ -90,14 +90,18 @@ export function ScratchCard({ children }: { children: React.ReactNode }) {
         total++;
         if (data[i] === 0) clear++;
       }
-      if (clear / total > 0.5) setDone(true);
+      if (clear / total > 0.2) setDone(true);
     };
     const start = (e: PointerEvent) => {
       down = true;
       c.setPointerCapture(e.pointerId);
       scratch(e);
     };
-    const stop = () => (down = false);
+    // A little scratching is enough: lifting the finger after a few strokes reveals the whole card.
+    const stop = () => {
+      down = false;
+      if (strokes >= 6) setDone(true);
+    };
     c.addEventListener("pointerdown", start);
     c.addEventListener("pointermove", scratch);
     c.addEventListener("pointerup", stop);
@@ -121,7 +125,7 @@ export function ScratchCard({ children }: { children: React.ReactNode }) {
             type="button"
             data-cover
             onClick={() => setDone(true)}
-            className="absolute right-2 bottom-2 rounded-md bg-white/80 px-2 py-1 text-xs font-medium text-[#6b4a12] backdrop-blur"
+            className="sr-only absolute right-2 bottom-2 rounded-md bg-white/80 px-2 py-1 text-xs font-medium text-[#6b4a12] backdrop-blur focus:not-sr-only"
           >
             Reveal
           </button>

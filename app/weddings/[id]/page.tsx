@@ -16,7 +16,7 @@ import { SectionTabs } from "@/app/ui/section-tabs";
 import { appUrl, inviteLink, inviteMessage, reminderMessage, whatsappUrl } from "@/lib/invite";
 import { REMIND_EVERY_DAYS, ago, missingEvents, reminderStatus } from "@/lib/reminders";
 import { countHeadcount } from "@/lib/headcount";
-import { invitedEvents, isInvited, minPickDate } from "@/lib/rsvp";
+import { deadlineText, invitedEvents, isInvited, minPickDate } from "@/lib/rsvp";
 import { functionTone } from "@/lib/invitation";
 import { errorPct, predictEvent } from "@/lib/predict";
 import { plannerCalibration } from "@/lib/calibrate";
@@ -109,7 +109,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
         sub={
           <>
             {guests.length} invites · {events.length} functions
-            {wedding.rsvpDeadline && ` · RSVP by ${ist(wedding.rsvpDeadline, { dateStyle: "medium" })}`}
+            {wedding.rsvpDeadline && ` · RSVP by ${deadlineText(wedding.rsvpDeadline)}`}
           </>
         }
         action={

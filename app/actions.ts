@@ -16,7 +16,7 @@ import { RESET_SENT, hashToken, isUsable, newResetToken, resetEmail, resetExpiry
 import { sendEmail } from "@/lib/mail";
 import { checkIn, doorOpen } from "@/lib/checkin";
 import { appUrl, templateProblem } from "@/lib/invite";
-import { MAX_FAMILY, THEMES } from "@/lib/invitation";
+import { MAX_FAMILY, THEMES, parseMapLink } from "@/lib/invitation";
 
 // Two requests inserting the same unique value at once: the database rejects the second with P2002.
 const isDuplicate = (e: unknown) => e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
@@ -127,7 +127,7 @@ export async function logout() {
   redirect("/login");
 }
 
-// Shared by create and edit. Deadline is a date in IST; store end of that day. Checked because a raw POST can send anything.
+// Shared by create and edit. Deadline is a date and optional time in IST. Checked because a raw POST can send anything.
 function parseWeddingForm(fd: FormData) {
   const name = text(fd, "name");
   const city = text(fd, "city") || null;
@@ -135,8 +135,10 @@ function parseWeddingForm(fd: FormData) {
   if (!name) return "Wedding name is required.";
   if (name.length > 120) return "Wedding name is too long.";
   if (city && city.length > 80) return "City is too long.";
-  const rsvpDeadline = deadline ? new Date(`${deadline}T23:59:59+05:30`) : null;
-  if (deadline && (!/^\d{4}-\d{2}-\d{2}$/.test(deadline) || isNaN(rsvpDeadline!.getTime())))
+  // Time is optional; without one the deadline is the end of that day.
+  const time = text(fd, "rsvpDeadlineTime") || "23:59";
+  const rsvpDeadline = deadline ? new Date(`${deadline}T${time}:${time === "23:59" ? "59" : "00"}+05:30`) : null;
+  if (deadline && (!/^\d{4}-\d{2}-\d{2}$/.test(deadline) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time) || isNaN(rsvpDeadline!.getTime())))
     return "Enter a valid RSVP deadline.";
   return { name, city, rsvpDeadline };
 }
@@ -363,7 +365,10 @@ function parseEventForm(fd: FormData) {
   const startsAt = new Date(`${date}T${time}:00+05:30`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time) || isNaN(startsAt.getTime()))
     return "Enter a valid date and time.";
-  return { name, startsAt, venue };
+  const rawMap = text(fd, "mapUrl");
+  const map = rawMap ? parseMapLink(rawMap) : { url: null };
+  if ("error" in map) return map.error;
+  return { name, startsAt, venue, mapUrl: map.url };
 }
 
 export async function addEvent(weddingId: string, _: FormState, fd: FormData): Promise<FormState> {

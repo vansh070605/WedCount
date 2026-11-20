@@ -15,7 +15,10 @@ test("inviteMessage includes the link and the deadline as an IST date", () => {
     deadline: new Date("2026-11-30T20:00:00Z"),
   });
   assert.match(text, /^Namaste Sharma Uncle!/);
-  assert.match(text, /by 1 December:\nhttps:\/\/wedcount\.app\/r\/abc\n/);
+  assert.match(text, /by 1 December, 1:30\s?am:\nhttps:\/\/wedcount\.app\/r\/abc\n/i);
+  // The usual end-of-day deadline shows only the date.
+  const eod = inviteMessage({ guestName: "A", weddingName: "B", link: "L", deadline: new Date("2026-12-01T23:59:59+05:30") });
+  assert.match(eod, /by 1 December:\nL/);
   assert.match(inviteMessage({ guestName: "A", weddingName: "B", link: "L", deadline: null }), /as soon as you can/);
 });
 

@@ -55,7 +55,7 @@ async function EditEvent({ params }: { params: Promise<{ id: string; eventId: st
         <AddEventForm
           action={updateEvent.bind(null, event.id)}
           minDate={minPickDate(new Date(), event.startsAt)}
-          event={{ name: event.name, date: istDate(event.startsAt), time, venue: event.venue }}
+          event={{ name: event.name, date: istDate(event.startsAt), time, venue: event.venue, mapUrl: event.mapUrl }}
         />
       </section>
 

@@ -46,6 +46,9 @@ async function Settings({ params }: { params: Promise<{ id: string }> }) {
             name: wedding.name,
             city: wedding.city,
             rsvpDeadline: wedding.rsvpDeadline ? istDate(wedding.rsvpDeadline) : "",
+            rsvpDeadlineTime: wedding.rsvpDeadline
+              ? wedding.rsvpDeadline.toLocaleTimeString("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+              : undefined,
           }}
         />
       </section>

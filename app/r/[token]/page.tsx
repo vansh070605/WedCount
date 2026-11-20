@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { invitedEvents, isEventOpen } from "@/lib/rsvp";
-import { coupleNames, functionTone, initials, mapsUrl, themeOf } from "@/lib/invitation";
+import { deadlineText, invitedEvents, isEventOpen } from "@/lib/rsvp";
+import { calendarUrl, coupleNames, functionTone, initials, mapsUrl, themeOf } from "@/lib/invitation";
 import { saveRsvp } from "@/app/actions";
 import { RsvpForm, type EventAnswer } from "@/app/ui/rsvp-form";
 import { Countdown, ScratchCard } from "@/app/ui/invite-bits";
@@ -219,38 +219,67 @@ async function Invitation({ params }: { params: Promise<{ token: string }> }) {
                 {mine.map((e) => {
                   const tone = functionTone(e.name) ?? "var(--brand)";
                   return (
-                    <li key={e.id} className="reveal lift overflow-hidden rounded-2xl border border-[var(--inv-gold)]/40 bg-white shadow-sm">
+                    <li
+                      key={e.id}
+                      className="reveal lift relative overflow-hidden rounded-2xl border border-[var(--inv-gold)]/50 bg-white shadow-sm"
+                    >
                       <div className="h-1.5" style={{ background: tone }} />
+                      <MandalaCorner className="pointer-events-none absolute top-1.5 right-0 size-24 -scale-x-100 opacity-[0.07]" />
                       <div className="flex items-start gap-4 p-5">
-                        <div className="flex w-14 shrink-0 flex-col items-center rounded-xl py-2 text-white" style={{ background: tone }}>
-                          <span className="text-[10px] font-semibold tracking-wider uppercase">{ist(e.startsAt, { month: "short" })}</span>
-                          <span className="text-2xl leading-none font-semibold">{ist(e.startsAt, { day: "numeric" })}</span>
+                        <div
+                          className="flex w-16 shrink-0 flex-col items-center rounded-xl py-2 text-white shadow-sm"
+                          style={{ background: tone }}
+                        >
+                          <span className="text-[10px] font-semibold tracking-wider uppercase opacity-90">{ist(e.startsAt, { weekday: "short" })}</span>
+                          <span className="text-3xl leading-none font-semibold">{ist(e.startsAt, { day: "numeric" })}</span>
+                          <span className="text-[10px] font-semibold tracking-wider uppercase opacity-90">{ist(e.startsAt, { month: "short" })}</span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-display text-2xl font-semibold" style={{ color: tone }}>
+                          <p className="font-display text-2xl leading-tight font-semibold" style={{ color: tone }}>
                             {e.name}
                           </p>
-                          <p className="text-sm opacity-80">
-                            {ist(e.startsAt, { weekday: "long" })}, {ist(e.startsAt, { hour: "numeric", minute: "2-digit" })}
+                          <p className="mt-1.5 flex items-center gap-1.5 text-sm opacity-80">
+                            <svg viewBox="0 0 20 20" aria-hidden className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.6">
+                              <circle cx="10" cy="10" r="7" />
+                              <path d="M10 6v4l2.5 2" strokeLinecap="round" />
+                            </svg>
+                            {ist(e.startsAt, { weekday: "long" })} · {ist(e.startsAt, { hour: "numeric", minute: "2-digit" })}
                           </p>
                           {e.venue && (
-                            <>
-                              <p className="mt-1 text-sm font-medium">{e.venue}</p>
-                              <a
-                                href={mapsUrl(e.venue, wedding.city)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold tracking-wider uppercase"
-                                style={{ color: tone }}
-                              >
-                                Open in Google Maps
-                                <svg viewBox="0 0 20 20" aria-hidden className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M7 13 13 7M8 7h5v5" />
-                                </svg>
-                              </a>
-                            </>
+                            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium">
+                              <svg viewBox="0 0 20 20" aria-hidden className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.6">
+                                <path d="M10 17.5s5.5-5 5.5-9.5a5.5 5.5 0 0 0-11 0c0 4.5 5.5 9.5 5.5 9.5Z" />
+                                <circle cx="10" cy="8" r="2" />
+                              </svg>
+                              {e.venue}
+                            </p>
                           )}
                         </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2 border-t border-dashed border-[var(--inv-gold)]/40 px-5 py-3">
+                        {(e.mapUrl || e.venue) && (
+                          <a
+                            href={e.mapUrl ?? mapsUrl(e.venue!, wedding.city)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="press inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-xs font-semibold tracking-wide text-white uppercase"
+                            style={{ background: tone }}
+                          >
+                            Directions
+                            <svg viewBox="0 0 20 20" aria-hidden className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M7 13 13 7M8 7h5v5" />
+                            </svg>
+                          </a>
+                        )}
+                        <a
+                          href={calendarUrl(e, wedding.name)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="press inline-flex h-9 items-center rounded-full border px-4 text-xs font-semibold tracking-wide uppercase"
+                          style={{ borderColor: tone, color: tone }}
+                        >
+                          Add to calendar
+                        </a>
                       </div>
                     </li>
                   );
@@ -268,7 +297,7 @@ async function Invitation({ params }: { params: Promise<{ token: string }> }) {
                 {!anyOpen
                   ? "Replies are closed."
                   : wedding.rsvpDeadline
-                    ? `Please reply by ${ist(wedding.rsvpDeadline, { day: "numeric", month: "long" })}.`
+                    ? `Please reply by ${deadlineText(wedding.rsvpDeadline)}.`
                     : "Please reply before each function's day."}
               </p>
             </div>
