@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { requireOwnedWedding, requirePlanner } from "@/lib/auth";
-import { addEvent, addGuest, importGuests, markSent, recordActual } from "@/app/actions";
+import { addEvent, addGuest, importGuests, markSent, recordActual, setJoinLink } from "@/app/actions";
 import {
   ActualCountForm,
   AddEventForm,
@@ -97,7 +97,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
     ...(events.length > 0 && guests.length > 0 ? [["reminders", "Reminders"] as [string, string]] : []),
     ["functions", "Functions"],
     ["guests", "Guests"],
-    ["add", "Add guests"],
+    ["link", "Add guests"],
   ];
 
   return (
@@ -489,6 +489,40 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
               </tbody>
             </table>
           </div>
+        )}
+      </Card>
+
+      <Card id="link" className="scroll-mt-32">
+        <SectionTitle
+          title="Invite link"
+          hint="One link for everyone: share it in WhatsApp chats or groups. Guests type their name and number, reply, and appear in your guest list. They're invited to every function."
+        />
+        {wedding.joinCode ? (
+          <div className="flex flex-col gap-3">
+            <p className="rounded-lg bg-sunken px-3.5 py-2.5 font-mono text-sm break-all">{`${base}/w/${wedding.joinCode}`}</p>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`You're invited to ${wedding.name}! Open the invitation and reply here: ${base}/w/${wedding.joinCode}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={buttonClass("whatsapp", "sm")}
+              >
+                Share on WhatsApp
+              </a>
+              <CopyLinkButton link={`${base}/w/${wedding.joinCode}`} guestName="everyone" />
+              <form action={setJoinLink.bind(null, wedding.id, "new")}>
+                <button className={buttonClass("ghost", "sm")}>New link</button>
+              </form>
+              <form action={setJoinLink.bind(null, wedding.id, "off")}>
+                <button className={buttonClass("ghost", "sm")}>Turn off</button>
+              </form>
+            </div>
+            <p className="text-xs text-muted">New link and Turn off stop the current link from working. Guests who already joined keep their own links.</p>
+          </div>
+        ) : (
+          <form action={setJoinLink.bind(null, wedding.id, "on")}>
+            <button className={buttonClass("primary")}>Create invite link</button>
+          </form>
         )}
       </Card>
 

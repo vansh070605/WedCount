@@ -120,3 +120,12 @@ Accepted · 2026-11-17
 **Context.** Testers wanted the product to feel like a wedding, and the guest link to feel like a real invitation (a reference: a sealed, gold-on-royal-blue invite with a countdown and a scratch-to-reveal date). D7's neutral look read as generic.
 **Decision.** Guest invitations get a full festive treatment in four themes chosen per wedding, with our own SVG ornaments (marigold garland, diyas, mandala corners, lotus divider, a drawn couple) instead of photos or copied art. Planner pages stay light and usable but warm: ivory, maroon actions, marigold accents, Cormorant Garamond headings, a garland under the header, and a colour per function. Motion makes it feel alive but always ends: the invitation's doors swing open, names rise in, marigold petals fall once, diya flames flicker, the countdown ticks and the date pops when scratched; planner pages fade between routes (React `<ViewTransition>`), numbers count up when they come into view and the header garland drops in; headlines reveal word by word (on load for page titles, on scroll for section titles), cards ease in with a stagger, and the landing's product preview, bars and step lines animate on scroll. Scroll effects use CSS scroll timelines, so unsupported browsers just show the content. Still no emoji, cursor effects or looping particles, and everything rests under reduced motion.
 **Consequences.** Two more web fonts (Cormorant Garamond, Great Vibes). The invite stays usable without JavaScript. A couple photo would need image storage; revisit if planners ask.
+
+## D14. A shared invite link next to personal links
+
+Accepted · 2026-11-20
+
+**Context.** Planners asked to send one link to a WhatsApp group instead of typing every guest in.
+**Decision.** Each wedding can have one shared link (`Wedding.joinCode`, null when off). Guests add themselves with name, number and side, then get a normal personal link. Personal links stay the only credential for a guest's reply: the shared link can only create new guests, and refuses a number already on the list.
+**Consequences.** Anyone the link is forwarded to can join, so it can be replaced or turned off. Self-added guests are invited to every function and counted with the "other" show rates, which predicts slightly less accurately than a relation the planner chose.
+

@@ -490,3 +490,32 @@ export async function checkInGuest(eventId: string, guestId: string, step: numbe
   await checkIn(eventId, guestId, step < 0 ? -1 : 1); // bound arguments come from the client, so clamp
   revalidatePath(`/weddings/${event.weddingId}`, "layout");
 }
+
+// Shared invite link: "on" makes a code if there is none, "new" replaces it (the old link stops working), "off" removes it.
+export async function setJoinLink(weddingId: string, mode: string) {
+  const planner = await requirePlanner();
+  const wedding = await requireOwnedWedding(planner.id, weddingId);
+  const joinCode = mode === "off" ? null : mode === "new" || !wedding.joinCode ? newGuestToken() : wedding.joinCode;
+  await prisma.wedding.update({ where: { id: weddingId }, data: { joinCode } });
+  revalidatePath(`/weddings/${weddingId}`);
+}
+
+// A guest who opened the shared link adds themself (invited to every function), then lands on their own
+// invitation to reply. A number already on the list is refused: otherwise anyone could take over that guest's reply.
+export async function joinWedding(code: string, _: FormState, fd: FormData): Promise<FormState> {
+  const wedding = await prisma.wedding.findUnique({ where: { joinCode: code }, select: { id: true } });
+  if (!wedding) return { error: "This invite link is no longer active. Ask the family for a new one." };
+  if (!(await allow("join", 20))) return { error: "Too many replies from this network. Please try again in an hour." };
+  const result = validateGuest({ name: text(fd, "name"), phone: text(fd, "phone"), side: text(fd, "side"), relation: "other" });
+  if (typeof result === "string") return { error: result.charAt(0).toUpperCase() + result.slice(1) + "." };
+  const token = newGuestToken();
+  try {
+    await prisma.guest.create({ data: { ...result, weddingId: wedding.id, token, invitedAt: new Date() } });
+  } catch (e) {
+    if (isDuplicate(e))
+      return { error: "This number is already on the guest list. Open the invite the family sent you on WhatsApp." };
+    throw e;
+  }
+  revalidatePath(`/weddings/${wedding.id}`, "layout");
+  redirect(`/r/${token}`);
+}
