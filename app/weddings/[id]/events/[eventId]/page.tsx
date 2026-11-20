@@ -5,7 +5,7 @@ import { requirePlanner } from "@/lib/auth";
 import { istDate, minPickDate } from "@/lib/rsvp";
 import { deleteEvent, updateEvent } from "@/app/actions";
 import { AddEventForm, DeleteButton } from "@/app/ui/forms";
-import { BackLink } from "@/app/ui/kit";
+import { BackLink, ButtonLink } from "@/app/ui/kit";
 
 export default function EditEventPage(props: PageProps<"/weddings/[id]/events/[eventId]">) {
   return (
@@ -42,6 +42,14 @@ async function EditEvent({ params }: { params: Promise<{ id: string; eventId: st
           Guests see the new name, time and venue the next time they open their invite.
         </p>
       </header>
+
+      <section className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-line bg-surface p-5 shadow-card sm:p-6">
+        <div>
+          <h2 className="font-display text-2xl font-semibold">Door list</h2>
+          <p className="text-sm text-muted">On the day, check guests in as they arrive. The total becomes the actual turnout.</p>
+        </div>
+        <ButtonLink href={`/weddings/${id}/events/${event.id}/door`}>Open door list</ButtonLink>
+      </section>
 
       <section className="rounded-card border border-line bg-surface p-5 shadow-card sm:p-6">
         <AddEventForm

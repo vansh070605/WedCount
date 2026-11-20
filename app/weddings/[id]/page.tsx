@@ -285,7 +285,7 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
         <Card id="turnout" className="scroll-mt-32">
           <SectionTitle
             title="Actual turnout"
-            hint="After a function, enter how many people came. It shows how close the prediction was and improves the next ones."
+            hint="After a function, enter how many people came, or check them in on the door list. It shows how close the prediction was and improves the next ones."
           />
           <ul className="divide-y divide-line">
             {started.map(({ e, i }) => (
@@ -298,7 +298,12 @@ async function Wedding({ params }: { params: Promise<{ id: string }> }) {
                       : `Came: ${e.actualCount} · Expected: ${predictions[i].expected} (${signed(errorPct(predictions[i].expected, e.actualCount))}) · Counting only "Coming": ${counts[i].attending.people} (${signed(errorPct(counts[i].attending.people, e.actualCount))})`}
                   </p>
                 </div>
-                <ActualCountForm action={recordActual.bind(null, e.id)} current={e.actualCount} eventName={e.name} />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link href={`/weddings/${wedding.id}/events/${e.id}/door`} className="text-sm font-medium text-brand underline-offset-4 hover:underline">
+                    Door list
+                  </Link>
+                  <ActualCountForm action={recordActual.bind(null, e.id)} current={e.actualCount} eventName={e.name} />
+                </div>
               </li>
             ))}
           </ul>

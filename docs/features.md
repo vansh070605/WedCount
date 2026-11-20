@@ -64,6 +64,13 @@ Sharma Uncle,98765 43210,bride,family
 - **Who's coming**: per function, the names of everyone who said Coming. **Names CSV** (`/weddings/[id]/export?list=names`) gives one row per person per function, for the door list.
 - **Caterer CSV** at `/weddings/[id]/export`: one row per function with expected people, range and the food split. Cells are protected against spreadsheet formula injection. Code: `app/weddings/[id]/export/route.ts`, `csvCell` in `lib/headcount.ts`.
 
+## Door list (check-in on the day)
+
+- **`/weddings/[id]/events/[eventId]/door`**, linked from each function's page and the Actual turnout section. Every guest invited to the function, Coming first, with their reply, party size and the names they gave. Tap **+** for each person who arrives and **−** to undo; a guest can never go below 0.
+- Search (`?q=`) matches the guest and every name in their reply, ignoring case, spaces and dots, and works without JavaScript.
+- Opens at midnight IST on the function's day. Each tap recomputes the function's **actual turnout** as the sum of check-ins in one SQL statement, so calibration needs no typing. A door check-in replaces a number typed by hand.
+- Code: `Arrival` model, `checkIn`/`doorOpen` in `lib/checkin.ts`, `checkInGuest` in `app/actions.ts`.
+
 ## Expected turnout (prediction)
 
 Each guest's party either comes or doesn't, with a probability that depends on their answer and relation:
