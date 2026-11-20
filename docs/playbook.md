@@ -37,7 +37,7 @@ npm run build
 ```
 
 5. Check the change in a browser at desktop width and at 390 px.
-6. Push and open a PR describing what changed, why, and how it was tested.
+6. Push and open a PR describing what changed, why, and how it was tested. GitHub Actions (`.github/workflows/ci.yml`) runs the same four checks against a fresh Postgres on every PR and push to `main`.
 7. Merge with `gh pr merge <number> --merge`. Do not delete the branch.
 
 ## 3. Change the database schema

@@ -118,11 +118,20 @@ export function parseRsvpForm(events: EventInfo[], get: (key: string) => string)
       errors.push(`${e.name}: arrival time looks wrong.`);
       continue;
     }
-    // shortcut: arrival is assumed on the event's own date, so a 01:00 arrival for a late-night event lands
-    // on the wrong day; fine while it's only a hint for the caterer, revisit if used for scheduling.
-    const arrivalTime = hhmm ? new Date(`${istDate(e.startsAt)}T${hhmm}:00+05:30`) : null;
+    const arrivalTime = hhmm ? arrivalAt(e.startsAt, hhmm) : null;
 
     rsvps.push({ eventId: e.id, status, vegCount: veg, nonVegCount: nonVeg, arrivalTime, names });
   }
   return { rsvps, errors };
+}
+
+// A guest types only a clock time. Take the one nearest the function's start, so 01:00 for a 21:00 Sangeet
+// is the night after, not 20 hours early.
+export function arrivalAt(startsAt: Date, hhmm: string) {
+  const sameDay = new Date(`${istDate(startsAt)}T${hhmm}:00+05:30`);
+  const DAY = 24 * 60 * 60 * 1000;
+  const gap = sameDay.getTime() - startsAt.getTime();
+  if (gap < -DAY / 2) return new Date(sameDay.getTime() + DAY);
+  if (gap > DAY / 2) return new Date(sameDay.getTime() - DAY);
+  return sameDay;
 }
