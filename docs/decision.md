@@ -129,3 +129,11 @@ Accepted · 2026-11-20
 **Decision.** Each wedding can have one shared link (`Wedding.joinCode`, null when off). Guests add themselves with name, number and side, then get a normal personal link. Personal links stay the only credential for a guest's reply: the shared link can only create new guests, and refuses a number already on the list.
 **Consequences.** Anyone the link is forwarded to can join, so it can be replaced or turned off. Self-added guests are invited to every function and counted with the "other" show rates, which predicts slightly less accurately than a relation the planner chose.
 
+## D15. Door check-in feeds the turnout number
+
+Accepted · 2026-11-20
+
+**Context.** Calibration needs the real turnout, but planners rarely typed it in after the event.
+**Decision.** A door list per function: one tap per arriving person, stored in `Arrival` per guest and function. The function's `actualCount` is recomputed from the sum in one statement, so the prediction loop closes without extra work. The page opens at midnight IST on the function's day.
+**Consequences.** A typed turnout is overwritten by door taps. Walk-ins need to be added as guests first.
+

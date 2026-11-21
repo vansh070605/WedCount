@@ -52,6 +52,7 @@ WedCount is one Next.js 16 application (App Router, React 19, TypeScript) deploy
 Planner 1──* Session            (sessions die with the planner)
 Planner 1──* Wedding 1──* Event
                      1──* Guest 1──* Rsvp *──1 Event
+                           1──* Arrival *──1 Event   (door check-in)
 ```
 
 | Model | Key fields | Invariants |
@@ -60,10 +61,11 @@ Planner 1──* Wedding 1──* Event
 | Session | `id` = sha256(cookie token), `expiresAt` | raw token never stored |
 | PasswordReset | `id` = sha256(link token), `plannerId`, `expiresAt`, `usedAt` | raw token never stored; used once |
 | RateLimit | `key` = sha256(action + client address), `count`, `windowStart` | raw address never stored |
-| Wedding | `plannerId`, `name`, `city`, `rsvpDeadline`, `inviteTemplate` | always read through the owner; deadline before the first function's day |
-| Event | `weddingId`, `name`, `startsAt`, `venue`, `actualCount` | `actualCount` feeds calibration |
+| Wedding | `plannerId`, `name`, `city`, `rsvpDeadline`, `inviteTemplate`, `theme`, couple and family fields, `joinCode` unique | always read through the owner; deadline before the first function's day; `joinCode` null = shared link off |
+| Event | `weddingId`, `name`, `startsAt`, `venue`, `mapUrl`, `actualCount` | `actualCount` feeds calibration; `mapUrl` accepts Google Maps hosts only |
 | Guest | `weddingId`, `phone`, `side`, `relation`, `token` unique, `invitedAt`, `remindedAt`, `reminderCount` | `(weddingId, phone)` unique; token is 128 random bits |
 | Invitation | `guestId`, `eventId` | no rows for a guest = invited to every function |
+| Arrival | `guestId`, `eventId`, `people`, `at` | `(guestId, eventId)` is the key; `people >= 0`; their sum is the function's `actualCount` |
 | Rsvp | `guestId`, `eventId`, `status`, `vegCount`, `nonVegCount`, `arrivalTime`, `names[]` | `(guestId, eventId)` unique; people = veg + non-veg; Coming has one name per person; no row means no reply |
 
 All foreign keys cascade on delete, so removing a wedding removes its functions, guests and replies.
@@ -75,6 +77,16 @@ All foreign keys cascade on delete, so removing a wedding removes its functions,
 1. Guest opens `/r/<token>` from WhatsApp. The page looks the guest up by token (unique index) and renders their functions and current answers.
 2. The form posts to the `saveRsvp` Server Action, which validates input (`parseRsvpForm` in `lib/rsvp.ts`), checks the deadline in IST, and upserts every function's answer in one transaction.
 3. The planner's wedding page reads the new rows on the next render.
+
+### Guest joins by the shared link
+
+1. Guest opens `/w/<code>`; the page finds the wedding by `joinCode` (unique index) and shows its functions.
+2. `joinWedding` rate-limits (20 per network per hour), validates the guest, and creates them with a fresh personal token. A phone number already on the list is refused so nobody can take over another guest's reply.
+3. The guest is redirected to their own `/r/<token>`, and the flow above continues.
+
+### Door check-in
+
+`checkInGuest` checks the function and the guest belong to the planner and the same wedding, then `checkIn` (`lib/checkin.ts`) adds or removes one person and recomputes `Event.actualCount` from the `Arrival` sum in one SQL statement.
 
 ### Planner views a wedding
 
@@ -114,7 +126,7 @@ Cache Components is on (`next.config.ts`). Pages that read cookies or the databa
 
 - **Authorization is ownership.** Every planner-side read and write is filtered by `plannerId`, centrally in `lib/owned.ts` and `requireOwnedWedding`. A database test proves another planner gets nothing.
 - **Guests are authorised by token only**, and the token is never derived from the guest id.
-- **Abuse limits**: signup limit per network (hashed address, `lib/ratelimit.ts`); login lockout; party size capped at 20 per function; CSV import validated before any write.
+- **Abuse limits**: signup, reset and join limits per network (hashed address, one atomic `INSERT ... ON CONFLICT` in `lib/ratelimit.ts`); login lockout; party size capped at 20 per function; CSV import validated before any write.
 - **Output safety**: React escapes all text; the caterer CSV neutralises formula prefixes (`=`, `+`, `-`, `@`); docs HTML comes only from files in this repo.
 
 ## Testing
@@ -122,6 +134,7 @@ Cache Components is on (`next.config.ts`). Pages that read cookies or the databa
 | Command | What it covers |
 |---|---|
 | `npm test` | Unit tests for every pure module in `lib/` |
-| `npm run test:db` | Ownership scoping against a real Postgres schema |
+| `npm run test:db` | Ownership scoping, the atomic rate limit under parallel requests, and door check-in sums, against a real Postgres schema |
+| GitHub Actions (`.github/workflows/ci.yml`) | The four commands in this table on every pull request and push to `main`, with Postgres 16 |
 | `npm run lint` | ESLint with the Next.js config |
 | `npm run build` | Type check and production build, including prerendering |

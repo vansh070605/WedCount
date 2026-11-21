@@ -80,13 +80,13 @@ Every later deploy: merge to `main`. Vercel builds, applies pending migrations, 
 
 ## 5. Run a real wedding
 
-1. Create the wedding with its RSVP deadline (end of that day in IST).
-2. Add every function with date, time and venue before inviting anyone.
-3. Import guests from the family's sheet (`name,phone,side,relation`). Fix any line the import reports and import again.
-4. Send invites with the WhatsApp button, one guest at a time. The guest list shows who has not been sent one.
+1. Create the wedding with its RSVP deadline (a date and a time; blank time means the end of that day, IST). Pick a theme and fill in the couple and families in Settings.
+2. Add every function with date, time, venue and the venue's Google Maps link before inviting anyone.
+3. Add guests: import the family's sheet (`name,phone,side,relation`, fix any line the import reports and import again), or create the **Invite link** and share it in WhatsApp groups so guests add themselves.
+4. Send invites with the WhatsApp button, one guest at a time. Each message lists that guest's functions with day, time and venue. The guest list shows who has not been sent one.
 5. Every two days, open **Reminders** and send the ones that are due.
 6. Three days before each function, download the caterer CSV and share the **Expected** column and range, not the Coming count.
-7. The day after each function, enter how many people actually came. This calibrates the next wedding.
+7. On the day, open the function's **Door list** and tap + for each person who arrives. The total becomes the actual turnout and calibrates the next wedding. (If you skipped the door list, enter the number by hand the day after.)
 
 ## 6. When something breaks
 
