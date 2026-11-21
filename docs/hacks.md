@@ -66,3 +66,35 @@ Without a verified domain, Resend only delivers mail from `onboarding@resend.dev
 In development, when a planner form is submitted before JavaScript loads and the action returns an error, Next.js 16.4 throws `Invariant: Received an underlying cookies object that does not match either cookies or mutableCookies` while re-rendering the page. The production build (`npm run build && npm start`) renders the error message correctly.
 **Fix now:** test the no-JavaScript path against a production build.
 **Replace when:** a Next.js release fixes the dev invariant; then this entry can go.
+
+## A production build breaks a running dev server
+
+`npm run build` rewrites `.next`, which a running `npm run dev` also uses. The dev page then loads but its client code stops working (forms do nothing).
+**Fix now:** stop the dev server, delete `.next`, start it again.
+
+## Shared-link guests are counted as "other"
+
+`joinWedding` cannot ask for a relation, so people who join by the shared link use the "other" show rates and are invited to every function.
+**Replace when:** planners ask for it. Add a relation question to the join form, or let the planner edit the guest after they join (that already works).
+
+## Anyone with the shared link can join
+
+The link is a 128-bit code but can be forwarded. Joins are limited to 20 per network per hour.
+**Fix now:** use **New link** or **Turn off** on the wedding page.
+**Replace when:** a planner needs approval before a guest appears. Add a pending state to `Guest`.
+
+## Door check-in replaces a typed turnout
+
+Every door tap rewrites `Event.actualCount` from the check-ins, overwriting a number the planner typed by hand.
+**Replace when:** planners mix both. Keep the typed number separately and prefer whichever was set last.
+
+## WhatsApp caches link previews
+
+The themed preview card is fetched once per URL. Changing the theme or functions later does not update a link already shared.
+**Fix now:** nothing; new links show the new card.
+
+## Walk-ins cannot be checked in
+
+The door list only shows guests already on the list.
+**Fix now:** add the guest first (or let them use the shared link), then check them in.
+

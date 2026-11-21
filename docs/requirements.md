@@ -37,12 +37,17 @@ Indian weddings run over several functions (Haldi, Mehendi, Sangeet, Wedding, Re
 - **R8** See who is due a reminder and send it in one tap, naming only the functions still unanswered.
 - **R9** Download a caterer CSV for a wedding.
 - **R10** Record how many people actually came, so future predictions calibrate.
+- **R10a** Check guests in at the door on the day, one tap per person, so turnout records itself.
+- **R4a** Share one invite link for the whole wedding in WhatsApp chats and groups, so guests add themselves; the link can be replaced or turned off.
+- **R3a** Give each function a Google Maps link, and the RSVP deadline a time.
 
 ### Guest
 
 - **R11** Open a private link with no login and no app.
 - **R12** Answer Coming, Maybe or Can't come for each function they're invited to, with veg and non-veg counts, an arrival time, and the name of everyone coming.
 - **R13** Change the answer until the RSVP deadline, and never on or after a function's day. After that, see the answer read only.
+- **R14** Get to each function with one tap (Directions) and add it to a calendar.
+- **R15** See a clear thank-you with the answers sent after saving a reply.
 
 ## Non-functional requirements
 
@@ -66,4 +71,4 @@ Indian weddings run over several functions (Haldi, Mehendi, Sangeet, Wedding, Re
 
 ## Acceptance
 
-A release is acceptable when R1 to R13 work end to end on a phone-sized screen and a desktop, all checks in the [Playbook](playbook.md) pass, and no hard rule in the [Agent guide](agents.md) is broken.
+A release is acceptable when R1 to R15 work end to end on a phone-sized screen and a desktop, all checks in the [Playbook](playbook.md) pass, and no hard rule in the [Agent guide](agents.md) is broken.

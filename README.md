@@ -18,7 +18,7 @@
 ![Postgres on Neon](https://img.shields.io/badge/Postgres-Neon-00e599?logo=postgresql&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000?logo=vercel&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-06b6d4?logo=tailwindcss&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-66_passing-2f7a4f)
+![Tests](https://img.shields.io/badge/tests-73_passing-2f7a4f)
 
 ### [Live: wedcount.vercel.app](https://wedcount.vercel.app)
 
@@ -60,6 +60,9 @@ Families spend lakhs on catering, and the one number it depends on is a guess.
 - **Invite guests to only some functions**, and see **who's coming by name**
 - Duplicate guests are caught; replies close before each function's day
 - **Caterer CSV**, ready for Excel
+- **One shared invite link** for WhatsApp groups: guests add themselves, then reply
+- A **door list** for the day: one tap per person who arrives, and the turnout records itself
+- A Google Maps link for each venue and a time on the RSVP deadline
 - Edit or remove guests, functions and whole weddings; import the family's spreadsheet
 
 </td>
@@ -68,10 +71,12 @@ Families spend lakhs on catering, and the one number it depends on is a guess.
 **For the guest: an invitation, not a form**
 
 - A private link, no app, no login
-- A real **wedding invitation** in the couple's chosen theme: tap the seal, families, countdown, scratch-the-gold date, every function with a map
+- A real **wedding invitation** in the couple's chosen theme: tap the seal, families, countdown, scratch-the-gold date, and every function with **Directions** and **Add to calendar**
 - Then **Coming / Maybe / Can't come for each function**
 - How many people, their names, veg or non-veg, arrival time
+- A **thank-you card** with their answers when they save
 - Can change their mind until the deadline (never on the function's day)
+- The WhatsApp message lists each function's day, time and venue, and the link previews as a card in the wedding's theme
 
 </td>
 </tr>
@@ -96,7 +101,28 @@ Planners get card layouts instead of cramped tables, sticky section tabs that fo
 </tr>
 </table>
 
+<table>
+<tr>
+<td width="33%"><img src="docs/screenshots/functions-phone.png" alt="Function cards with Directions and Add to calendar" /></td>
+<td width="33%"><img src="docs/screenshots/thanks-phone.png" alt="Thank-you card after a guest saves their reply" /></td>
+<td width="33%"><img src="docs/screenshots/join-phone.png" alt="The wedding's shared invite link: a guest adds themselves" /></td>
+</tr>
+</table>
+
 <img src="docs/screenshots/dashboard.png" alt="Planner home: what's coming up, what needs attention, latest replies" width="100%" />
+
+<table>
+<tr>
+<td width="30%"><img src="docs/screenshots/door-phone.png" alt="Door list on a phone: tap + for each person who arrives" /></td>
+<td width="70%" valign="middle">
+
+**On the day: a door list**
+
+Open a function's door list on your phone and tap **+** for each person who arrives (**−** to undo). Search finds a guest or anyone named in their reply. The total becomes that function's actual turnout, so the prediction learns from the real numbers without anyone typing them in.
+
+</td>
+</tr>
+</table>
 
 <table>
 <tr>
@@ -109,14 +135,14 @@ Planners get card layouts instead of cramped tables, sticky section tabs that fo
 
 ```mermaid
 flowchart LR
-    A[Planner adds guests<br/>and functions] --> B[One tap opens WhatsApp<br/>with a personal link]
+    A[Planner adds guests<br/>and functions<br/>or shares one invite link] --> B[One tap opens WhatsApp<br/>with a personal link]
     B --> C[Guest replies per function<br/>people · veg · arrival]
     C --> D[Live headcount<br/>+ expected turnout]
     D --> E[Caterer CSV]
     C -. no reply in 2 days .-> F[Reminder names the<br/>functions still missing]
     F --> C
-    D -. after the function .-> G[Planner records<br/>real turnout]
-    G -. calibrates .-> D
+    D -. on the day .-> G[Door list: tap each<br/>person who arrives]
+    G -. real turnout calibrates .-> D
 ```
 
 <img src="docs/screenshots/landing-features.png" alt="Feature grid on the landing page" width="100%" />
@@ -155,7 +181,7 @@ across all of that planner's past functions. The `+100` stops one odd function f
 - Guest invite tokens are **128 random bits**: the link is the guest's only credential.
 - Every query is **scoped to the logged-in planner**; another planner's wedding returns 404, so ids can't be probed. A database test proves it.
 - **Password reset** by one-time email link (Resend): 256-bit token stored hashed, 30 minutes, single use, signs out other devices.
-- **Signup limit** of 5 attempts per network per hour; only a hash of the address is stored.
+- **Signup, reset and join limits** per network per hour, counted by **one atomic SQL statement** (a test fires 12 parallel requests and exactly 5 pass); only a hash of the address is stored.
 - **Login lockout** after 5 wrong passwords, stored in the DB so it holds across serverless instances. Every failure shows the same message, so nobody can tell which emails have accounts.
 - CSV export is **formula-injection safe**; unique-constraint races give a clear message instead of a crash.
 
@@ -165,7 +191,8 @@ across all of that planner's past functions. The `+100` stops one odd function f
 <summary><b>Correctness</b></summary>
 
 - RSVP rules, CSV parsing (RFC 4180, quoted names with commas), phone normalisation (`98765 43210` and `+91-98765-43210` are the same guest), reminders, headcount and the prediction model are **pure functions with unit tests**.
-- Saves are **transactions**: a guest never ends up with half their functions saved.
+- Saves are **transactions**: a guest never ends up with half their functions saved. Door check-ins recompute the turnout in one statement, so parallel taps always add up.
+- **GitHub Actions** runs lint, unit tests, database tests and the build against Postgres on every pull request.
 - Dates are handled in **IST** throughout (deadline = end of that day in India).
 - Forms keep a **server action fallback**, so a tap before the page finishes loading on a slow phone still saves.
 
@@ -177,7 +204,7 @@ across all of that planner's past functions. The `+100` stops one odd function f
 - Warm wedding **tokens** in `app/globals.css` (ivory, maroon, marigold gold); components in `app/ui/kit.tsx`; four invitation themes under `[data-invite]`.
 - Cormorant Garamond headings, Great Vibes for the couple's names, Geist for text and numbers.
 - The landing page is plain server-rendered HTML that shows the product's real UI; no animation library.
-- Motion is limited to hover states and short reveals on the browser's **native scroll timelines**, all off under **reduced motion**.
+- Motion is hover states, short reveals on the browser's **native scroll timelines**, and a few one-time moments on the invitation (doors, petals, the thank-you tick), all off under **reduced motion**.
 
 </details>
 
@@ -198,13 +225,14 @@ across all of that planner's past functions. The `+100` stops one odd function f
 ```text
 app/
   _landing/      marketing page
-  dashboard/     planner's weddings
-  weddings/[id]/ headcount, reminders, functions, guests, caterer CSV export
-  r/[token]/     guest RSVP page (public, token = credential)
+  home/, dashboard/  planner home and weddings
+  weddings/[id]/ headcount, invites, functions, guests, door list, caterer CSV export
+  r/[token]/     the guest's invitation and RSVP (public, token = credential)
+  w/[code]/      the wedding's shared invite link
   docs/, llms*/  documentation for people and AI agents
   privacy/, terms/  legal pages
   ui/            design-system kit, forms, cursor, section tabs
-lib/             pure logic: rsvp, guests/CSV, headcount, predict, reminders, invite, lockout, docs (+ tests)
+lib/             pure logic: rsvp, guests/CSV, headcount, predict, reminders, invite, invitation, checkin, ratelimit, lockout, docs (+ tests)
 docs/            agents, requirements, features, architecture, decision, playbook, hacks, tips
 prisma/          schema, migrations, demo seed
 ```
@@ -223,8 +251,8 @@ npm run dev
 Open **http://localhost:3000** and log in with the local demo account: `demo@wedcount.test` / `demo-planner-123`.
 
 ```bash
-npm test          # 63 unit tests
-npm run test:db   # 3 database tests in a throwaway Postgres schema
+npm test          # 66 unit tests
+npm run test:db   # 7 database tests in a throwaway Postgres schema
 npm run lint
 npm run build
 ```
@@ -289,14 +317,24 @@ Each step is a pull request with what changed, why, and how it was tested, and a
 | + | Tester feedback: send queue, per-function invites, names, duplicates, RSVP closing | [#18](https://github.com/vansh070605/WedCount/pull/18) |
 | + | Planner home page, no past dates | [#19](https://github.com/vansh070605/WedCount/pull/19) |
 | + | Festive invitation (4 themes, seal, countdown, scratch card) and warm wedding look | [#20](https://github.com/vansh070605/WedCount/pull/20) |
+| + | Text and scroll animations; card reveal fix | [#21](https://github.com/vansh070605/WedCount/pull/21), [#22](https://github.com/vansh070605/WedCount/pull/22) |
+| + | Atomic rate limit, late-night arrivals, GitHub Actions CI | [#23](https://github.com/vansh070605/WedCount/pull/23) |
+| + | Door list: check-in on the day | [#24](https://github.com/vansh070605/WedCount/pull/24) |
+| + | Pill choices; Send invites always visible | [#25](https://github.com/vansh070605/WedCount/pull/25) |
+| + | One shared invite link for the whole wedding | [#26](https://github.com/vansh070605/WedCount/pull/26) |
+| + | Maps links per function, deadline time, scratch card, function cards | [#27](https://github.com/vansh070605/WedCount/pull/27) |
+| + | Structured WhatsApp messages and themed link previews | [#28](https://github.com/vansh070605/WedCount/pull/28) |
+| + | Thank-you card after saving a reply | [#29](https://github.com/vansh070605/WedCount/pull/29) |
 
 ## 🗺 Roadmap
 
 - [x] Postgres on Neon, live on Vercel: [wedcount.vercel.app](https://wedcount.vercel.app)
-- [ ] Real-wedding test: record turnout and publish predicted vs actual
+- [x] Shared invite link, door list, themed link previews, CI
+- [ ] Real-wedding test: record turnout (door list) and publish predicted vs actual
 - [ ] Automatic WhatsApp sending through the Cloud API
 - [ ] Hindi guest page
 - [ ] Shared planner teams
+- [ ] A verified email domain, so password-reset mail reaches every planner
 
 <div align="center">
 <br />
