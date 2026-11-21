@@ -22,7 +22,7 @@
 
 ### [Live: wedcount.vercel.app](https://wedcount.vercel.app)
 
-[The problem](#-the-problem) · [Features](#-what-it-does) · [How it works](#-how-it-works) · [Prediction model](#-the-prediction-model) · [Engineering](#-engineering-highlights) · [Docs](#-documentation) · [Run it](#-run-it-locally)
+[Problem](#the-problem) · [Features](#features) · [How it works](#how-it-works) · [Prediction model](#prediction-model) · [Engineering](#engineering) · [Tech stack](#tech-stack) · [Run locally](#run-locally) · [Documentation](#documentation)
 
 <br />
 
@@ -32,9 +32,11 @@
 
 ---
 
-## 🪔 The problem
+## The problem
 
 Indian weddings run over several functions (Haldi, Mehendi, Sangeet, Wedding, Reception) with hundreds of guests each. The guest count is still worked out on WhatsApp and gut feel: *"Sharma uncle will come, na?"*
+
+An illustrative function:
 
 | | Guests | |
 |---|---:|---|
@@ -45,7 +47,7 @@ Indian weddings run over several functions (Haldi, Mehendi, Sangeet, Wedding, Re
 
 Families spend lakhs on catering, and the one number it depends on is a guess.
 
-## ✨ What it does
+## Features
 
 <table>
 <tr>
@@ -131,7 +133,7 @@ Open a function's door list on your phone and tap **+** for each person who arri
 </tr>
 </table>
 
-## 🧭 How it works
+## How it works
 
 ```mermaid
 flowchart LR
@@ -147,7 +149,7 @@ flowchart LR
 
 <img src="docs/screenshots/landing-features.png" alt="Feature grid on the landing page" width="100%" />
 
-## 📈 The prediction model
+## Prediction model
 
 RSVPs overpromise: people say "Coming" and don't show, and some who never replied turn up. Each guest's **party** (everyone on one invite) either comes or doesn't, with a probability that depends on their answer and how they're related:
 
@@ -172,7 +174,7 @@ across all of that planner's past functions. The `+100` stops one odd function f
 
 > **Honest by design.** The show rates above are starting assumptions, not measured data, and the app says so on the page. For every recorded function it shows the prediction's error next to the naive "count only Coming" number, so accuracy is shown, not claimed.
 
-## 🛠 Engineering highlights
+## Engineering
 
 <details open>
 <summary><b>Security</b></summary>
@@ -208,7 +210,7 @@ across all of that planner's past functions. The `+100` stops one odd function f
 
 </details>
 
-## 🧱 Tech stack
+## Tech stack
 
 | Layer | Choice |
 |---|---|
@@ -237,7 +239,7 @@ docs/            agents, requirements, features, architecture, decision, playboo
 prisma/          schema, migrations, demo seed
 ```
 
-## 🚀 Run it locally
+## Run locally
 
 ```bash
 npm install
@@ -274,7 +276,7 @@ Sharma Uncle,98765 43210,bride,family
 
 </details>
 
-## 📚 Documentation
+## Documentation
 
 Everything about the project lives in [`docs/`](docs) as Markdown, rendered in the app at `/docs` and served to AI agents at `/llms.txt`.
 
@@ -290,51 +292,12 @@ Everything about the project lives in [`docs/`](docs) as Markdown, rendered in t
 
 <img src="docs/screenshots/docs.png" alt="Architecture page in the WedCount docs" width="100%" />
 
-## 📅 Built day by day
+## Roadmap
 
-Each step is a pull request with what changed, why, and how it was tested, and a `day-N` tag on `main`.
-
-| Day | What shipped | PR |
-|---|---|:---:|
-| 1 | Next.js scaffold | tag `day-1` |
-| 2 | Data model, migration, seed data | [#1](https://github.com/vansh070605/WedCount/pull/1) |
-| 3 | Planner auth, weddings, guest CSV import | [#2](https://github.com/vansh070605/WedCount/pull/2) |
-| 4 | Guest RSVP page per function | [#3](https://github.com/vansh070605/WedCount/pull/3) |
-| 5 | WhatsApp invite links | [#4](https://github.com/vansh070605/WedCount/pull/4) |
-| 6 | Headcount and caterer CSV | [#5](https://github.com/vansh070605/WedCount/pull/5) |
-| 7 | Reminders | [#6](https://github.com/vansh070605/WedCount/pull/6) |
-| 8 | Expected turnout with range and calibration | [#7](https://github.com/vansh070605/WedCount/pull/7) |
-| 9 | Hardening: login lockout, race-safe saves | [#8](https://github.com/vansh070605/WedCount/pull/8) |
-| + | Edit / delete, quoted CSV, ownership tests | [#9](https://github.com/vansh070605/WedCount/pull/9) |
-| + | Design system and animated redesign | [#10](https://github.com/vansh070605/WedCount/pull/10) |
-| + | Mobile polish | [#11](https://github.com/vansh070605/WedCount/pull/11) |
-| + | Scroll motion, README | [#12](https://github.com/vansh070605/WedCount/pull/12) |
-| + | Light redesign, docs for agents, Postgres on Neon | [#13](https://github.com/vansh070605/WedCount/pull/13) |
-| + | Wedding settings, account deletion, icons and share card | [#14](https://github.com/vansh070605/WedCount/pull/14) |
-| + | Go live on Vercel + Neon, functions in Singapore | [#15](https://github.com/vansh070605/WedCount/pull/15) |
-| + | Signup limit, analytics, error logging | [#16](https://github.com/vansh070605/WedCount/pull/16) |
-| + | Password reset by email (Resend) | [#17](https://github.com/vansh070605/WedCount/pull/17) |
-| + | Tester feedback: send queue, per-function invites, names, duplicates, RSVP closing | [#18](https://github.com/vansh070605/WedCount/pull/18) |
-| + | Planner home page, no past dates | [#19](https://github.com/vansh070605/WedCount/pull/19) |
-| + | Festive invitation (4 themes, seal, countdown, scratch card) and warm wedding look | [#20](https://github.com/vansh070605/WedCount/pull/20) |
-| + | Text and scroll animations; card reveal fix | [#21](https://github.com/vansh070605/WedCount/pull/21), [#22](https://github.com/vansh070605/WedCount/pull/22) |
-| + | Atomic rate limit, late-night arrivals, GitHub Actions CI | [#23](https://github.com/vansh070605/WedCount/pull/23) |
-| + | Door list: check-in on the day | [#24](https://github.com/vansh070605/WedCount/pull/24) |
-| + | Pill choices; Send invites always visible | [#25](https://github.com/vansh070605/WedCount/pull/25) |
-| + | One shared invite link for the whole wedding | [#26](https://github.com/vansh070605/WedCount/pull/26) |
-| + | Maps links per function, deadline time, scratch card, function cards | [#27](https://github.com/vansh070605/WedCount/pull/27) |
-| + | Structured WhatsApp messages and themed link previews | [#28](https://github.com/vansh070605/WedCount/pull/28) |
-| + | Thank-you card after saving a reply | [#29](https://github.com/vansh070605/WedCount/pull/29) |
-
-## 🗺 Roadmap
-
-- [x] Postgres on Neon, live on Vercel: [wedcount.vercel.app](https://wedcount.vercel.app)
-- [x] Shared invite link, door list, themed link previews, CI
-- [ ] Real-wedding test: record turnout (door list) and publish predicted vs actual
-- [ ] Automatic WhatsApp sending through the Cloud API
-- [ ] Hindi guest page
-- [ ] Shared planner teams
-- [ ] A verified email domain, so password-reset mail reaches every planner
+- Automatic WhatsApp sending through the Cloud API, with delivery receipts
+- A Hindi guest page
+- Several planners sharing one wedding
+- Pilot at a real wedding: record turnout with the door list and publish predicted against actual
 
 <div align="center">
 <br />
